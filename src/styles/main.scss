@@ -1,0 +1,25 @@
+page {
+  box-sizing: border-box;
+}
+
+.app {
+  height: calc(100vh - 44px);
+  color: #000000;
+  background: #ffffff;
+  overflow: auto;
+}
+.dark {
+  color: #ffffff;
+  background: #121212;
+}
+
+.bt-btn{
+  @apply fixed bottom-0  w-full;
+}
+
+::-webkit-scrollbar {
+  /*滚动条整体样式*/
+  width: 0; /*高宽分别对应横竖滚动条的尺寸*/
+  height: 0;
+  scrollbar-arrow-color: red;
+}

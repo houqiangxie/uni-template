@@ -1,0 +1,125 @@
+{
+  "globalStyle": {
+    "navigationBarTitleText": "监管执法",
+    "navigationBarBackgroundColor": "@navBgColor",
+    "navigationBarTextStyle": "@navTxtStyle",
+    "backgroundColor": "@bgColor",
+    "backgroundTextStyle": "@bgTxtStyle",
+    "backgroundColorTop": "@bgColorTop",
+    "backgroundColorBottom": "@bgColorBottom",
+    "app-plus": {
+      "bounce": "none",
+      "titleNView": {
+        "backButton": {
+          "background": "#fff"
+        }
+      }
+    }
+  },
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^nut-(.*)?-(.*)": "nutui-uniapp/components/$1$2/$1$2.vue",
+      "^nut-(.*)": "nutui-uniapp/components/$1/$1.vue"
+    }
+  },
+  "pages": [
+    {
+      "path": "pages/index",
+      "type": "home",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "app-plus": {
+          "bounce": "none",
+          "titleNView": {
+            "backButton": {
+              "background": "#fff"
+            }
+          }
+        }
+      }
+    },
+    {
+      "path": "pages/hi",
+      "type": "page"
+    },
+    {
+      "path": "pages/login",
+      "type": "page"
+    },
+    {
+      "path": "pages/webview",
+      "type": "page"
+    },
+    {
+      "path": "pages/areaManage/index",
+      "type": "page",
+      "style": {
+        "navigationBarTitleText": "检查点"
+      }
+    },
+    {
+      "path": "pages/interestedTarget/interestedTargetUnit",
+      "type": "page"
+    },
+    {
+      "path": "pages/interestedTarget/relPersonAdd",
+      "type": "page",
+      "style": {
+        "navigationBarTitleText": "作业人员申请"
+      }
+    },
+    {
+      "path": "pages/interestedTarget/relPersonApproval",
+      "type": "page",
+      "layout": "success",
+      "style": {
+        "navigationBarTitleText": "作业人员申请"
+      }
+    },
+    {
+      "path": "pages/interestedTarget/relUnitAdd",
+      "type": "page",
+      "style": {
+        "navigationBarTitleText": "相关方单位申请"
+      }
+    },
+    {
+      "path": "pages/interestedTarget/relUnitApproval",
+      "type": "page",
+      "layout": "success",
+      "style": {
+        "navigationBarTitleText": "相关方单位申请"
+      }
+    },
+    {
+      "path": "pages/interestedTarget/vertify",
+      "type": "page"
+    },
+    {
+      "path": "pages/riskJob/index",
+      "type": "page",
+      "style": {
+        "navigationBarTitleText": ""
+      }
+    },
+    {
+      "path": "pages/riskJob/shareSignature",
+      "type": "page",
+      "style": {
+        "navigationBarTitleText": "分享签名"
+      }
+    }
+  ],
+  "subPackages": [
+    {
+      "root": "pages-sub",
+      "pages": [
+        {
+          "path": "index",
+          "type": "page"
+        }
+      ]
+    }
+  ]
+}
