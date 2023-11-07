@@ -4,7 +4,7 @@
  * @Author: houqiangxie
  * @Date: 2023-08-07 20:48:34
  * @LastEditors: houqiangxie
- * @LastEditTime: 2023-09-12 11:06:36
+ * @LastEditTime: 2023-09-20 11:02:43
 -->
 <template>
   <div
@@ -13,6 +13,7 @@
     }"
   >
   <nut-config-provider :theme="isDark?'dark':''" :theme-vars="themeVars">
+    <Register/>
     <main
       font-sans
       color="gray-700 dark:gray-200"
@@ -24,7 +25,6 @@
         [Default Layout]
       </div> -->
     </main>
-    <nut-notify ref="notify" />
     </nut-config-provider>
   </div>
 </template>
@@ -36,6 +36,4 @@ const themeVars = reactive({
   collapseWrapperContentLineHeight: '1.2',
   collapseItemIconColor: '#ddd',
 });
-const notify = ref();
-provide('notify', notify);
 </script>

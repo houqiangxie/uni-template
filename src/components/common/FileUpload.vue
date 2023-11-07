@@ -4,7 +4,7 @@
  * @Author: houqiangxie
  * @Date: 2023-08-18 08:58:42
  * @LastEditors: houqiangxie
- * @LastEditTime: 2023-09-12 11:42:31
+ * @LastEditTime: 2023-09-20 11:17:37
 -->
 
 
@@ -73,7 +73,7 @@ const {
   // 限制允许上传的格式，空串=不限制，默认为空
   formats = 'png,jpg,pdf',
   // 文件上传大小限制
-  size = 30,
+  size = 1,
   // 文件数量限制
   limit = 9,
   // 不可编辑
@@ -83,8 +83,6 @@ const {
 const emit = defineEmits<{
   (e: 'update:modelValue', payload: any): void; (e: 'blur', payload: any): void
 }>()
-
-const notify = inject('notify')
 
 const maximize = computed(()=>size*1024*1024)
 // 转换file字段
@@ -169,7 +167,7 @@ const beforeXhrUpload = (UploadFile: any, options: any) => {
   const suffix = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
   const format = formats.toLowerCase()
   if (format && !format.includes(suffix)) {
-    notify.value.showNotify({
+    uni.$notify.showNotify({
       type: 'danger',
       msg: `不支持上传${suffix.toUpperCase()}格式文件`,
       position: 'top',
@@ -177,6 +175,11 @@ const beforeXhrUpload = (UploadFile: any, options: any) => {
     })
     return
   }
+  uni.$notify.showNotify({
+    type: 'primary',
+    msg: '文件上传中',
+    position: 'top',
+  })
   //UploadFile  是 uni.uploadFile ， 你也可以自定义设置其它函数
   const uploadTask = UploadFile({
     url: options.url,
@@ -197,6 +200,12 @@ const beforeXhrUpload = (UploadFile: any, options: any) => {
           const val = limit == 1 ? fileList.value[0] : fileList.value
           emit('update:modelValue', val)
           emit('blur', val)
+        } else {
+          uni.$notify.showNotify({
+            type: 'danger',
+            msg: data.message,
+            position: 'top',
+          })
         }
       }
       // if (options.xhrState == response.statusCode) {
@@ -220,7 +229,8 @@ const beforeXhrUpload = (UploadFile: any, options: any) => {
 };
 
 const onOversize = (files) => { 
-  notify.value.showNotify({
+  console.log('uni.$notify: ', uni.$notify);
+  uni.$notify.showNotify({
     type: 'danger',
     msg: `只允许上传${size}M以内的文件`,
     position: 'top',
