@@ -1,5 +1,5 @@
 {
-  "name": "szsti_regulatory_enterprise_app",
+  "name": "uni-template",
   "private": true,
   "scripts": {
     "dev:app": "uni -p app",

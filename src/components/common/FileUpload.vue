@@ -4,7 +4,7 @@
  * @Author: houqiangxie
  * @Date: 2023-08-18 08:58:42
  * @LastEditors: houqiangxie
- * @LastEditTime: 2023-09-20 11:17:37
+ * @LastEditTime: 2024-01-10 17:18:20
 -->
 
 
@@ -208,6 +208,7 @@ const beforeXhrUpload = (UploadFile: any, options: any) => {
           })
         }
       }
+      uni.$notify.hideNotify()
       // if (options.xhrState == response.statusCode) {
       //   options.onSuccess?.(response, options);
       // } else {
@@ -229,7 +230,6 @@ const beforeXhrUpload = (UploadFile: any, options: any) => {
 };
 
 const onOversize = (files) => { 
-  console.log('uni.$notify: ', uni.$notify);
   uni.$notify.showNotify({
     type: 'danger',
     msg: `只允许上传${size}M以内的文件`,
