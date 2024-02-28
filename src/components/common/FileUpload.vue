@@ -4,7 +4,7 @@
  * @Author: houqiangxie
  * @Date: 2023-08-18 08:58:42
  * @LastEditors: houqiangxie
- * @LastEditTime: 2024-01-10 17:18:20
+ * @LastEditTime: 2024-02-28 16:28:14
 -->
 
 
@@ -27,7 +27,7 @@
     </nut-uploader>
     <view class="w-full flex flex-wrap pt-1">
       <template v-for="(item, index) in fileList" :key="index" >
-        <view v-if="item.isImg" class="border-1 border-dotted border-[#eee] rounded w-15 h-15 m-1 relative" @click="previewImg(item)">
+        <view v-if="item.isImg" class="border-1 border-dotted border-[#eee] rounded w-15 h-15 m-1 relative" @click="previewFile(item)">
           <image :src="item.url"  class="w-full h-full" />
           <nut-icon v-if="!readonly" name="circle-close" color="#f00" @click.stop="clear(index)" class="!absolute top-[1px] right-[1px]"></nut-icon>
         </view>
@@ -35,7 +35,7 @@
     </view>
     <template v-for="(item, index) in fileList" :key="index">
       <view  class="box-border w-full flex justify-between leading-8" v-if="!item.isImg">
-        <view class="flex flex-1 items-center" @click="previewImg(item)" >
+        <view class="flex flex-1 items-center" @click="previewFile(item)" >
           <view class="flex-1 truncate max-w-50">
             {{ item.name }}
           </view>
@@ -121,12 +121,12 @@ function clear(index) {
 function download(item) {
   let url = item.url
   // #ifdef H5
-  url = item.url.replace(/(.*)(\/file.*)/g, '$2')
-  new Download(url, item.fileName)
-  return
+    url = item.url.replace(/(.*)(\/file.*)/g, '$2')
+    new Download(url, item.fileName)
   // #endif
+  // ifndef
   uni.downloadFile({
-    url,
+    url: import.meta.env.BASE_URL + item.url,
     success(res) {
       // var filePath = res.tempFilePath;
       // uni.openDocument({
@@ -138,26 +138,41 @@ function download(item) {
       // });
     },
   })
+  // #endif
 }
 
-function previewImg(file) {
-  if (!file.isImg)
-    return
-  const urls = fileList.value.filter(item => item.isImg).map(item => item.url)
-  const current = urls.findIndex(url => url === file.url) || 0
-  uni.previewImage({
-    urls,
-    current,
-    longPressActions: {
-      itemList: ['发送给朋友', '保存图片', '收藏'],
-      success(data) {
+function previewFile(file) {
+  if (file.isImg) {
+    const urls = fileList.value.filter(item => item.isImg).map(item => item.url)
+    const current = urls.findIndex(url => url === file.url) || 0
+    uni.previewImage({
+      urls,
+      current,
+      longPressActions: {
+        itemList: ['发送给朋友', '保存图片', '收藏'],
+        success(data) {
 
-      },
-      fail(err) {
+        },
+        fail(err) {
 
+        },
       },
-    },
-  })
+    })
+  } else {
+     uni.downloadFile({
+      url: import.meta.env.BASE_URL + file.url,
+      success: function (res) {
+        var filePath = res.tempFilePath;
+        uni.openDocument({
+          filePath: filePath,
+          showMenu: true,
+          success: function (res) {
+            console.log('打开文档成功');
+          }
+        });
+      }
+    });
+  }
 }
 
 // source file https://github.com/jdf2e/nutui/blob/v4/src/packages/__VUE/uploader/uploader.ts#L6
