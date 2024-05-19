@@ -4,7 +4,7 @@
  * @Author: houqiangxie
  * @Date: 2023-08-07 20:48:35
  * @LastEditors: houqiangxie
- * @LastEditTime: 2023-09-14 10:59:48
+ * @LastEditTime: 2024-05-19 12:09:32
 -->
 <!--
  * @Descripttion: 
@@ -17,12 +17,13 @@
 
 <template>
   <div m="t-5">
-    <CommonForm :config="config" v-model:formModel="formModel" ref="form"/>
+    <!-- <CommonForm :config="config" v-model:formModel="formModel" ref="form"/> -->
     <!-- <uni-forms :modelValue="formModel">
       <FileUpload v-model="formModel.fileList" />
     </uni-forms> -->
     <!-- <Sign v-model="formModel.url" showMode="vertical"></Sign> -->
-      <nut-button type="primary" @click="submit">主要按钮</nut-button>
+      <!-- <nut-button type="primary" @click="submit">主要按钮</nut-button> -->
+      <Amap/>
   </div>
 </template>
 

@@ -8,15 +8,6 @@ interface NavigateToOptions {
        "pages/hi" |
        "pages/login" |
        "pages/webview" |
-       "pages/areaManage/index" |
-       "pages/interestedTarget/interestedTargetUnit" |
-       "pages/interestedTarget/relPersonAdd" |
-       "pages/interestedTarget/relPersonApproval" |
-       "pages/interestedTarget/relUnitAdd" |
-       "pages/interestedTarget/relUnitApproval" |
-       "pages/interestedTarget/vertify" |
-       "pages/riskJob/index" |
-       "pages/riskJob/shareSignature" |
        "pages-sub/index";
 }
 interface RedirectToOptions extends NavigateToOptions {}
