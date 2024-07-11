@@ -19,8 +19,7 @@
   "easycom": {
     "autoscan": true,
     "custom": {
-      "^nut-(.*)?-(.*)": "nutui-uniapp/components/$1$2/$1$2.vue",
-      "^nut-(.*)": "nutui-uniapp/components/$1/$1.vue"
+      "^wd-(.*)": "wot-design-uni/components/wd-$1/wd-$1.vue"
     }
   },
   "pages": [
@@ -40,80 +39,17 @@
       }
     },
     {
-      "path": "pages/hi",
-      "type": "page"
-    },
-    {
       "path": "pages/login",
       "type": "page"
     },
     {
       "path": "pages/webview",
       "type": "page"
-    },
-    {
-      "path": "pages/areaManage/index",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "检查点"
-      }
-    },
-    {
-      "path": "pages/interestedTarget/interestedTargetUnit",
-      "type": "page"
-    },
-    {
-      "path": "pages/interestedTarget/relPersonAdd",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "作业人员申请"
-      }
-    },
-    {
-      "path": "pages/interestedTarget/relPersonApproval",
-      "type": "page",
-      "layout": "success",
-      "style": {
-        "navigationBarTitleText": "作业人员申请"
-      }
-    },
-    {
-      "path": "pages/interestedTarget/relUnitAdd",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "相关方单位申请"
-      }
-    },
-    {
-      "path": "pages/interestedTarget/relUnitApproval",
-      "type": "page",
-      "layout": "success",
-      "style": {
-        "navigationBarTitleText": "相关方单位申请"
-      }
-    },
-    {
-      "path": "pages/interestedTarget/vertify",
-      "type": "page"
-    },
-    {
-      "path": "pages/riskJob/index",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    },
-    {
-      "path": "pages/riskJob/shareSignature",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "分享签名"
-      }
     }
   ],
   "subPackages": [
     {
-      "root": "pages-sub",
+      "root": "pages-sub/pages",
       "pages": [
         {
           "path": "index",

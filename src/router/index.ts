@@ -1,18 +1,15 @@
 /*
  * @Author: houqiangxie
  * @Date: 2021-10-13 11:15:00
- * @LastEditTime: 2023-08-09 17:06:43
+ * @LastEditTime: 2024-07-10 17:34:18
  * @LastEditors: houqiangxie
  * @Description:
  * @FilePath: \uniapp-vue3-fant-ts\src\router\index.ts
  * 记得注释
  */
 
-// import { pages } from 'virtual:uni-pages'
-import pagesJson from '@/pages.json'
-import pagesJsonToRoutes from 'uni-parse-pages'
 const router = createRouter({
-  routes: [...pagesJsonToRoutes(pagesJson)]
+  routes: ROUTES
 })
 // router.beforeEach((to, from, next) => {
 //   const token = uni.getStorageSync("TOKEN")

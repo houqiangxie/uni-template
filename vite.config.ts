@@ -11,6 +11,7 @@ import UniLayouts from '@uni-helper/vite-plugin-uni-layouts'
 // import VueDevTools from 'vite-plugin-vue-devtools'
 import ReactivityTransform from '@vue-macros/reactivity-transform/vite'
 import vueJsx from '@vitejs/plugin-vue-jsx';
+import TransformPages from 'uni-read-pages-vite'
 // https://vitejs.dev/config/
 export default defineConfig({
   resolve: {
@@ -25,7 +26,7 @@ export default defineConfig({
      */
     UniPages({
       subPackages: [
-        'src/pages-sub',
+        'src/pages-sub/pages',
       ],
     }),
 
@@ -58,10 +59,10 @@ export default defineConfig({
       ],
       dts: 'src/auto-imports.d.ts',
       dirs: [
-        './src/composables',
-        './src/service',
-        './src/utils',
-        './src/enum',
+        './src/**/composables',
+        './src/**/service',
+        './src/**/utils',
+        './src/**/enum',
       ],
       vueTemplate: true,
     }),
@@ -73,6 +74,8 @@ export default defineConfig({
      */
     Components({
       dts: 'src/components.d.ts',
+      dirs: ['./src/**/components'],
+      exclude: [/[\\/]lime-echarts[\\/]/,],
     }),
 
     /**
@@ -89,6 +92,9 @@ export default defineConfig({
      */
     ReactivityTransform(),
   ],
+  define: {
+    ROUTES: new TransformPages().routes, // 注入路由表
+  },
 
   /**
    * Vitest
@@ -101,7 +107,7 @@ export default defineConfig({
     preprocessorOptions: {
       scss: {
         // additionalData: `  @import "@/uni.scss";`,
-        additionalData: ` @import '@/styles/custom_theme.scss'; @import 'nutui-uniapp/styles/variables.scss';`,
+        additionalData: ` @import '@/styles/custom_theme.scss';`,
       },
     },
   },

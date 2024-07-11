@@ -4,26 +4,26 @@
  * @Author: houqiangxie
  * @Date: 2023-08-07 20:48:35
  * @LastEditors: houqiangxie
- * @LastEditTime: 2023-09-14 10:59:48
--->
-<!--
- * @Descripttion: 
- * @version: 
- * @Author: houqiangxie
- * @Date: 2023-08-07 20:48:35
- * @LastEditors: houqiangxie
- * @LastEditTime: 2023-08-08 18:13:29
+ * @LastEditTime: 2024-07-11 10:11:50
 -->
 
 <template>
-  <div m="t-5">
-    <CommonForm :config="config" v-model:formModel="formModel" ref="form"/>
-    <!-- <uni-forms :modelValue="formModel">
-      <FileUpload v-model="formModel.fileList" />
-    </uni-forms> -->
-    <!-- <Sign v-model="formModel.url" showMode="vertical"></Sign> -->
-      <nut-button type="primary" @click="submit">主要按钮</nut-button>
-  </div>
+  <view m="t-5">
+    <wd-form ref="form" :model="formModel">
+      <wd-cell-group border>
+        <wd-cell title="你说呢" title-width="100px" prop="sex" required>
+          <ComSelect :columns="econNatureList" v-model="formModel.sex" multiple />
+        </wd-cell>
+        <wd-input label="用户名" label-width="100px" prop="value1" clearable v-model="formModel.value1"
+          placeholder="请输入用户名" :rules="[{ required: true, message: '请填写用户名' }]" />
+        <wd-input label="密码" label-width="100px" prop="value2" show-password clearable v-model="formModel.value2"
+          placeholder="请输入密码" :rules="[{ required: true, message: '请填写密码' }]" />
+      </wd-cell-group>
+      <view class="footer">
+        <wd-button type="primary" size="large" @click="handleSubmit" block>提交</wd-button>
+      </view>
+    </wd-form>
+  </view>
 </template>
 
 <route>
@@ -45,7 +45,7 @@
 <script setup lang="tsx">
 const value = ref('')
 const router = useRouter()
-const formModel = reactive({sex:1, fileList :{name:23,url:'3333'}})
+const formModel = reactive({sex:[], fileList :{name:23,url:'3333'}})
 const config = reactive([
   {
     label: '大多数', key: 'ee', component: 'input', required: true, on: {

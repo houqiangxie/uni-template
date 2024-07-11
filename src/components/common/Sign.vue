@@ -37,20 +37,31 @@ function uuid(len = 32, radix = null) {
 
 // 签完名的图片旋转处理
 function rotateBase64Img(src, edg, callback) {
+  // #ifdef MP
+  const canvas =uni.createOffscreenCanvas({type:'2d'})
+  // #endif
+  // #ifndef MP
   const canvas = document.createElement('canvas')
+  // #endif
   const ctx = canvas.getContext('2d')
   let imgW// 图片宽度
   let imgH// 图片高度
   let size// canvas初始大小
   if (edg % 90 != 0) {
-    console.error('旋转角度必须是90的倍数!')
+    
     throw '旋转角度必须是90的倍数!'
   }
   (edg < 0) && (edg = (edg % 360) + 360)
   const quadrant = (edg / 90) % 4 // 旋转象限
   const cutCoor = { sx: 0, sy: 0, ex: 0, ey: 0 } // 裁剪坐标
-  const image = new Image()
+   // #ifdef MP
+   const image = canvas.createImage()
+  // #endif
+  // #ifndef MP
+    const image = new Image()
+  // #endif
   image.crossOrigin = 'anonymous'
+  
   image.src = src
   image.onload = function () {
     imgW = image.width
@@ -126,7 +137,7 @@ export default {
     // },
     lineWidth: { // 画笔宽度
       type: Number,
-      default: 6,
+      default: 3,
     },
     lineColor: {
       type: String,
@@ -219,7 +230,7 @@ export default {
         this.height = canvas.offsetHeight
       }
       this.ctx.fillRect(0, 0, Number.parseInt(this.width), Number.parseInt(this.height))
-      console.log('this.height: ', this.height)
+      
       // #ifndef MP
       this.ctx.draw(true)
       // #endif
@@ -365,22 +376,24 @@ export default {
           canvas: this.canvas,
           // #endif
           // #ifndef MP
-          canvasId: this.myCanvasId,
           // #endif
+          canvasId: this.myCanvasId,
           // fileType:'jpg',
           quality: 1,
           success: async (res) => {
-            // console.log(res.tempFilePath)
+            
+            // 
             // #ifdef H5
-            const data = this.dataURLtoBlob(res.tempFilePath)
-            resolve({ errMsg: 'canvasToTempFilePath:ok', tempFilePath: URL.createObjectURL(data) })
+            // const data = this.dataURLtoBlob(res.tempFilePath)
+            // resolve({ errMsg: 'canvasToTempFilePath:ok', tempFilePath: URL.createObjectURL(data) })
+            // resolve({ errMsg: 'canvasToTempFilePath:ok', tempFilePath: URL.createObjectURL(data) })
             // #endif
             // #ifdef APP-PLUS||MP
-            resolve(res)
             // #endif
+            resolve(res)
           },
           fail(err) {
-            console.log(err)
+            
             reject(err)
           },
         })
@@ -388,10 +401,18 @@ export default {
     },
     saveImg() {
       this.save().then((res) => {
+        // 
+        //   this.fileList.push(transformObj({ url: res.tempFilePath }))
+        //   const val = this.limit == 1 ? this.fileList[0] : this.fileList
+        //   this.$emit('update:modelValue', val)
+        //   this.$emit('change', val)
+        //   this.itemRef?.onFieldChange?.(val)
+        //   this.$refs.popup.close()
         rotateBase64Img(res.tempFilePath, this.showMode == 'vertical' ? 270 : 0, (base64data) => {
           this.fileList.push(transformObj({ url: base64data }))
           const val = this.limit == 1 ? this.fileList[0] : this.fileList
           this.$emit('update:modelValue', val)
+          this.$emit('change', val)
           this.itemRef?.onFieldChange?.(val)
           this.$refs.popup.close()
         })
@@ -403,57 +424,70 @@ export default {
         //     this.itemRef?.onFieldChange?.(val)
         // }
       }).catch((err) => {
-        uni.showToast({
-          title: err.errMsg,
-          icon: 'none',
-        })
+        
+        // uni.showToast({
+        //   title: err.errMsg,
+        //   icon: 'none',
+        // })
       })
     },
     showPopup() {
       this.$refs.popup.open()
+      nextTick(()=>{
+        this.initCanvas()
+      })
     },
     spin() {
       this.showMode = this.showMode == 'vertical' ? 'horizontal' : 'vertical'
       this.clear()
+      nextTick(()=>{
+        this.initCanvas()
+      })
     },
     download(item) {
-      let url = item.url
-      // #ifdef H5
-      url = item.url.replace(/(.*)(\/file.*)/g, '$2')
-      new Download(url, item.fileName || '签名')
-      return
-      // #endif
-      uni.downloadFile({
-        url,
-        success: (res) => {
-          if (res.statusCode == 200) {
-
-          }
-        },
-      })
+      new Download(item.url, item.fileName||'签名')
     },
     // 移除某个文件
     clearImg(index) {
       this.fileList.splice(index, 1)
       const val = this.limit == 1 ? this.fileList[0] : this.fileList
       this.$emit('update:modelValue', val)
+      this.$emit('change', val)
       this.itemRef?.onFieldChange?.(val)
     },
+    previewImg(file){
+      const urls = this.fileList.map(item => item.url)
+      const current = urls.findIndex(url => url === file.url) || 0
+      uni.previewImage({
+        urls,
+        current,
+        longPressActions: {
+          itemList: ['发送给朋友', '保存图片', '收藏'],
+          success(data) {
+
+          },
+          fail(err) {
+
+          },
+        },
+      })
+    }
   },
 }
 </script>
 
 <template>
   <view class="sign-box">
-    <button v-if="!disabled && showTriggerBtn" size="mini" type="primary" class="h-7 w-16" @click="showPopup">
+    <button v-if="!disabled && showTriggerBtn" size="mini" type="primary"  @click="showPopup">
       签名
     </button>
+    <slot name="extend"></slot>
     <view v-for="item in fileList" class="box-border w-full flex items-center justify-between leading-8">
-      <image :src="item.url" :class="imgClass" mode="aspectFit" />
+      <image :src="item.url" :class="imgClass" mode="aspectFit" @click="previewImg(item)"/>
       <text text="[10px] [#999]">
         {{ item.time }}
       </text>
-      <view class="max-w-12">
+      <view class="max-w-12 flex items-center">
         <nut-icon v-if="disabled" name="download" color="#999" @click="download(item)" ></nut-icon>
         <nut-icon v-if="!disabled" name="circle-close" color="#f00" @click="clearImg(index)" ></nut-icon>
       </view>

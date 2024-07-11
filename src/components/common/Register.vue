@@ -4,12 +4,12 @@
  * @Author: houqiangxie
  * @Date: 2023-09-20 10:54:57
  * @LastEditors: houqiangxie
- * @LastEditTime: 2023-09-20 11:13:01
+ * @LastEditTime: 2024-07-10 17:16:46
 -->
 <template>
     <view>
-        <nut-toast ref="toastRef"/>
-        <nut-notify  ref="notifyRef"/>
+        <wd-toast ref="toastRef"/>
+        <wd-notify  ref="notifyRef"/>
     </view>
 </template>
 

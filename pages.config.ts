@@ -4,7 +4,7 @@
  * @Author: houqiangxie
  * @Date: 2023-08-07 20:48:34
  * @LastEditors: houqiangxie
- * @LastEditTime: 2023-09-11 16:48:20
+ * @LastEditTime: 2024-07-10 17:14:14
  */
 import { defineUniPages } from '@uni-helper/vite-plugin-uni-pages'
 
@@ -29,8 +29,7 @@ export default defineUniPages({
   "easycom": {
     "autoscan": true,
     "custom": {
-      "^nut-(.*)?-(.*)": "nutui-uniapp/components/$1$2/$1$2.vue",
-      "^nut-(.*)": "nutui-uniapp/components/$1/$1.vue"
+      "^wd-(.*)": "wot-design-uni/components/wd-$1/wd-$1.vue"
     }
   },
   pages: [],
