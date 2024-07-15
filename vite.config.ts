@@ -75,7 +75,7 @@ export default defineConfig({
     Components({
       dts: 'src/components.d.ts',
       dirs: ['./src/**/components'],
-      exclude: [/[\\/]lime-echarts[\\/]/,],
+      exclude: [/[\\/]lime-echart[\\/]/,],
     }),
 
     /**

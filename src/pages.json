@@ -39,6 +39,21 @@
       }
     },
     {
+      "path": "pages/indexeeey",
+      "type": "page",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "app-plus": {
+          "bounce": "none",
+          "titleNView": {
+            "backButton": {
+              "background": "#fff"
+            }
+          }
+        }
+      }
+    },
+    {
       "path": "pages/login",
       "type": "page"
     },

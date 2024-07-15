@@ -1,13 +1,12 @@
 /*
  * @Author: houqiangxie
  * @Date: 2021-10-13 11:15:00
- * @LastEditTime: 2024-07-10 17:34:18
+ * @LastEditTime: 2024-07-11 15:18:16
  * @LastEditors: houqiangxie
  * @Description:
  * @FilePath: \uniapp-vue3-fant-ts\src\router\index.ts
  * 记得注释
  */
-
 const router = createRouter({
   routes: ROUTES
 })

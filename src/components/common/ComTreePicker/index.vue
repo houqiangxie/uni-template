@@ -2,7 +2,7 @@
  * @Author: wuxiangqu
  * @Date: 2024-02-28 18:14:42
  * @LastEditors: houqiangxie
- * @LastEditTime: 2024-07-11 10:25:26
+ * @LastEditTime: 2024-07-11 14:10:39
  * @Description: 
 -->
 <script>
@@ -244,7 +244,7 @@ function filterTreeData(treeData, keyword) {
           </scroll-view>
         </view>
       </view>
-    </-popup>
+    </wd-popup>
   </view>
 </template>
 <style lang="scss" scoped>

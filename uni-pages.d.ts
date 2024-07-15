@@ -5,6 +5,7 @@
 
 interface NavigateToOptions {
   url: "/pages/index" |
+       "/pages/indexeeey" |
        "/pages/login" |
        "/pages/webview" |
        "/pages-sub/pages/index";
