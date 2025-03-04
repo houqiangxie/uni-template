@@ -5,10 +5,8 @@
 
 interface NavigateToOptions {
   url: "/pages/index" |
-       "/pages/indexeeey" |
-       "/pages/login" |
-       "/pages/webview" |
-       "/pages-sub/pages/index";
+       "/pages-sub/pages/index" |
+       "/pages-sub/pages/index2";
 }
 interface RedirectToOptions extends NavigateToOptions {}
 

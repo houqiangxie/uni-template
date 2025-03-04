@@ -216,3 +216,41 @@ export const setNavigationBarTitle = (title) => {
     // #endif
     uni.setNavigationBarTitle({title})
 }
+
+const hiddenBackButtonList = [
+    'pages/index',
+    'pages-sub/pages/index'
+]
+export function getCurrentPageConfig(pagesjson) {
+    // 获取页面栈
+    const pages = getCurrentPages();
+    if (!pages.length) return '';
+
+    // 获取当前页面对象
+    const currentPage = pages[pages.length - 1];
+    const currentRoute = currentPage.route; // 获取当前页面的路径
+    let title = '';
+    let config = null
+    // 在 pages.json 的 pages 和 subPackages 里查找
+    if (pagesjson.pages) {
+        pagesjson.pages.forEach(page => {
+            if (page.path === currentRoute) {
+                title = page.style?.navigationBarTitleText || '';
+                config = page
+            }
+        });
+    }
+    if (!title && pagesjson.subPackages) {
+        pagesjson.subPackages.forEach(pkg => {
+            pkg.pages.forEach(page => {
+                if (`${pkg.root}/${page.path}` === currentRoute) {
+                    title = page.style?.navigationBarTitleText || '';
+                    config = page
+                }
+            });
+        });
+    }
+    let showLeftButton=true
+    if (hiddenBackButtonList.includes(currentRoute)) showLeftButton=false
+    return { title, config, showLeftButton };
+}

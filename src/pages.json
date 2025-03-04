@@ -7,14 +7,7 @@
     "backgroundTextStyle": "@bgTxtStyle",
     "backgroundColorTop": "@bgColorTop",
     "backgroundColorBottom": "@bgColorBottom",
-    "app-plus": {
-      "bounce": "none",
-      "titleNView": {
-        "backButton": {
-          "background": "#fff"
-        }
-      }
-    }
+    "navigationStyle": "custom"
   },
   "easycom": {
     "autoscan": true,
@@ -26,49 +19,38 @@
     {
       "path": "pages/index",
       "type": "home",
+      "layout": "page",
       "style": {
-        "navigationBarTitleText": "首页",
-        "app-plus": {
-          "bounce": "none",
-          "titleNView": {
-            "backButton": {
-              "background": "#fff"
-            }
-          }
-        }
+        "navigationStyle": "custom"
       }
-    },
-    {
-      "path": "pages/indexeeey",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "首页",
-        "app-plus": {
-          "bounce": "none",
-          "titleNView": {
-            "backButton": {
-              "background": "#fff"
-            }
-          }
-        }
-      }
-    },
-    {
-      "path": "pages/login",
-      "type": "page"
-    },
-    {
-      "path": "pages/webview",
-      "type": "page"
     }
   ],
+  "__esModule": true,
   "subPackages": [
     {
       "root": "pages-sub/pages",
       "pages": [
         {
           "path": "index",
-          "type": "page"
+          "type": "page",
+          "style": {
+            "navigationBarTitleText": "首页"
+          }
+        },
+        {
+          "path": "index2",
+          "type": "page",
+          "style": {
+            "navigationBarTitleText": "fuye",
+            "app-plus": {
+              "bounce": "none",
+              "titleNView": {
+                "backButton": {
+                  "background": "#fff"
+                }
+              }
+            }
+          }
         }
       ]
     }

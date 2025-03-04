@@ -9,9 +9,10 @@ import Components from 'unplugin-vue-components/vite'
 import UniPages from '@uni-helper/vite-plugin-uni-pages'
 import UniLayouts from '@uni-helper/vite-plugin-uni-layouts'
 // import VueDevTools from 'vite-plugin-vue-devtools'
-import ReactivityTransform from '@vue-macros/reactivity-transform/vite'
-import vueJsx from '@vitejs/plugin-vue-jsx';
+// import ReactivityTransform from '@vue-macros/reactivity-transform/vite'
+// import vueJsx from '@vitejs/plugin-vue-jsx';
 import TransformPages from 'uni-read-pages-vite'
+import UniKuRoot from '@uni-ku/root'
 // https://vitejs.dev/config/
 export default defineConfig({
   resolve: {
@@ -63,6 +64,7 @@ export default defineConfig({
         './src/**/service',
         './src/**/utils',
         './src/**/enum',
+        './src/**/stores',
       ],
       vueTemplate: true,
     }),
@@ -83,14 +85,14 @@ export default defineConfig({
      * @see https://github.com/webfansplz/vite-plugin-vue-devtools
      */
     // VueDevTools(),
-
+    UniKuRoot(),
     uni(),
-    vueJsx(), //jsx
+    // vueJsx(), //jsx
     /**
      * Reactivity Transform
      * @see https://vue-macros.sxzz.moe/zh-CN/features/reactivity-transform.html
      */
-    ReactivityTransform(),
+    // ReactivityTransform(),
   ],
   define: {
     ROUTES: new TransformPages().routes, // 注入路由表
@@ -100,9 +102,6 @@ export default defineConfig({
    * Vitest
    * @see https://github.com/vitest-dev/vitest
    */
-  test: {
-    environment: 'jsdom',
-  },
   css: {
     preprocessorOptions: {
       scss: {

@@ -4,25 +4,25 @@
  * @Author: houqiangxie
  * @Date: 2023-08-07 20:48:34
  * @LastEditors: houqiangxie
- * @LastEditTime: 2024-07-11 10:05:54
+ * @LastEditTime: 2025-03-04 16:36:50
 -->
 <script lang="ts" setup>
-const themeVars = reactive({
+const router = useRouter()
+const currentPageConfig = inject('currentPageConfig')
+const handleClickLeft = () => {
+  router.back()
+}
 
-})
 </script>
 
 <template>
-  <div
-    class="app" :class="{
+  <div class="app flex flex-col" :class="{
       dark: isDark,
-    }"
-  >
-    <wd-config-provider :theme="isDark ? 'dark' : ''" :theme-vars="themeVars" class="h-full">
-      <!-- <Register/> -->
-      <main class="h-full overflow-hidden bg-[#f8f9fa]">
-        <slot />
-      </main>
-    </wd-config-provider>
+    }">
+    <wd-navbar :title="currentPageConfig.title" @click-left="handleClickLeft"
+      :leftArrow="currentPageConfig.showLeftButton" custom-class="bg-[#1575ff] text-white"></wd-navbar>
+    <main class="flex-1 overflow-hidden bg-[#f8f9fa]">
+      <slot />
+    </main>
   </div>
 </template>
