@@ -1,21 +1,12 @@
-<!--
- * @Descripttion:
- * @version:
- * @Author: houqiangxie
- * @Date: 2023-08-11 09:39:21
- * @LastEditors: houqiangxie
- * @LastEditTime: 2024-07-11 10:22:57
--->
-
 <script lang="ts" setup>
 const {
-  modelValue = '', columns = [], name = '', label = '', columnsFieldNames = { text: 'text', value: 'value', children: 'children' }, disabled, multiple = false, showSearch = false,
-  itemRef = {}, remote = false, remoteUrl = '', showType = 'default', placeholder = '请选择', customFunc=null,selectWord=false,beforeOpenFunc=null,showArrow=true,
+  modelValue = '', columns = [], name = '', label = '', labelKey="text",valueKey='value', disabled=false, multiple = false, showSearch = false,
+  remote = false, remoteUrl = '', showType = 'default', placeholder = '请选择', customFunc=null,selectWord=false,beforeOpenFunc=null,showArrow=true,
 }
-  = defineProps<{
-    modelValue: string | number | undefined, columns?: Array<Record<string, string | number>>, name?: string, label?: string, columnsFieldNames?: Record<string, string>,beforeOpenFunc?:any,showArrow?:boolean,
-    disabled?: boolean, multiple?: boolean, itemRef?: any, remote?: boolean, remoteUrl?: string, showType?: string, showSearch?: boolean, placeholder?: string, customFunc?: any,selectWord?:boolean
-  }>()
+= defineProps<{
+  modelValue: string | number | undefined, columns?: Array<Record<string, string | number>>, name?: string, label?: string, labelKey?:string,valueKey?:string,beforeOpenFunc?:any,showArrow?:boolean,
+  disabled?: boolean, multiple?: boolean, itemRef?: any, remote?: boolean, remoteUrl?: string, showType?: string, showSearch?: boolean, placeholder?: string, customFunc?: any,selectWord?:boolean
+}>()
 const emit = defineEmits<{ (e: 'update:modelValue', payload: any): void; (e: 'change', payload: any): void }>()
 const popup = ref()
 const data: { checkData: any; text: string; value: string | number } = reactive({
@@ -23,9 +14,8 @@ const data: { checkData: any; text: string; value: string | number } = reactive(
   value: '',
   text: '',
 })
-
-let isConfirm =false
-
+let isConfirm = false
+const tempProps=computed(()=>({name,label,labelKey,valueKey,disabled,multiple,showSearch,placeholder,showArrow}))
 // 单选多选选中事件
 function onGroupChange(e) {
   data.value = e.detail.value ?? (multiple ? [] : '')
@@ -38,14 +28,13 @@ function onConfirm() {
   if(showSearch&&selectWord&&!data.value){
     data.value=keyWord.value
     data.text=keyWord.value
-    data.checkData={[columnsFieldNames.value]:keyWord.value,[columnsFieldNames.text]:keyWord.value}
+    data.checkData={[valueKey]:keyWord.value,[labelKey]:keyWord.value}
   }
   isConfirm=true
   emit('update:modelValue', data.value)
   emit('change', data.checkData)
   onCancel()
   setTimeout(() => {
-    
     isConfirm=false
   }, 300);
 }
@@ -54,8 +43,8 @@ async function reShow(flag = false) {
   if(!flag)await onSearch()
   if ((multiple && data.value?.length > 0) || (!multiple && (data.value || data.value === 0 || data.value === '0'))) {
     
-    data.checkData = multiple ? filterList.value.filter(item => (data.value).includes(item[columnsFieldNames.value])) : filterList.value.find(item => item[columnsFieldNames.value] == data.value)
-    data.text = multiple ? data.checkData.map(item => item[columnsFieldNames.text]).join(',') : data.checkData?.[columnsFieldNames.text]
+    data.checkData = multiple ? filterList.value.filter(item => (data.value).includes(item[valueKey])) : filterList.value.find(item => item[valueKey] == data.value)
+    data.text = multiple ? data.checkData.map(item => item[labelKey]).join(',') : data.checkData?.[labelKey]
   }
   else {
     data.text = ''
@@ -75,9 +64,9 @@ function showPopUp() {
 const keyWord = ref('')
 const filterList = ref<Array<Record<string, string | number>>>([])
 async function onSearch() {
-  if (!remote)
-    filterList.value = columns.filter(c => (c[columnsFieldNames.text] as string)?.match(keyWord.value)) as []
+  if (!remote)filterList.value = columns.filter(c => (c[labelKey] as string)?.match(keyWord.value)) as []
   else await getRemoteData()
+  
 }
 
 // 获取用户信息
@@ -89,7 +78,7 @@ async function getRemoteData() {
     filterList.value = data
   }
   if(remote&&showSearch){
-    const valueIndex= filterList.value?.findIndex(d=>data.value==d[columnsFieldNames.value])
+    const valueIndex= filterList.value?.findIndex(d=>data.value==d[valueKey])
     if(valueIndex==-1) data.value=''
   }
 }
@@ -101,8 +90,8 @@ watch(() => columns, (newVal, oldVal) => {
 watch(() => modelValue, (newVal, oldVal) => {
   data.value = newVal
   if(!isConfirm){
-    if (remote && columnsFieldNames.text == columnsFieldNames.value&&!selectWord) keyWord.value = newVal
-    if(columnsFieldNames.text == columnsFieldNames.value){
+    if (remote && labelKey == valueKey&&!selectWord) keyWord.value = newVal
+    if(labelKey == valueKey){
       data.text=data.value
       if(selectWord) return;
     }
@@ -130,41 +119,40 @@ export default {
 </script>
 
 <template>
-  <view class="border-box h-6 w-full" :class="{ 'b-none': disabled }">
+  <view class="border-box h-6 w-full com-select" :class="{ 'b-none': disabled }">
     <view class="uni-input border-box h-full w-full flex items-center text-left text-sm" :value="data.text"
-      :disabled="disabled" placeholder="" @click="showPopUp">
+      @click="showPopUp">
       <slot>
-        <view class="flex flex-1 items-center text-[14px] w-0" :class="{ 'text-[#c0c4cc]': !data.text }"
-          :cancelButton='false'>
-          <text class="truncate">
-            {{ data.text || placeholder }}
-          </text>
-        </view>
-        <u-icon name="arrow-right" v-if="showArrow" />
+        <wd-input type="none" readonly v-model="data.text" custom-class="w-full" no-border
+          :disabled="tempProps.disabled" />
       </slot>
+      <slot><wd-icon name="arrow-right" color="#999" size="28rpx" v-if="!disabled"></wd-icon></slot>
     </view>
     <wd-popup v-model="show" position="bottom" custom-class="rounded-t-lg overflow-hidden">
       <view class="uni-list">
-        <view class="tree-bar">
-          <view class="tree-bar-cancel" @click="onCancel">取消</view>
-          <view class="tree-bar-submit" @click="onConfirm">确定</view>
+        <view class="h-10 relative">
+          <view class="flex items-center justify-center h-full text-base">请选择{{ tempProps.label }}</view>
+          <wd-icon name="close" size="16" color="#666" custom-class="absolute top-2 right-5" @click="onCancel" />
         </view>
-        <view v-if="showSearch" class="m-1">
-          <wd-search v-model="keyWord" placeholder="请输入关键词搜索" bg-color="#efefef" :showAction="false"
-            @change='onSearch'></wd-search>
-        </view>
+        <wd-search v-if="tempProps.showSearch" v-model="keyWord" placeholder="请输入关键词搜索" hide-cancel
+          placeholderLeft @change='onSearch' @clear='onSearch'></wd-search>
         <view class=" overflow-hidden">
-          <scroll-view class="h-80" scroll-x="false" scroll-y="true" >
+          <scroll-view class="h-80" scroll-x="false" scroll-y="true">
             <wd-radio-group v-if="!multiple" v-model="data.value" cell>
-              <wd-radio :value="item[columnsFieldNames.value]" :disabled="item.disabled"
-                v-for="(item, index) in filterList" :key="item[columnsFieldNames.value]">{{
-                item[columnsFieldNames.text] }}</wd-radio>
+              <wd-radio :value="item[tempProps.valueKey]" :disabled="item.disabled" v-for="(item, index) in filterList"
+                shape="dot" icon-placement="left" custom-class="overflow-hidden " :key="item[tempProps.valueKey]">{{
+                item[tempProps.labelKey] }}</wd-radio>
             </wd-radio-group>
             <wd-checkbox-group v-if="multiple" v-model="data.value" cell>
-                <wd-checkbox :modelValue="item[columnsFieldNames.value]" :disabled="item.disabled" v-for="(item, index) in filterList" :key="item[columnsFieldNames.value]">{{
-                  item[columnsFieldNames.text] }}</wd-checkbox>
+              <wd-checkbox :modelValue="item[tempProps.valueKey]" :disabled="item.disabled" shape="square"
+                custom-label-class="flex-1 truncate text-left" custom-class="!flex items-center overflow-hidden"
+                v-for="(item, index) in filterList">
+                {{ item[tempProps.labelKey] }}</wd-checkbox>
             </wd-checkbox-group>
           </scroll-view>
+        </view>
+        <view class="p-2">
+          <wd-button type="primary" block @click="onConfirm">确定</wd-button>
         </view>
       </view>
     </wd-popup>
@@ -188,6 +176,14 @@ export default {
   .tree-bar-submit {
     color: #1575ff;
     padding: 10rpx;
+  }
+}
+.com-select{
+  ::v-deep .wd-radio__label{
+    @apply truncate flex-1 pl-1;
+  }
+  ::v-deep .uni-input-wrapper, .uni-input-form{
+    @apply text-left items-center;
   }
 }
 </style>

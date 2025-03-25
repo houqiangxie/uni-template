@@ -1,10 +1,3 @@
-<!--
- * @Author: wuxiangqu
- * @Date: 2024-02-29 17:51:38
- * @LastEditors: houqiangxie
- * @LastEditTime: 2024-07-11 10:26:30
- * @Description:
--->
 <script setup>
 import treeItem from './TreeItem.vue'
 
@@ -33,6 +26,8 @@ const props = defineProps({
 
 const treeList = inject('treeList')
 const treeFlat = inject('treeFlat')
+const submit = inject('submit')
+const popUp = inject('popUp')
 function handelSwitch(item) {
   item.isShowChild = !item.isShowChild
 }
@@ -54,6 +49,7 @@ function handelSelect(item) {
           node.checkStatus = 0
       })
     }
+    !popUp&&submit()
   }
 }
 function setChildCheckStatus(parent, status) {
@@ -92,9 +88,9 @@ export default {
 
 </script>
 <template>
-  <view v-if="itemData.children && itemData.children.length > 0" class="tree-item">
+  <view v-if="itemData.children && itemData.children.length > 0" class="tree-item text-sm">
     <view class="item-title" :style="{ paddingLeft: `${30 * (itemData.level - 1)}rpx` }" @click="isOpend = !isOpend">
-      <view class="item-icon" :class="itemData?.isShowChild ? 'expanded' : ''" @click.stop="handelSwitch(itemData)">
+      <view class="item-icon" :class="itemData?.isShowChild ? '' : 'expanded'" @click.stop="handelSwitch(itemData)">
         <!-- <u-icon name="arrow-down-fill" size="28rpx" /> -->
         <view class="arrow" />
       </view>
@@ -104,8 +100,8 @@ export default {
       <view v-if="!props.onlyLastNode" class="item-check"
         :class="[props.multiple ? '' : 'circle', itemData.checkStatus ? 'checked' : '', itemData.disabled ? 'disabled' : '']"
         @click.stop="handelSelect(itemData)">
-        <wd-icon v-if="itemData.checkStatus === 1" name="minus" size="20rpx" color="#ffffff" />
-        <wd-icon v-else-if="itemData.checkStatus === 2" name="checkbox-mark" size="28rpx" color="#ffffff" />
+        <wd-icon v-if="itemData.checkStatus === 1" name="decrease" size="20rpx" color="#ffffff" />
+        <wd-icon v-else-if="itemData.checkStatus === 2" name="check" size="28rpx" color="#ffffff" />
       </view>
     </view>
     <view class="item-sub" :class="itemData?.isShowChild ? 'expanded' : ''">
@@ -113,7 +109,7 @@ export default {
         :only-last-node="props.onlyLastNode" :only-check-self="props.onlyCheckSelf" :multiple="props.multiple" />
     </view>
   </view>
-  <view v-else class="tree-item">
+  <view v-else class="tree-item text-sm">
     <view :class="['item-title', props.flat ? '!pl-0' : '']"
       :style="{ paddingLeft: `${30 * (itemData.level - 1)}rpx` }">
       <text class="item-name" @click.stop="handelSelect(itemData)">
@@ -121,8 +117,8 @@ export default {
       </text>
       <view class="item-check" :class="[props.multiple ? '' : 'circle', itemData.checkStatus ? 'checked' : '']"
         @click.stop="handelSelect(itemData)">
-        <wd-icon v-if="itemData.checkStatus === 1" name="minus" size="20rpx" color="#ffffff" />
-        <wd-icon v-else-if="itemData.checkStatus === 2" name="checkbox-mark" size="28rpx" color="#ffffff" />
+        <wd-icon v-if="itemData.checkStatus === 1" name="decrease" size="20rpx" color="#ffffff" />
+        <wd-icon v-else-if="itemData.checkStatus === 2" name="check" size="28rpx" color="#ffffff" />
       </view>
     </view>
   </view>
@@ -175,20 +171,21 @@ export default {
     .item-name {
       flex: 1;
       overflow: hidden;
+      text-align: left;
     }
 
     .item-check {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 30rpx;
-      height: 30rpx;
-      border: 1rpx solid #e0e0e0;
-      border-radius: 4rpx;
-
-      &.circle {
-        border-radius: 50%;
-      }
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30rpx;
+        height: 30rpx;
+        border: 1rpx solid #e0e0e0; 
+        border-radius: 4rpx;
+    
+        &.circle {
+            border-radius: 50%;
+        }
 
       &.checked {
         background-color: #1575ff;

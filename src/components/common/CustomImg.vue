@@ -26,6 +26,7 @@ export default {
 <script setup >
 const props = defineProps(['src','style','width','height'])
 const url = computed(() => getUrl(props.src))
+console.log('url: ', url);
 const imageWidth = ref(0)
 const imageHeight = ref(0)
 const onImageLoad=(event) =>{

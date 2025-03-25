@@ -8,7 +8,7 @@
 -->
 <script lang="ts" setup>
 const router = useRouter()
-const currentPageConfig = inject('currentPageConfig')
+const navbarStore = useNavbarStore()
 const handleClickLeft = () => {
   router.back()
 }
@@ -19,9 +19,9 @@ const handleClickLeft = () => {
   <div class="app flex flex-col" :class="{
       dark: isDark,
     }">
-    <wd-navbar :title="currentPageConfig.title" @click-left="handleClickLeft"
-      :leftArrow="currentPageConfig.showLeftButton" custom-class="bg-[#1575ff] text-white"></wd-navbar>
-    <main class="flex-1 overflow-hidden bg-[#f8f9fa]">
+    <wd-navbar :title="navbarStore.title" @click-left="handleClickLeft" :bordered="false"
+      :leftArrow="navbarStore.showLeftButton" custom-class="bg-[#1575ff] text-white"></wd-navbar>
+    <main class="flex-1  bg-[#f8f9fa]">
       <slot />
     </main>
   </div>

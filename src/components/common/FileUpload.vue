@@ -1,11 +1,3 @@
-<!--
- * @Descripttion:
- * @version:
- * @Author: houqiangxie
- * @Date: 2023-08-18 08:58:42
- * @LastEditors: houqiangxie
- * @LastEditTime: 2024-07-05 14:37:49
--->
 <script lang="ts" setup>
 let upUrl = ''
 // #if H5
@@ -51,7 +43,8 @@ const {
   itemRef = {},
   isCamera = false,
   showTip = false,
-} = defineProps<{ option?: any; instantly?: boolean; width?: number; height?: number; size?: number; limit?: number; multiple?: boolean; debug?: boolean; formats?: string; disabled?: boolean; itemRef?: any; modelValue: any; isCamera?: boolean; showTip?: boolean }>()
+  alignRight=false,
+} = defineProps<{ option?: any; instantly?: boolean; width?: number; height?: number; size?: number; limit?: number; multiple?: boolean; debug?: boolean; formats?: string; disabled?: boolean; itemRef?: any; modelValue: any; isCamera?: boolean; showTip?: boolean, alignRight?:boolean }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', payload: any): void
   (e: 'change', payload: any): void
@@ -68,10 +61,12 @@ function transformObj(file) {
   file.extname = file.url?.substring(file.url?.lastIndexOf('.') + 1) || ''
   
   file.name = file.fileName || file.name
+  file.fileSize = file.fileSize || file.size
   file.progress = 100
   file.isImg = ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'psd', 'svg', 'tiff'].includes(file.extname.toLowerCase())
-  if (file.url?.startsWith('/file'))
-    file.url = `/enterprise_h5${file.url}`
+  // if (file.url?.startsWith('/file'))
+  //   file.url = `/enterprise_h5${file.url}`
+  file.previewUrl=formatUrl(file.url)
   return file
 }
 
@@ -104,8 +99,8 @@ function download(item) {
 function previewImg(file) {
   if (!file.isImg)
     return
-  const urls = fileList.value.filter(item => item.isImg).map(item => item.url)
-  const current = urls.findIndex(url => url === file.url) || 0
+  const urls = fileList.value.filter(item => item.isImg).map(item => item.previewUrl)
+  const current = urls.findIndex(url => url === file.previewUrl) || 0
   uni.previewImage({
     urls,
     current,

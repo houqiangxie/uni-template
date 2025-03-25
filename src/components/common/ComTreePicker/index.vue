@@ -1,23 +1,11 @@
-<!--
- * @Author: wuxiangqu
- * @Date: 2024-02-28 18:14:42
- * @LastEditors: houqiangxie
- * @LastEditTime: 2024-07-11 14:10:39
- * @Description: 
--->
-<script>
-export default {
-  options: {
-    // 微信小程序中 options 选项
-    multipleSlots: true, //  在组件定义时的选项中启动多slot支持，默认启用
-    styleIsolation: "shared",  //  启动样式隔离。当使用页面自定义组件，希望父组件影响子组件样式时可能需要配置。具体配置选项参见：微信小程序自定义组件的样式
-    addGlobalClass: true, //  表示页面样式将影响到自定义组件，但自定义组件中指定的样式不会影响页面。这个选项等价于设置 styleIsolation: apply-shared
-    virtualHost: true,  //  将自定义节点设置成虚拟的，更加接近Vue组件的表现。我们不希望自定义组件的这个节点本身可以设置样式、响应 flex 布局等，而是希望自定义组件内部的第一层节点能够响应 flex 布局或者样式由自定义组件本身完全决定
-  },
-}
-
-</script>
 <script setup>
+defineOptions({
+   // 微信小程序中 options 选项
+    // multipleSlots: true, //  在组件定义时的选项中启动多slot支持，默认启用
+    styleIsolation: "shared",  //  启动样式隔离。当使用页面自定义组件，希望父组件影响子组件样式时可能需要配置。具体配置选项参见：微信小程序自定义组件的样式
+    // addGlobalClass: true, //  表示页面样式将影响到自定义组件，但自定义组件中指定的样式不会影响页面。这个选项等价于设置 styleIsolation: apply-shared
+    // virtualHost: true,  //  将自定义节点设置成虚拟的，更加接近Vue组件的表现。我们不希望自定义组件的这个节点本身可以设置样式、响应 flex 布局等，而是希望自定义组件内部的第一层节点能够响应 flex 布局或者样式由自定义组件本身完全决定
+})
 const props = defineProps({
   modelValue: {
     type: [Number, String, Array],
@@ -56,6 +44,16 @@ const props = defineProps({
   showTrigger: {
     type: Boolean,
     default: true
+  },
+  // 是否弹窗
+  popUp: {
+    type: Boolean,
+    default: true
+  },
+  // 禁用
+  disabled: {
+    type: Boolean,
+    default: false
   },
 })
 const emit = defineEmits(['update:modelValue'])
@@ -110,12 +108,14 @@ const submit = () => {
   let selectNodes = list.filter(item=>selectKeys.includes(item.id))
   emit('update:modelValue', props.multiple ? selectKeys : selectKeys[0] || '')
   emit('change',props.multiple ? selectNodes : selectNodes[0] || {})
-  close()
+  props.popUp && close()
 }
 const treeList = ref([])
 const treeFlat = ref([])
 provide('treeList', treeList)
 provide('treeFlat', treeFlat)
+provide('submit', submit)
+provide('popUp', props.popUp)
 const nodeList = computed(() => {
   let list = treeFlat.value
   let arr = []
@@ -165,7 +165,7 @@ const setParentCheckStatus = (child) => {
     }
   }
 }
-watch(() => [props.modelValue, props.data], (newVal) => {
+watch(() =>props.popUp? [props.modelValue, props.data]:props.data, (newVal) => {
   initData()
 }, { immediate: true })
 
@@ -213,8 +213,8 @@ function filterTreeData(treeData, keyword) {
 
 </script>
 <template>
-  <view class="com-tree-picker">
-    <view class="tree-content" @click.stop="open">
+  <view class="com-tree-picker" :class="{'h-full flex flex-col': !popUp}">
+    <view class="tree-content" @click.stop="open" v-if="popUp">
       <view class="select-box w-0" v-if="showTrigger">
         <template v-if="nodeList.length">
 
@@ -224,27 +224,50 @@ function filterTreeData(treeData, keyword) {
         </template>
         <view v-else class="placeholder">请选择</view>
       </view>
-      <slot><u-icon name="arrow-right" size="28rpx"></u-icon></slot>
+      <slot><wd-icon name="arrow-right" color="#999" size="28rpx" v-if="!disabled"></wd-icon></slot>
     </view>
-    <wd-popup v-model="show" @close="close" round="10rpx" position="bottom">
+    <wd-popup v-model="show" @close="close" round="10rpx" position="bottom"  v-if="popUp" custom-class="rounded-t-lg overflow-hidden">
       <view>
-        <view class="tree-bar">
-          <view class="tree-bar-cancel" @click="cancel">取消</view>
-          <view class="tree-bar-submit" @click="submit">确定</view>
+        <view class="h-10 relative">
+          <view class="flex items-center justify-center h-full text-base">请选择</view>
+          <wd-icon name="close" size="16" color="#666" custom-class="absolute top-2 right-5" @click="close" />
         </view>
-        <wd-search class='px-3 pt-2' v-if="showSearch" v-model="keyWord" placeholder="" bg-color="#efefef" :showAction="false" @change='onSearch'></wd-search>
+        <wd-search v-if="showSearch" v-model="keyWord" placeholder="请输入关键词搜索" hide-cancel
+          :placeholder-left="true" @change='onSearch' @clear='onSearch'></wd-search>
         <view class="tree-view">
           <scroll-view style="height: 100%" scroll-y>
             <view v-show="keyWord">
-              <tree-item v-for="item in filterList" :key="item.id" :itemData="item" :multiple="props.multiple" :onlyLastNode="props.onlyLastNode" :onlyCheckSelf="props.onlyCheckSelf" flat></tree-item>
+              <tree-item v-for="item in filterList" :key="item.id" :itemData="item" :multiple="props.multiple"
+                :onlyLastNode="props.onlyLastNode" :onlyCheckSelf="props.onlyCheckSelf" flat></tree-item>
             </view>
             <view v-show='!keyWord'>
-              <tree-item v-for="item in filterList" :key="item.id" :itemData="item" :multiple="props.multiple" :onlyLastNode="props.onlyLastNode" :onlyCheckSelf="props.onlyCheckSelf"></tree-item>
+              <tree-item v-for="item in filterList" :key="item.id" :itemData="item" :multiple="props.multiple"
+                :onlyLastNode="props.onlyLastNode" :onlyCheckSelf="props.onlyCheckSelf"></tree-item>
             </view>
           </scroll-view>
         </view>
+        <view class="p-2">
+          <wd-button type="primary" block @click="submit">确定</wd-button>
+        </view>
       </view>
     </wd-popup>
+    <view v-else class="flex-1 flex flex-col overflow-hidden">
+      <wd-search v-if="showSearch" v-model="keyWord" placeholder="请输入关键词搜索" hide-cancel
+          :placeholder-left="true" @change='onSearch' @clear='onSearch'></wd-search>
+      <!-- <view class="truncate h-5">{{ formatText }}</view> -->
+      <view class="tree-view flex-1 py-0 overflow-hidden">
+        <scroll-view style="height: 100%" scroll-y>
+          <view v-show="keyWord">
+            <tree-item v-for="item in filterList" :key="item.id" :itemData="item" :multiple="props.multiple"
+              :onlyLastNode="props.onlyLastNode" :onlyCheckSelf="props.onlyCheckSelf" flat></tree-item>
+          </view>
+          <view v-show='!keyWord'>
+            <tree-item v-for="item in filterList" :key="item.id" :itemData="item" :multiple="props.multiple"
+              :onlyLastNode="props.onlyLastNode" :onlyCheckSelf="props.onlyCheckSelf"></tree-item>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
   </view>
 </template>
 <style lang="scss" scoped>
@@ -315,6 +338,9 @@ function filterTreeData(treeData, keyword) {
   .tree-view {
     height: 400rpx;
     padding: 20rpx;
+  }
+  ::v-deep .uni-input-wrapper, .uni-input-form{
+    @apply text-left items-center;
   }
 }
 </style>

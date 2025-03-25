@@ -7,13 +7,12 @@
  * @LastEditTime: 2025-03-04 14:51:10
 -->
 <template>
-     <KuRootView />
 </template>
 
 <script setup lang="ts">
 </script>
 
 <style lang="scss">
-@import './styles/main.scss';
+@use './styles/main.scss';
 </style>
 

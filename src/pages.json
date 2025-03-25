@@ -25,7 +25,6 @@
       }
     }
   ],
-  "__esModule": true,
   "subPackages": [
     {
       "root": "pages-sub/pages",
@@ -38,19 +37,16 @@
           }
         },
         {
-          "path": "index2",
+          "path": "test",
           "type": "page",
           "style": {
-            "navigationBarTitleText": "fuye",
-            "app-plus": {
-              "bounce": "none",
-              "titleNView": {
-                "backButton": {
-                  "background": "#fff"
-                }
-              }
-            }
+            "navigationBarTitleText": "测试"
           }
+        },
+        {
+          "path": "login/index",
+          "type": "page",
+          "layout": "custom"
         }
       ]
     }
