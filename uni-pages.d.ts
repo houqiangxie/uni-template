@@ -5,9 +5,9 @@
 
 interface NavigateToOptions {
   url: "/pages/index" |
-       "/pages-sub/pages/index" |
-       "/pages-sub/pages/test" |
-       "/pages-sub/pages/login/index";
+       "/pages/login/index" |
+       "/pages-echarts/ComChart" |
+       "/pages-test/pages/form-demo/index";
 }
 interface RedirectToOptions extends NavigateToOptions {}
 

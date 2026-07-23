@@ -24,9 +24,9 @@ export function getConfigCol(key: string, list: Array<{ [key: string]: string }>
 
 // 文件下载
 export class Download {
-  constructor(url: string, name: string = '下载文件') {
+  constructor(url: string, name: string = '下载文件',flag=true) {
     // const isMp4 = url?.includes('.mp4')
-    url = formatUrl(url)
+    if(flag)url = formatUrl(url)
     // if (isMp4) {
     //   uni.setStorageSync('webviewUrl', url)
     //   uni.navigateTo({ url: `/pages-sub1/webview?url=${baseUrl}/wxStaticFile/video.html` })
@@ -142,9 +142,17 @@ export function dateFormat(time, type = 'date') {
 }
 
 export function getUrl(url) {
-  // return new URL(`/src/static/${url}`, import.meta.url).href
-  return baseUrl +`/wxStaticFile/static/${url}`
+  if (!url) return ''
+  // if (isDevelopment) {
+  //   return new URL (`${url}`, staticBaseUrl).href
+  // }
+  // return new URL(`/wxStaticFile/static/station_h5/${url}`, 'http://172.17.30.234:5888').href
+  // return new URL(`/wxStaticFile/static/station_h5/${url}`, baseUrl).href
+  return `/static/${url}`
 }
+
+
+
 
 // 根据key,返回所有父级数据
 export const treeFindPath = (tree: any, func: Function, path: any[] = []): any => {
@@ -161,6 +169,22 @@ export const treeFindPath = (tree: any, func: Function, path: any[] = []): any =
   }
   return [];
 };
+
+// 根据id 获取当前递归项数据
+export const findItemById=(list, id)=> {
+  for (const item of list) {
+    if (item.id === id) {
+      return item;
+    }
+    if (item.children) {
+      const found = findItemById(item.children, id);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return null;
+}
 
 
 export const  debounce=(func, delay, immediate)=> {

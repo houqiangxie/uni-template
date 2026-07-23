@@ -1,13 +1,49 @@
 <script lang="ts" setup>
-const {
-  modelValue = '', columns = [], name = '', label = '', labelKey="text",valueKey='value', disabled=false, multiple = false, showSearch = false,
-  remote = false, remoteUrl = '', showType = 'default', placeholder = '请选择', customFunc=null,selectWord=false,beforeOpenFunc=null,showArrow=true,
-}
-= defineProps<{
-  modelValue: string | number | undefined, columns?: Array<Record<string, string | number>>, name?: string, label?: string, labelKey?:string,valueKey?:string,beforeOpenFunc?:any,showArrow?:boolean,
-  disabled?: boolean, multiple?: boolean, itemRef?: any, remote?: boolean, remoteUrl?: string, showType?: string, showSearch?: boolean, placeholder?: string, customFunc?: any,selectWord?:boolean
-}>()
+
+const props = withDefaults(
+  defineProps<{
+    modelValue: string | number | undefined
+    columns?: Array<Record<string, string | number>>
+    name?: string
+    label?: string
+    labelKey?: string
+    valueKey?: string
+    beforeOpenFunc?: any
+    showArrow?: boolean
+    disabled?: boolean
+    multiple?: boolean
+    itemRef?: any
+    remote?: boolean
+    remoteUrl?: string
+    showType?: string
+    showSearch?: boolean
+    placeholder?: string
+    customFunc?: any
+    selectWord?: boolean
+  }>(),
+  {
+    modelValue: '',
+    columns: [],
+    name: '',
+    label: '',
+    labelKey: 'text',
+    valueKey: 'value',
+    disabled: false,
+    multiple: false,
+    showSearch: false,
+    remote: false,
+    remoteUrl: '',
+    showType: 'default',
+    placeholder: '请选择',
+    customFunc: null,
+    selectWord: false,
+    beforeOpenFunc: null,
+    showArrow: true,
+  }
+)
+
 const emit = defineEmits<{ (e: 'update:modelValue', payload: any): void; (e: 'change', payload: any): void }>()
+
 const popup = ref()
 const data: { checkData: any; text: string; value: string | number } = reactive({
   checkData: {},
@@ -15,48 +51,52 @@ const data: { checkData: any; text: string; value: string | number } = reactive(
   text: '',
 })
 let isConfirm = false
-const tempProps=computed(()=>({name,label,labelKey,valueKey,disabled,multiple,showSearch,placeholder,showArrow}))
-// 单选多选选中事件
-function onGroupChange(e) {
-  data.value = e.detail.value ?? (multiple ? [] : '')
-}
 function onCancel() {
   show.value = false
 }
 function onConfirm() {
   reShow(true)
-  if(showSearch&&selectWord&&!data.value){
-    data.value=keyWord.value
-    data.text=keyWord.value
-    data.checkData={[valueKey]:keyWord.value,[labelKey]:keyWord.value}
+  if (props.showSearch && props.selectWord && !data.value) {
+    data.value = keyWord.value
+    data.text = keyWord.value
+    data.checkData = {
+      [props.valueKey]: keyWord.value,
+      [props.labelKey]: keyWord.value,
+    }
   }
-  isConfirm=true
+  isConfirm = true
   emit('update:modelValue', data.value)
   emit('change', data.checkData)
   onCancel()
   setTimeout(() => {
-    isConfirm=false
-  }, 300);
+    isConfirm = false
+  }, 300)
 }
+
 // 回显
 async function reShow(flag = false) {
-  if(!flag)await onSearch()
-  if ((multiple && data.value?.length > 0) || (!multiple && (data.value || data.value === 0 || data.value === '0'))) {
-    
-    data.checkData = multiple ? filterList.value.filter(item => (data.value).includes(item[valueKey])) : filterList.value.find(item => item[valueKey] == data.value)
-    data.text = multiple ? data.checkData.map(item => item[labelKey]).join(',') : data.checkData?.[labelKey]
-  }
-  else {
+  if (!flag) await onSearch()
+  if (
+    (props.multiple && data.value?.length > 0) ||
+    (!props.multiple && (data.value || data.value === 0 || data.value === '0'))
+  ) {
+    data.checkData = props.multiple
+      ? filterList.value.filter((item) => data.value.includes(item[props.valueKey]))
+      : filterList.value.find((item) => item[props.valueKey] == data.value)
+    data.text = props.multiple
+      ? data.checkData.map((item) => item[props.labelKey]).join(',')
+      : data.checkData?.[props.labelKey]
+  } else {
     data.text = ''
   }
-  // flag&&itemRef.onFieldChange(data.value)
 }
+
 const show = ref(false)
 function showPopUp() {
-  beforeOpenFunc?.()
-  if (disabled)return
-  show.value=true
-  if(!remote)keyWord.value = ''
+  props.beforeOpenFunc?.()
+  if (props.disabled) return
+  show.value = true
+  if (!props.remote) keyWord.value = ''
   onSearch()
 }
 
@@ -64,90 +104,141 @@ function showPopUp() {
 const keyWord = ref('')
 const filterList = ref<Array<Record<string, string | number>>>([])
 async function onSearch() {
-  if (!remote)filterList.value = columns.filter(c => (c[labelKey] as string)?.match(keyWord.value)) as []
+  if (!props.remote)
+    filterList.value = props.columns.filter((c) =>
+      (c[props.labelKey] as string)?.match(keyWord.value)
+    ) as []
   else await getRemoteData()
-  
 }
 
 // 获取用户信息
 async function getRemoteData() {
-  if (showType == 'relUnit') { filterList.value = await getRelUnitListByKeyWord(keyWord.value) }
-  else if (customFunc) { filterList.value = await customFunc(keyWord.value) }
-  else {
-    const { data } = await post(remoteUrl, { pageNum: 1, pageSize: 20, enterpriseName: keyWord.value })
+  if (props.customFunc) {
+    filterList.value = await props.customFunc(keyWord.value)
+  } else {
+    const { data } = await post(props.remoteUrl, {
+      pageNum: 1,
+      pageSize: 20,
+      enterpriseName: keyWord.value,
+    })
     filterList.value = data
   }
-  if(remote&&showSearch){
-    const valueIndex= filterList.value?.findIndex(d=>data.value==d[valueKey])
-    if(valueIndex==-1) data.value=''
+  if (props.remote && props.showSearch) {
+    const valueIndex = filterList.value?.findIndex((d) => data.value == d[props.valueKey])
+    if (valueIndex == -1) data.value = ''
   }
 }
 
-watch(() => columns, (newVal, oldVal) => {
-  // 处理异步数据回显
-  reShow()
-})
-watch(() => modelValue, (newVal, oldVal) => {
-  data.value = newVal
-  if(!isConfirm){
-    if (remote && labelKey == valueKey&&!selectWord) keyWord.value = newVal
-    if(labelKey == valueKey){
-      data.text=data.value
-      if(selectWord) return;
-    }
-    // 处理异步数据回显
-    reShow()
-  }
-},{immediate:true})
 
-// watchEffect(()=>{
-//     reShow()
-// })
+watch(
+  () => props.columns,
+  (newVal, oldVal) => {
+    reShow()
+  },
+  { deep: true }
+)
+watch(
+  () => props.modelValue,
+  (newVal, oldVal) => {
+    data.value = newVal
+    if (!isConfirm) {
+      if (props.remote && props.labelKey == props.valueKey && !props.selectWord)
+        keyWord.value = newVal
+      if (props.labelKey == props.valueKey) {
+        data.text = data.value
+        if (props.selectWord) return
+      }
+      reShow()
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <script lang="ts">
 export default {
   options: {
-    // 微信小程序中 options 选项
-    multipleSlots: true, //  在组件定义时的选项中启动多slot支持，默认启用
-    styleIsolation: "shared",  //  启动样式隔离。当使用页面自定义组件，希望父组件影响子组件样式时可能需要配置。具体配置选项参见：微信小程序自定义组件的样式
-    addGlobalClass: true, //  表示页面样式将影响到自定义组件，但自定义组件中指定的样式不会影响页面。这个选项等价于设置 styleIsolation: apply-shared
-    virtualHost: true,  //  将自定义节点设置成虚拟的，更加接近Vue组件的表现。我们不希望自定义组件的这个节点本身可以设置样式、响应 flex 布局等，而是希望自定义组件内部的第一层节点能够响应 flex 布局或者样式由自定义组件本身完全决定
+    multipleSlots: true,
+    styleIsolation: 'shared',
+    addGlobalClass: true,
+    virtualHost: true,
   },
 }
-
 </script>
 
 <template>
-  <view class="border-box h-6 w-full com-select" :class="{ 'b-none': disabled }">
-    <view class="uni-input border-box h-full w-full flex items-center text-left text-sm" :value="data.text"
-      @click="showPopUp">
+  <view class="border-box h-6 w-full com-select" :class="{ 'b-none': props.disabled }">
+    <view
+      class="uni-input border-box h-full w-full flex items-center  text-sm"
+      :value="data.text"
+      @click="showPopUp"
+    >
       <slot>
-        <wd-input type="none" readonly v-model="data.text" custom-class="w-full" no-border
-          :disabled="tempProps.disabled" />
+        <wd-input
+          type="none"
+          readonly
+          v-model="data.text"
+          custom-class="w-full"
+          no-border
+          :disabled="disabled"
+          :placeholder="placeholder"
+        />
       </slot>
-      <slot><wd-icon name="arrow-right" color="#999" size="28rpx" v-if="!disabled"></wd-icon></slot>
+      <slot name="right">
+        <wd-icon v-if="showArrow && !props.disabled" name="right" color="#999" size="28rpx" />
+      </slot>
     </view>
     <wd-popup v-model="show" position="bottom" custom-class="rounded-t-lg overflow-hidden">
       <view class="uni-list">
         <view class="h-10 relative">
-          <view class="flex items-center justify-center h-full text-base">请选择{{ tempProps.label }}</view>
-          <wd-icon name="close" size="16" color="#666" custom-class="absolute top-2 right-5" @click="onCancel" />
+          <view class="flex items-center justify-center h-full text-base">
+            请选择{{ label }}
+          </view>
+          <wd-icon
+            name="close"
+            size="16"
+            color="#666"
+            custom-class="absolute top-3 right-5"
+            @click="onCancel"
+          />
         </view>
-        <wd-search v-if="tempProps.showSearch" v-model="keyWord" placeholder="请输入关键词搜索" hide-cancel
-          placeholderLeft @change='onSearch' @clear='onSearch'></wd-search>
+        <wd-search
+          v-if="showSearch"
+          v-model="keyWord"
+          placeholder="请输入关键词搜索"
+          hide-cancel
+          custom-class="pop-search"
+          :placeholder-left="true"
+          @search="onSearch"
+          @clear="onSearch"
+        ></wd-search>
         <view class=" overflow-hidden">
           <scroll-view class="h-80" scroll-x="false" scroll-y="true">
-            <wd-radio-group v-if="!multiple" v-model="data.value" cell>
-              <wd-radio :value="item[tempProps.valueKey]" :disabled="item.disabled" v-for="(item, index) in filterList"
-                shape="dot" icon-placement="left" custom-class="overflow-hidden " :key="item[tempProps.valueKey]">{{
-                item[tempProps.labelKey] }}</wd-radio>
+            <wd-radio-group v-if="!props.multiple" v-model="data.value">
+              <wd-radio
+                :value="item[valueKey]"
+                :disabled="item.disabled"
+                v-for="(item, index) in filterList"
+                type="dot"
+                placement="left"
+                custom-class="overflow-hidden "
+                :key="item[valueKey]"
+              >
+                {{ item[labelKey] }}
+              </wd-radio>
             </wd-radio-group>
-            <wd-checkbox-group v-if="multiple" v-model="data.value" cell>
-              <wd-checkbox :modelValue="item[tempProps.valueKey]" :disabled="item.disabled" shape="square"
-                custom-label-class="flex-1 truncate text-left" custom-class="!flex items-center overflow-hidden"
-                v-for="(item, index) in filterList">
-                {{ item[tempProps.labelKey] }}</wd-checkbox>
+            <wd-checkbox-group v-if="props.multiple" v-model="data.value">
+              <wd-checkbox
+                :name="item[valueKey]"
+                :disabled="item.disabled"
+                type="square"
+                custom-label-class="flex-1 truncate text-left"
+                custom-class="!flex items-center overflow-hidden"
+                v-for="(item, index) in filterList"
+                :key="item[valueKey]"
+              >
+                {{ item[labelKey] }}
+              </wd-checkbox>
             </wd-checkbox-group>
           </scroll-view>
         </view>
@@ -174,16 +265,25 @@ export default {
   }
 
   .tree-bar-submit {
-    color: #1575ff;
+    color: #108EE9;
     padding: 10rpx;
   }
 }
-.com-select{
-  ::v-deep .wd-radio__label{
-    @apply truncate flex-1 pl-1;
+.com-select {
+  :deep(.wd-radio){
+    padding: 4px 8px;
   }
-  ::v-deep .uni-input-wrapper, .uni-input-form{
-    @apply text-left items-center;
+  :deep(.wd-checkbox){
+    padding: 4px 8px;
+  }
+  ::v-deep .wd-radio__label {
+    // @apply truncate flex-1 pl-1 text-left;
+    flex: 1;
+    padding-left: 1rpx;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 </style>

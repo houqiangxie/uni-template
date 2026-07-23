@@ -10,7 +10,7 @@ import { defineUniPages } from '@uni-helper/vite-plugin-uni-pages'
 
 export default defineUniPages({
   globalStyle: {
-    'navigationBarTitleText': '监管执法',
+    'navigationBarTitleText': 'Uni 模板',
     'navigationBarBackgroundColor': '@navBgColor',
     'navigationBarTextStyle': '@navTxtStyle',
     'backgroundColor': '@bgColor',
@@ -30,8 +30,14 @@ export default defineUniPages({
   "easycom": {
     "autoscan": true,
     "custom": {
-      "^wd-(.*)": "wot-design-uni/components/wd-$1/wd-$1.vue"
+      "^wd-(.*)": "@wot-ui/ui/components/wd-$1/wd-$1.vue",
     }
   },
   pages: [],
+  preloadRule: {
+    'pages/index': {
+      network: 'all',
+      packages: ['pages-echarts', 'pages-test'],
+    },
+  }
 })

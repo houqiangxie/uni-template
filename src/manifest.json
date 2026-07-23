@@ -1,13 +1,12 @@
 {
-    "name" : "szsti_regulatory_enterprise_app",
+    "name" : "Uni 模板",
     "appid" : "__UNI__003FC41",
-    "description" : "uszsti_regulatory_enterprise_app !!!",
+    "description" : "uni-app 基础模板",
     "versionName" : "1.0.0",
     "versionCode" : "100",
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
-        "darkmode" : true,
         "usingComponents" : true,
         "nvueStyleCompiler" : "uni-app",
         "compilerVersion" : 3,
@@ -48,18 +47,41 @@
         }
     },
     "h5" : {
-        "darkmode" : true
+        "sdkConfigs": {
+            "maps": {                
+                "amap": {
+                    "key": "8fac72005c6e492a3076c6a1f3b67649",
+                    "securityJsCode": "",
+                    "serviceHost": ""
+                }
+            }
+        }
     },
     /* 快应用特有相关 */
     "quickapp" : {},
     /* 小程序特有相关 */
     "mp-weixin" : {
-        "darkmode" : true,
-        "appid" : "",
-        "setting" : {
-            "urlCheck" : false
+        "appid" : "wx364293d68cdce738",
+        "setting": {
+            "urlCheck": false
         },
-        "usingComponents" : true
+        "usingComponents": true,
+        "optimization": {
+            "subpackages": true
+        },
+        "sdkConfigs": {
+            "maps": {
+                // "amap": {
+                //     "key": "70eb9a87435f285cbaf1e6aec47ee032",
+                //     "securityJsCode": "305d948e3663e5fe8764fff5efdd5101",
+                //     "serviceHost": ""
+                // }
+            }
+        },
+        "lazyCodeLoading": "requiredComponents",
+        "mergeVirtualHostAttributes": true,
+        "virtualHost": true,
+        "styleIsolation": "shared"
     },
     "mp-alipay" : {
         "usingComponents" : true

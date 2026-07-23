@@ -10,9 +10,15 @@
 </template>
 
 <script setup lang="ts">
+import { useToast, useNotify, useDialog } from '@wot-ui/ui'
+uni.$toast = useToast()
+uni.$notify = useNotify()
+uni.$dialog = useDialog()
+onMounted(() => {
+})
 </script>
 
 <style lang="scss">
-@use './styles/main.scss';
+@import './styles/main.scss';
 </style>
 

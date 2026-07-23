@@ -1,6 +1,6 @@
 {
   "globalStyle": {
-    "navigationBarTitleText": "监管执法",
+    "navigationBarTitleText": "Uni 模板",
     "navigationBarBackgroundColor": "@navBgColor",
     "navigationBarTextStyle": "@navTxtStyle",
     "backgroundColor": "@bgColor",
@@ -12,41 +12,58 @@
   "easycom": {
     "autoscan": true,
     "custom": {
-      "^wd-(.*)": "wot-design-uni/components/wd-$1/wd-$1.vue"
+      "^wd-(.*)": "@wot-ui/ui/components/wd-$1/wd-$1.vue"
     }
   },
   "pages": [
     {
       "path": "pages/index",
       "type": "home",
-      "layout": "page",
+      "layout": "default",
       "style": {
-        "navigationStyle": "custom"
+        "navigationBarTitleText": "首页",
+        "showLeftButton": false
+      }
+    },
+    {
+      "path": "pages/login/index",
+      "type": "page",
+      "style": {
+        "navigationStyle": "custom",
+        "hideNavbar": true
       }
     }
   ],
+  "preloadRule": {
+    "pages/index": {
+      "network": "all",
+      "packages": [
+        "pages-echarts",
+        "pages-test"
+      ]
+    }
+  },
+  "__esModule": true,
   "subPackages": [
     {
-      "root": "pages-sub/pages",
+      "root": "pages-echarts",
       "pages": [
         {
-          "path": "index",
-          "type": "page",
-          "style": {
-            "navigationBarTitleText": "首页"
-          }
-        },
+          "path": "ComChart",
+          "type": "page"
+        }
+      ]
+    },
+    {
+      "root": "pages-test",
+      "pages": [
         {
-          "path": "test",
+          "path": "pages/form-demo/index",
           "type": "page",
+          "layout": "default",
           "style": {
-            "navigationBarTitleText": "测试"
+            "navigationBarTitleText": "表单示例"
           }
-        },
-        {
-          "path": "login/index",
-          "type": "page",
-          "layout": "custom"
         }
       ]
     }

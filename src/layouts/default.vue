@@ -16,13 +16,13 @@ const handleClickLeft = () => {
 </script>
 
 <template>
-  <div class="app flex flex-col" :class="{
+  <view class="app flex flex-col" :class="{
       dark: isDark,
     }">
-    <wd-navbar :title="navbarStore.title" @click-left="handleClickLeft" :bordered="false"
-      :leftArrow="navbarStore.showLeftButton" custom-class="bg-[#1575ff] text-white"></wd-navbar>
-    <main class="flex-1  bg-[#f8f9fa]">
+    <wd-navbar v-if="!navbarStore.hideNavbar" :title="navbarStore.title" @click-left="handleClickLeft" :bordered="false" safeAreaInsetTop
+      :leftArrow="navbarStore.showLeftButton" ></wd-navbar>
+    <main class="flex-1   overflow-hidden">
       <slot />
     </main>
-  </div>
+  </view>
 </template>
