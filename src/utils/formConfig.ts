@@ -202,6 +202,7 @@ export function generateDefaultPlaceholder(item: FormConfigItem) {
     input: '请输入',
     textarea: '请输入',
     upload: '请上传',
+    'chunk-upload': '请上传',
     select: '请选择',
     radio: '请选择',
     checkbox: '请选择',
@@ -223,6 +224,7 @@ export function getDefaultValidator(item: FormConfigItem) {
     case 'sign':
       return (v: any) => arrayRequired(v)
     case 'upload':
+    case 'chunk-upload':
       if (!item.limit)
         item.limit = 9
       return item.limit > 1 ? (v: any) => arrayRequired(v) : (v: any) => v?.filePath

@@ -3,4 +3,6 @@ export const routeTitleMap: Record<string, string> = {
   'pages/index': 'route.home',
   'pages/login/index': 'route.login',
   'pages-test/pages/form-demo/index': 'route.formDemo',
+  'pages-test/pages/chunk-upload-demo/index': 'route.chunkUploadDemo',
+  'pages-test/pages/upload-center-demo/index': 'route.uploadCenterDemo',
 }

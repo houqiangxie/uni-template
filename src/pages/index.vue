@@ -23,6 +23,14 @@ function goFormDemo() {
   router.push({ path: '/pages-test/pages/form-demo/index' })
 }
 
+function goChunkUploadDemo() {
+  router.push({ path: '/pages-test/pages/chunk-upload-demo/index' })
+}
+
+function goUploadCenterDemo() {
+  router.push({ path: '/pages-test/pages/upload-center-demo/index' })
+}
+
 async function handleLogout() {
   uni.showModal({
     title: t('common.tip'),
@@ -61,6 +69,8 @@ async function handleLogout() {
     <view class="home-card home-demos">
       <view class="home-demos__title">{{ t('home.demos') }}</view>
       <wd-cell :title="t('home.formDemo')" is-link @click="goFormDemo" />
+      <wd-cell :title="t('home.chunkUploadDemo')" is-link @click="goChunkUploadDemo" />
+      <wd-cell :title="t('home.uploadCenterDemo')" is-link @click="goUploadCenterDemo" />
     </view>
 
     <view class="home-actions">

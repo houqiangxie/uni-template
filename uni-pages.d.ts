@@ -7,6 +7,8 @@ interface NavigateToOptions {
   url: "/pages/index" |
        "/pages/login/index" |
        "/pages-echarts/ComChart" |
+       "/pages-test/pages/chunk-upload-demo/index" |
+       "/pages-test/pages/upload-center-demo/index" |
        "/pages-test/pages/form-demo/index";
 }
 interface RedirectToOptions extends NavigateToOptions {}

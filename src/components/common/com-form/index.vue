@@ -60,6 +60,12 @@
                         v-bind="pickChildProps(row.item, row.fieldIndex)"
                         @change="row.item.change"
                     />
+                    <ComChunkUpload
+                        v-else-if="row.item.compType === 'chunk-upload'"
+                        v-model="getModel(row)[row.item.key]"
+                        v-bind="pickChildProps(row.item, row.fieldIndex)"
+                        @change="row.item.change"
+                    />
                     <Sign
                         v-else-if="row.item.compType === 'sign'"
                         v-model="getModel(row)[row.item.key]"

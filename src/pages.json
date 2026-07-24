@@ -58,6 +58,22 @@
       "root": "pages-test",
       "pages": [
         {
+          "path": "pages/chunk-upload-demo/index",
+          "type": "page",
+          "layout": "default",
+          "style": {
+            "navigationBarTitleText": "大文件上传"
+          }
+        },
+        {
+          "path": "pages/upload-center-demo/index",
+          "type": "page",
+          "layout": "default",
+          "style": {
+            "navigationBarTitleText": "上传中心"
+          }
+        },
+        {
           "path": "pages/form-demo/index",
           "type": "page",
           "layout": "default",
