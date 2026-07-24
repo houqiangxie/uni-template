@@ -8,8 +8,6 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import UniPages from '@uni-helper/vite-plugin-uni-pages'
 import UniLayouts from '@uni-helper/vite-plugin-uni-layouts'
-// import VueDevTools from 'vite-plugin-vue-devtools'
-// import ReactivityTransform from '@vue-macros/reactivity-transform/vite'
 // import vueJsx from '@vitejs/plugin-vue-jsx';
 import TransformPages from 'uni-read-pages-vite'
 import UniKuRoot from '@uni-ku/root'
@@ -96,20 +94,9 @@ export default defineConfig(async ({ command, mode }) => {
         dirs: ['./src/**/components'],
         exclude: [/[\\/]lime-echart[\\/]/,],
       }),
-
-      /**
-       * vite-plugin-vue-devtools 增强 Vue 开发者体验
-       * @see https://github.com/webfansplz/vite-plugin-vue-devtools
-       */
-      // VueDevTools(),
       UniKuRoot(),
       uni(),
       // vueJsx(), //jsx
-      /**
-       * Reactivity Transform
-       * @see https://vue-macros.sxzz.moe/zh-CN/features/reactivity-transform.html
-       */
-      // ReactivityTransform(),
       uniSubpackagePlaceholder(['pages-echarts', 'pages-test']),
     ].filter(Boolean),
     define: {
