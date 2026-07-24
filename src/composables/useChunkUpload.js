@@ -1,22 +1,20 @@
 import {
   CHUNK_STATUS,
   ChunkUploader,
+  computeProgressFromCache,
   createFileUid,
   getChunkApiBase,
-  listUploadCaches,
-  loadUploadCache,
-  removeUploadCache,
-} from '@/utils/chunkUpload'
-import {
-  computeProgressFromCache,
   hydrateFileItem,
+  listUploadCaches,
   loadQueueSession,
+  loadUploadCache,
   persistFile,
   removePersistedFile,
   removeQueueSession,
+  removeUploadCache,
   saveQueueSession,
   verifyFileAccessible,
-} from '@/utils/chunkUploadPersist'
+} from '@/utils/chunkUpload'
 
 const DEFAULT_ENDPOINTS = {
   init: '/init',
