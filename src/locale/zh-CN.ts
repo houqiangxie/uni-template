@@ -1,3 +1,4 @@
+/** 内置中文 fallback（服务器拉取失败或未开启多语言时使用） */
 export default {
   app: {
     name: 'Uni 模板',
@@ -24,6 +25,7 @@ export default {
     logoutSuccess: '已退出登录',
     language: '语言',
     switchLanguage: '切换语言',
+    localeLoadFailed: '语言包加载失败，请稍后重试',
   },
   home: {
     welcome: '当前状态',
@@ -33,6 +35,7 @@ export default {
     formDemo: '表单示例',
     chunkUploadDemo: '大文件上传',
     uploadCenterDemo: '上传中心',
+    comSelectDemo: 'ComSelect 本地分页',
   },
   login: {
     username: '用户名',
@@ -44,8 +47,6 @@ export default {
     passwordPlaceholder: '请输入登录密码',
     login: '登录',
     loginSuccess: '登录成功',
-    brandTitle: 'Uni 模板',
-    brandSubtitle: '开箱即用的 uni-app 基础模板',
   },
   route: {
     appName: 'Uni 模板',
@@ -54,6 +55,7 @@ export default {
     formDemo: '表单示例',
     chunkUploadDemo: '大文件上传',
     uploadCenterDemo: '上传中心',
+    comSelectDemo: 'ComSelect 本地分页',
   },
   formDemo: {
     intro: '本页演示 com-form + configToSchema 的常用写法，包含基础字段、校验规则、条件校验与循环列表。',

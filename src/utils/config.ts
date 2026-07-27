@@ -1,20 +1,49 @@
-/*
- * @Descripttion: 环境配置文件
- * @version:
- * @Author: houqiangxie
- * @Date: 2024-05-30 15:58:33
- * @LastEditors: houqiangxie
- * @LastEditTime: 2025-01-26 09:01:15
+
+/** 去除末尾斜杠 */
+function trimTrailingSlash(url: string): string {
+  return url.replace(/\/$/, '')
+}
+
+/**
+ * API / 资源基础地址
+ * - H5：仅使用 window.location.origin，适配同一包部署到多域名，不读 VITE_BASE_URL
+ * - 小程序 / App：使用对应环境 .env 中的 VITE_BASE_URL
  */
+// #ifdef H5
+export const baseUrl = trimTrailingSlash(
+  typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : '',
+)
+// #endif
 
-// 从环境变量中获取 API 基础地址
-export const baseUrl = import.meta.env.VITE_API_BASE_URL 
+// #ifndef H5
+export const baseUrl = trimTrailingSlash(import.meta.env.VITE_BASE_URL || '')
+// #endif
 
-// 从环境变量中获取静态资源基础地址
-export const staticBaseUrl = import.meta.env.VITE_STATIC_BASE_URL 
+/** 远程静态资源根路径：baseUrl + /wxStaticFile/static/ */
+export const staticBaseUrl = baseUrl
+  ? `${baseUrl}/wxStaticFile/static/`
+  : '/wxStaticFile/static/'
 
 // 应用标题
 export const appTitle = import.meta.env.VITE_APP_TITLE || 'Uni 模板'
+
+/** 解析环境变量布尔值（true / 1 为真） */
+function parseEnvBool(value: string | undefined, defaultValue: boolean): boolean {
+  if (value === undefined || value === '')
+    return defaultValue
+  return value === 'true' || value === '1'
+}
+
+/**
+ * 是否启用多语言（语言切换、导航栏标题随语言变化等）
+ * 关闭后仍可使用 t() 展示默认语言文案，但不会加载其它语言包
+ */
+export const enableI18n = parseEnvBool(import.meta.env.VITE_ENABLE_I18N, false)
+
+/** 远程语言包版本号，变更后客户端会重新拉取 JSON（可选，与图片资源 ?v= 同理） */
+export const localeRemoteVersion = import.meta.env.VITE_LOCALE_REMOTE_VERSION || ''
 
 // 当前环境
 export const isDevelopment = import.meta.env.DEV
@@ -26,5 +55,5 @@ export const envInfo = {
   baseUrl,
   staticBaseUrl,
   isDevelopment,
-  isProduction
+  isProduction,
 }

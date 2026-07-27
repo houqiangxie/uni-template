@@ -1,0 +1,154 @@
+{
+  "app": {
+    "name": "Uni Template",
+    "slogan": "Ready-to-use uni-app starter template"
+  },
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "tip": "Notice",
+    "submit": "Submit",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "reset": "Reset",
+    "loading": "Loading...",
+    "noData": "No Data",
+    "success": "Success",
+    "failed": "Failed",
+    "notSet": "Not Set",
+    "logout": "Logout",
+    "logoutConfirm": "Are you sure you want to logout?",
+    "logoutSuccess": "Logged out",
+    "language": "Language",
+    "switchLanguage": "Switch Language",
+    "localeLoadFailed": "Failed to load language pack"
+  },
+  "home": {
+    "welcome": "Status",
+    "loggedIn": "Logged in",
+    "notLoggedIn": "Not logged in",
+    "demos": "Demos",
+    "formDemo": "Form Demo",
+    "chunkUploadDemo": "Large File Upload",
+    "uploadCenterDemo": "Upload Center",
+    "comSelectDemo": "ComSelect Local Pagination"
+  },
+  "login": {
+    "username": "Username",
+    "password": "Password",
+    "captcha": "Captcha",
+    "usernameRequired": "Please enter username",
+    "passwordRequired": "Please enter password",
+    "captchaRequired": "Please enter captcha",
+    "passwordPlaceholder": "Please enter password",
+    "login": "Login",
+    "loginSuccess": "Login successful"
+  },
+  "route": {
+    "appName": "Uni Template",
+    "home": "Home",
+    "login": "Login",
+    "formDemo": "Form Demo",
+    "chunkUploadDemo": "Large File Upload",
+    "uploadCenterDemo": "Upload Center",
+    "comSelectDemo": "ComSelect Local Pagination"
+  },
+  "formDemo": {
+    "intro": "This page demonstrates com-form + configToSchema: basic fields, validation, conditional rules, and loop lists.",
+    "sections": {
+      "basic": "Basic Info",
+      "validation": "Validation",
+      "members": "Members"
+    },
+    "fields": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "gender": "Gender",
+      "hobbies": "Hobbies",
+      "remark": "Remark",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "serviceMode": "Service Mode",
+      "address": "Address"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "hobbies": {
+      "reading": "Reading",
+      "sports": "Sports",
+      "music": "Music"
+    },
+    "serviceMode": {
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "memberTitle": "Member {index}",
+    "memberPrefix": "Member #{index}",
+    "addMember": "Add Member",
+    "submitSuccess": "Validation Passed",
+    "rules": {
+      "passwordMin": "Password must be at least 6 characters",
+      "passwordUpper": "Must contain an uppercase letter",
+      "passwordMismatch": "Passwords do not match",
+      "endDateEarly": "Cannot be earlier than start date",
+      "addressRequired": "Address is required for offline service",
+      "phoneDuplicate": "Owner phone cannot match a member phone",
+      "memberMin": "At least one member is required"
+    }
+  },
+  "chunkUpload": {
+    "overallProgress": "Overall {percent}%",
+    "start": "Upload",
+    "startAll": "Upload all",
+    "resumeAll": "Resume all",
+    "cancel": "Cancel",
+    "canceled": "Canceled",
+    "fileExpired": "File expired. Cancel and re-select the same file to resume.",
+    "pause": "Pause",
+    "resume": "Resume",
+    "retry": "Retry",
+    "cachedTitle": "Incomplete uploads detected (local cache)",
+    "cachedChunks": "{done} chunks uploaded",
+    "dismissCache": "Clear",
+    "limitExceeded": "Maximum {limit} files",
+    "invalidType": "Invalid file type",
+    "maxSizeExceeded": "File size cannot exceed {size} MB",
+    "status": {
+      "waiting": "Waiting",
+      "hashing": "Hashing",
+      "uploading": "Uploading",
+      "paused": "Paused",
+      "success": "Done",
+      "error": "Failed"
+    }
+  },
+  "chunkUploadDemo": {
+    "intro": "ComChunkUpload supports Xunlei-style resume: files persist locally across power loss, navigation, and restarts; pause, resume, or cancel anytime on H5, Mini Program, and App.",
+    "sections": {
+      "upload": "Attachments"
+    },
+    "fields": {
+      "attachments": "Large Files",
+      "images": "Images (chunked)"
+    },
+    "submitSuccess": "Submitted"
+  },
+  "uploadCenterDemo": {
+    "intro": "Standalone upload center demo using ComChunkUpload directly (no form). Files persist locally with pause, resume, and cancel. Leave and return to this page and the upload session is preserved.",
+    "sections": {
+      "upload": "Upload Queue",
+      "completed": "Completed Files"
+    },
+    "leavePage": "Leave page (test resume after navigation)",
+    "clearSession": "Clear session",
+    "clearConfirm": "This will clear the upload session and local cache. Continue?"
+  }
+}

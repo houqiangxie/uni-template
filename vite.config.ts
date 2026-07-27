@@ -1,6 +1,8 @@
 /// <reference types="vitest" />
 
+import { createReadStream, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import type { Plugin } from 'vite'
 import { defineConfig, loadEnv } from 'vite'
 import uni from '@dcloudio/vite-plugin-uni'
 // import Unocss from 'unocss/vite'
@@ -12,12 +14,50 @@ import UniLayouts from '@uni-helper/vite-plugin-uni-layouts'
 import TransformPages from 'uni-read-pages-vite'
 import UniKuRoot from '@uni-ku/root'
 import uniSubpackagePlaceholder from 'vite-plugin-uni-subpackage-placeholder'
+
+/** 开发环境：将 locale-remote/ 映射到 /wxStaticFile/static/locale/，与线上静态资源路径一致 */
+function localeRemoteDevPlugin(): Plugin {
+  const localeDir = resolve(__dirname, 'locale-remote')
+  return {
+    name: 'locale-remote-dev',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const pathname = req.url?.split('?')[0] ?? ''
+        const match = pathname.match(/^\/wxStaticFile\/static\/locale\/([\w-]+)\.json$/)
+        if (!match)
+          return next()
+
+        const filePath = resolve(localeDir, `${match[1]}.json`)
+        if (!existsSync(filePath))
+          return next()
+
+        res.setHeader('Content-Type', 'application/json; charset=utf-8')
+        createReadStream(filePath).pipe(res)
+      })
+    },
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(async ({ command, mode }) => {
   const Unocss = (await import('unocss/vite')).default
 
-  // 加载环境变量
+// 加载环境变量
   const env = loadEnv(mode, process.cwd(), '')
+
+  /** Sass 静态资源前缀：H5 相对路径；小程序 / App 用 VITE_BASE_URL */
+  function resolveSassBaseUrl(): string {
+    const platform = process.env.UNI_PLATFORM || ''
+    if (platform === 'h5')
+      return '/wxStaticFile/static/'
+    const base = (env.VITE_BASE_URL || '').replace(/\/$/, '')
+    if (!base)
+      return '/wxStaticFile/static/'
+    return `${base}/wxStaticFile/static/`
+  }
+
+  const sassBaseUrl = resolveSassBaseUrl()
+  const staticProxyTarget = (env.VITE_BASE_URL || '').replace(/\/$/, '')
 
   return {
     resolve: {
@@ -33,6 +73,7 @@ export default defineConfig(async ({ command, mode }) => {
       ],
     },
     plugins: [
+      command === 'serve' ? localeRemoteDevPlugin() : null,
       /**
        * vite-plugin-uni-pages
        * @see https://github.com/uni-helper/vite-plugin-uni-pages
@@ -115,6 +156,7 @@ export default defineConfig(async ({ command, mode }) => {
         scss: {
           api: 'modern-compiler',
           silenceDeprecations: ['legacy-js-api', 'import'],
+          additionalData: `$base-url: '${sassBaseUrl}';\n`,
         },
       },
     },
@@ -138,7 +180,15 @@ export default defineConfig(async ({ command, mode }) => {
           // target: "http://172.17.30.234:5888/station",
           target: "http://172.17.29.32:5889",
           changeOrigin: true,
-        }
+        },
+        ...(staticProxyTarget
+          ? {
+              '/wxStaticFile': {
+                target: staticProxyTarget,
+                changeOrigin: true,
+              },
+            }
+          : {}),
       }
     },
     build: {

@@ -1,0 +1,154 @@
+{
+  "app": {
+    "name": "Uni 模板",
+    "slogan": "开箱即用的 uni-app 基础模板"
+  },
+  "common": {
+    "confirm": "确定",
+    "cancel": "取消",
+    "tip": "提示",
+    "submit": "提交",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "add": "新增",
+    "search": "搜索",
+    "reset": "重置",
+    "loading": "加载中...",
+    "noData": "暂无数据",
+    "success": "操作成功",
+    "failed": "操作失败",
+    "notSet": "未设置",
+    "logout": "退出",
+    "logoutConfirm": "确定要退出登录吗？",
+    "logoutSuccess": "已退出登录",
+    "language": "语言",
+    "switchLanguage": "切换语言",
+    "localeLoadFailed": "语言包加载失败，请稍后重试"
+  },
+  "home": {
+    "welcome": "当前状态",
+    "loggedIn": "已登录",
+    "notLoggedIn": "未登录",
+    "demos": "示例页面",
+    "formDemo": "表单示例",
+    "chunkUploadDemo": "大文件上传",
+    "uploadCenterDemo": "上传中心",
+    "comSelectDemo": "ComSelect 本地分页"
+  },
+  "login": {
+    "username": "用户名",
+    "password": "密码",
+    "captcha": "验证码",
+    "usernameRequired": "请输入用户名",
+    "passwordRequired": "请输入密码",
+    "captchaRequired": "请输入验证码",
+    "passwordPlaceholder": "请输入登录密码",
+    "login": "登录",
+    "loginSuccess": "登录成功"
+  },
+  "route": {
+    "appName": "Uni 模板",
+    "home": "首页",
+    "login": "登录",
+    "formDemo": "表单示例",
+    "chunkUploadDemo": "大文件上传",
+    "uploadCenterDemo": "上传中心",
+    "comSelectDemo": "ComSelect 本地分页"
+  },
+  "formDemo": {
+    "intro": "本页演示 com-form + configToSchema 的常用写法，包含基础字段、校验规则、条件校验与循环列表。",
+    "sections": {
+      "basic": "基础信息",
+      "validation": "校验示例",
+      "members": "成员列表"
+    },
+    "fields": {
+      "name": "姓名",
+      "phone": "手机号",
+      "email": "邮箱",
+      "gender": "性别",
+      "hobbies": "爱好",
+      "remark": "备注",
+      "password": "密码",
+      "confirmPassword": "确认密码",
+      "startDate": "开始日期",
+      "endDate": "结束日期",
+      "serviceMode": "服务方式",
+      "address": "地址"
+    },
+    "gender": {
+      "male": "男",
+      "female": "女"
+    },
+    "hobbies": {
+      "reading": "阅读",
+      "sports": "运动",
+      "music": "音乐"
+    },
+    "serviceMode": {
+      "online": "线上",
+      "offline": "线下"
+    },
+    "memberTitle": "成员 {index}",
+    "memberPrefix": "第{index}位成员",
+    "addMember": "添加成员",
+    "submitSuccess": "校验通过",
+    "rules": {
+      "passwordMin": "密码至少6位",
+      "passwordUpper": "须包含大写字母",
+      "passwordMismatch": "两次密码不一致",
+      "endDateEarly": "不能早于开始日期",
+      "addressRequired": "线下服务请输入地址",
+      "phoneDuplicate": "负责人电话不能与成员电话重复",
+      "memberMin": "至少保留一位成员"
+    }
+  },
+  "chunkUpload": {
+    "overallProgress": "总进度 {percent}%",
+    "start": "上传",
+    "startAll": "全部上传",
+    "resumeAll": "继续全部",
+    "cancel": "取消",
+    "canceled": "已取消",
+    "fileExpired": "文件已失效，请取消后重新选择同一文件可续传",
+    "pause": "暂停",
+    "resume": "继续",
+    "retry": "重试",
+    "cachedTitle": "检测到未完成的上传任务（本地缓存）",
+    "cachedChunks": "已上传 {done} 个分片",
+    "dismissCache": "清除",
+    "limitExceeded": "最多上传 {limit} 个文件",
+    "invalidType": "文件格式不正确",
+    "maxSizeExceeded": "文件不能超过 {size} MB",
+    "status": {
+      "waiting": "等待中",
+      "hashing": "校验中",
+      "uploading": "上传中",
+      "paused": "已暂停",
+      "success": "已完成",
+      "error": "上传失败"
+    }
+  },
+  "chunkUploadDemo": {
+    "intro": "ComChunkUpload 支持迅雷式断点续传：选文件后本地持久化，断电/切页/重启后文件仍在，可暂停、继续、取消；H5 / 小程序 / App 统一实现。",
+    "sections": {
+      "upload": "附件上传"
+    },
+    "fields": {
+      "attachments": "大文件附件",
+      "images": "图片（分片）"
+    },
+    "submitSuccess": "提交成功"
+  },
+  "uploadCenterDemo": {
+    "intro": "独立上传中心示例：直接使用 ComChunkUpload，不依赖表单。选文件后本地持久化，可暂停/继续/取消；离开本页再返回，上传任务仍保留在会话中。",
+    "sections": {
+      "upload": "上传队列",
+      "completed": "已完成文件"
+    },
+    "leavePage": "离开页面（测试切页续传）",
+    "clearSession": "清空会话",
+    "clearConfirm": "将清除当前上传会话及本地缓存，确定继续？"
+  }
+}

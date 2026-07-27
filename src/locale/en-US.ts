@@ -1,3 +1,4 @@
+/** 内置英文 fallback（远程语言包拉取失败时使用） */
 export default {
   app: {
     name: 'Uni Template',
@@ -24,6 +25,7 @@ export default {
     logoutSuccess: 'Logged out',
     language: 'Language',
     switchLanguage: 'Switch Language',
+    localeLoadFailed: 'Failed to load language pack',
   },
   home: {
     welcome: 'Status',
@@ -33,6 +35,7 @@ export default {
     formDemo: 'Form Demo',
     chunkUploadDemo: 'Large File Upload',
     uploadCenterDemo: 'Upload Center',
+    comSelectDemo: 'ComSelect Local Pagination',
   },
   login: {
     username: 'Username',
@@ -44,8 +47,6 @@ export default {
     passwordPlaceholder: 'Please enter password',
     login: 'Login',
     loginSuccess: 'Login successful',
-    brandTitle: 'Uni Template',
-    brandSubtitle: 'Ready-to-use uni-app starter template',
   },
   route: {
     appName: 'Uni Template',
@@ -54,6 +55,7 @@ export default {
     formDemo: 'Form Demo',
     chunkUploadDemo: 'Large File Upload',
     uploadCenterDemo: 'Upload Center',
+    comSelectDemo: 'ComSelect Local Pagination',
   },
   formDemo: {
     intro: 'This page demonstrates com-form + configToSchema: basic fields, validation, conditional rules, and loop lists.',

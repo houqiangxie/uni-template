@@ -13,10 +13,10 @@ import App from './App.vue'
 import 'uno.css'
 import router from './router'
 import { setupPermissionDirective } from './composables/vPermission'
-import i18n, { loadLocaleMessages, setupI18n } from './locale'
+import i18n, { setupI18n, switchLocale } from './locale'
 import { DEFAULT_LOCALE } from './locale/types'
 
-// uni-app 要求 createApp 同步返回，语言包在模块加载时尽早开始异步拉取
+// uni-app 要求 createApp 同步返回，语言包在模块加载时尽早开始从静态服务器拉取
 const i18nReady = setupI18n()
 
 export function createApp() {
@@ -30,11 +30,8 @@ export function createApp() {
   const localeStore = useLocaleStore(store)
   i18nReady
     .then(locale => localeStore.markReady(locale))
-    .catch(async () => {
-      try {
-        await loadLocaleMessages(DEFAULT_LOCALE)
-      }
-      catch {}
+    .catch(() => {
+      switchLocale(DEFAULT_LOCALE)
       localeStore.markReady(DEFAULT_LOCALE)
     })
 

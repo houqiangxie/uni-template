@@ -11,6 +11,7 @@
     "noUnusedLocals": true,
     "strictNullChecks": true,
     "allowJs": true,
+    "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "types": [
@@ -23,6 +24,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "src/auto-imports.d.ts.back"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.json", "locale-remote/**/*.json", "src/auto-imports.d.ts.back"],
   "exclude": ["dist", "node_modules"]
 }

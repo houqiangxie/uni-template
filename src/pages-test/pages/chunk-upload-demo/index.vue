@@ -12,8 +12,6 @@ import { configToSchema } from '@/utils/formConfig'
 import { useForm } from '@/composables/useForm'
 import { destroyChunkUploadSession } from '@/composables/useChunkUpload'
 
-const { t } = useI18n()
-
 const formModel = reactive({
   attachments: [] as Record<string, any>[],
   images: null as Record<string, any> | null,
@@ -22,7 +20,7 @@ const formModel = reactive({
 const uploadConfig = computed(() => [
   {
     prop: 'attachments',
-    label: t('chunkUploadDemo.fields.attachments'),
+    label: '大文件附件',
     compType: 'chunk-upload',
     required: true,
     limit: 5,
@@ -38,7 +36,7 @@ const uploadConfig = computed(() => [
   },
   {
     prop: 'images',
-    label: t('chunkUploadDemo.fields.images'),
+    label: '图片（分片）',
     compType: 'chunk-upload',
     limit: 1,
     accept: 'image',
@@ -59,7 +57,7 @@ async function handleSubmit() {
     return
 
   uni.showModal({
-    title: t('chunkUploadDemo.submitSuccess'),
+    title: '提交成功',
     content: JSON.stringify(formModel, null, 2),
     showCancel: false,
   })
@@ -75,14 +73,14 @@ function handleReset() {
 <template>
   <view class="chunk-upload-demo card-form h-full overflow-auto">
     <view class="chunk-upload-demo__intro">
-      {{ t('chunkUploadDemo.intro') }}
+      ComChunkUpload 支持迅雷式断点续传：选文件后本地持久化，断电/切页/重启后文件仍在，可暂停、继续、取消；H5 / 小程序 / App 统一实现。
     </view>
 
     <scroll-view class="container" scroll-y :scroll-top="scrollTop" scroll-with-animation>
       <wd-form ref="formRef" :model="formModel" :schema="schema" layout="horizontal" title-width="auto">
         <view class="chunk-upload-demo__section">
           <view class="chunk-upload-demo__section-title">
-            {{ t('chunkUploadDemo.sections.upload') }}
+            附件上传
           </view>
           <com-form :config="uploadConfig" :form="formModel" embedded />
         </view>
@@ -91,10 +89,10 @@ function handleReset() {
 
     <view class="footer-box">
       <wd-button type="primary" @click="handleSubmit">
-        {{ t('common.submit') }}
+        提交
       </wd-button>
       <wd-button custom-class="chunk-upload-demo__reset-btn" @click="handleReset">
-        {{ t('common.reset') }}
+        重置
       </wd-button>
     </view>
   </view>

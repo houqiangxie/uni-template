@@ -32,3 +32,6 @@
 // $u-info-light: #f4f4f5;
 
 $-color-theme: #2d8cf0;
+
+// 静态资源远程 URL 前缀（H5 为相对路径；小程序构建时注入 VITE_BASE_URL + 路径）
+$base-url: '/wxStaticFile/static/' !default;

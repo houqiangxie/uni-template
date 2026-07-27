@@ -10,7 +10,6 @@
 <script setup lang="ts">
 import { destroyChunkUploadSession } from '@/composables/useChunkUpload'
 
-const { t } = useI18n()
 const router = useRouter()
 
 const UPLOAD_SESSION_ID = 'upload-center-demo'
@@ -23,8 +22,8 @@ function goHome() {
 
 function handleClear() {
   uni.showModal({
-    title: t('common.tip'),
-    content: t('uploadCenterDemo.clearConfirm'),
+    title: '提示',
+    content: '将清除当前上传会话及本地缓存，确定继续？',
     success: (res) => {
       if (!res.confirm)
         return
@@ -38,12 +37,12 @@ function handleClear() {
 <template>
   <view class="upload-center-demo">
     <view class="upload-center-demo__intro">
-      {{ t('uploadCenterDemo.intro') }}
+      独立上传中心示例：直接使用 ComChunkUpload，不依赖表单。选文件后本地持久化，可暂停/继续/取消；离开本页再返回，上传任务仍保留在会话中。
     </view>
 
     <view class="upload-center-demo__section">
       <view class="upload-center-demo__section-title">
-        {{ t('uploadCenterDemo.sections.upload') }}
+        上传队列
       </view>
       <ComChunkUpload
         v-model="fileList"
@@ -63,7 +62,7 @@ function handleClear() {
 
     <view v-if="fileList.length" class="upload-center-demo__section">
       <view class="upload-center-demo__section-title">
-        {{ t('uploadCenterDemo.sections.completed') }}
+        已完成文件
       </view>
       <view
         v-for="file in fileList"
@@ -77,10 +76,10 @@ function handleClear() {
 
     <view class="upload-center-demo__actions">
       <wd-button type="primary" plain block @click="goHome">
-        {{ t('uploadCenterDemo.leavePage') }}
+        离开页面（测试切页续传）
       </wd-button>
       <wd-button block @click="handleClear">
-        {{ t('uploadCenterDemo.clearSession') }}
+        清空会话
       </wd-button>
     </view>
   </view>

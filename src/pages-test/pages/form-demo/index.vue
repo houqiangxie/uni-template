@@ -11,23 +11,21 @@
 import { configToSchema, loopField, modelRules } from '@/utils/formConfig'
 import { useForm } from '@/composables/useForm'
 
-const { t } = useI18n()
+const serviceModeOptions = [
+  { text: '线上', value: 'online' },
+  { text: '线下', value: 'offline' },
+]
 
-const serviceModeOptions = computed(() => [
-  { text: t('formDemo.serviceMode.online'), value: 'online' },
-  { text: t('formDemo.serviceMode.offline'), value: 'offline' },
-])
+const genderOptions = [
+  { text: '男', value: 'male' },
+  { text: '女', value: 'female' },
+]
 
-const genderOptions = computed(() => [
-  { text: t('formDemo.gender.male'), value: 'male' },
-  { text: t('formDemo.gender.female'), value: 'female' },
-])
-
-const hobbyOptions = computed(() => [
-  { text: t('formDemo.hobbies.reading'), value: 'reading' },
-  { text: t('formDemo.hobbies.sports'), value: 'sports' },
-  { text: t('formDemo.hobbies.music'), value: 'music' },
-])
+const hobbyOptions = [
+  { text: '阅读', value: 'reading' },
+  { text: '运动', value: 'sports' },
+  { text: '音乐', value: 'music' },
+]
 
 const formModel = reactive({
   name: '',
@@ -46,64 +44,64 @@ const formModel = reactive({
 })
 
 const basicConfig = computed(() => [
-  { prop: 'name', label: t('formDemo.fields.name'), compType: 'input', required: true },
-  { prop: 'phone', label: t('formDemo.fields.phone'), compType: 'input', required: true, validationType: 'phone' },
-  { prop: 'email', label: t('formDemo.fields.email'), compType: 'input', validationType: 'email' },
-  { prop: 'gender', label: t('formDemo.fields.gender'), compType: 'radio', columns: genderOptions.value },
-  { prop: 'hobbies', label: t('formDemo.fields.hobbies'), compType: 'checkbox', columns: hobbyOptions.value },
-  { prop: 'remark', label: t('formDemo.fields.remark'), compType: 'textarea' },
+  { prop: 'name', label: '姓名', compType: 'input', required: true },
+  { prop: 'phone', label: '手机号', compType: 'input', required: true, validationType: 'phone' },
+  { prop: 'email', label: '邮箱', compType: 'input', validationType: 'email' },
+  { prop: 'gender', label: '性别', compType: 'radio', columns: genderOptions },
+  { prop: 'hobbies', label: '爱好', compType: 'checkbox', columns: hobbyOptions },
+  { prop: 'remark', label: '备注', compType: 'textarea' },
 ])
 
 const securityConfig = computed(() => [
   {
     prop: 'password',
-    label: t('formDemo.fields.password'),
+    label: '密码',
     compType: 'input',
     required: true,
     inputType: 'password',
     extendRules: [
-      { min: 6, message: t('formDemo.rules.passwordMin') },
-      { validator: (v: string) => !v || /[A-Z]/.test(v), message: t('formDemo.rules.passwordUpper') },
+      { min: 6, message: '密码至少6位' },
+      { validator: (v: string) => !v || /[A-Z]/.test(v), message: '须包含大写字母' },
     ],
   },
   {
     prop: 'confirmPassword',
-    label: t('formDemo.fields.confirmPassword'),
+    label: '确认密码',
     compType: 'input',
     required: true,
     inputType: 'password',
     customValidators: [
       ({ value, model }: { value: string, model: Record<string, any> }) =>
-        value === model.password || t('formDemo.rules.passwordMismatch'),
+        value === model.password || '两次密码不一致',
     ],
   },
-  { prop: 'startDate', label: t('formDemo.fields.startDate'), compType: 'input', required: true },
+  { prop: 'startDate', label: '开始日期', compType: 'input', required: true },
   {
     prop: 'endDate',
-    label: t('formDemo.fields.endDate'),
+    label: '结束日期',
     compType: 'input',
     required: true,
     extendRules: modelRules(
       ({ value, model }: { value: string, model: Record<string, any> }) =>
-        !value || !model.startDate || value >= model.startDate || t('formDemo.rules.endDateEarly'),
+        !value || !model.startDate || value >= model.startDate || '不能早于开始日期',
     ),
   },
   {
     prop: 'serviceMode',
-    label: t('formDemo.fields.serviceMode'),
+    label: '服务方式',
     compType: 'select',
-    columns: serviceModeOptions.value,
+    columns: serviceModeOptions,
   },
-  { prop: 'address', label: t('formDemo.fields.address'), compType: 'input' },
+  { prop: 'address', label: '地址', compType: 'input' },
 ])
 
 const membersFormConfig = computed(() => [
   loopField({
     arrayPath: 'members',
-    itemTitle: ({ index }: { index: number }) => t('formDemo.memberTitle', { index: index + 1 }),
+    itemTitle: ({ index }: { index: number }) => `成员 ${index + 1}`,
     fields: [
-      { prop: 'name', label: t('formDemo.fields.name'), compType: 'input', required: true },
-      { prop: 'phone', label: t('formDemo.fields.phone'), compType: 'input', required: true, validationType: 'phone' },
+      { prop: 'name', label: '姓名', compType: 'input', required: true },
+      { prop: 'phone', label: '手机号', compType: 'input', required: true, validationType: 'phone' },
     ],
   }),
 ])
@@ -114,22 +112,22 @@ const schema = computed(() => configToSchema(
   {
     extraRules: (model) => ({
       ...(model.serviceMode === 'offline'
-        ? { address: [{ required: true, message: t('formDemo.rules.addressRequired') }] }
+        ? { address: [{ required: true, message: '线下服务请输入地址' }] }
         : {}),
     }),
     formValidators: [
       (model) => {
         if (model.members?.length && model.members.some((m: { phone: string }) => m.phone === model.phone))
-          return { path: 'phone', message: t('formDemo.rules.phoneDuplicate') }
+          return { path: 'phone', message: '负责人电话不能与成员电话重复' }
         return true
       },
     ],
     loops: loopField({
       arrayPath: 'members',
-      itemPrefix: ({ index }: { index: number }) => t('formDemo.memberPrefix', { index: index + 1 }),
+      itemPrefix: ({ index }: { index: number }) => `第${index + 1}位成员`,
       fields: [
-        { prop: 'name', label: t('formDemo.fields.name'), compType: 'input', required: true },
-        { prop: 'phone', label: t('formDemo.fields.phone'), compType: 'input', required: true, validationType: 'phone' },
+        { prop: 'name', label: '姓名', compType: 'input', required: true },
+        { prop: 'phone', label: '手机号', compType: 'input', required: true, validationType: 'phone' },
       ],
     }),
   },
@@ -143,7 +141,7 @@ function addMember() {
 
 function removeMember(index: number) {
   if (formModel.members.length <= 1) {
-    uni.showToast({ title: t('formDemo.rules.memberMin'), icon: 'none' })
+    uni.showToast({ title: '至少保留一位成员', icon: 'none' })
     return
   }
   formModel.members.splice(index, 1)
@@ -155,7 +153,7 @@ async function handleSubmit() {
     return
 
   uni.showModal({
-    title: t('formDemo.submitSuccess'),
+    title: '校验通过',
     content: JSON.stringify(formModel, null, 2),
     showCancel: false,
   })
@@ -183,35 +181,35 @@ function handleReset() {
 <template>
   <view class="h-full flex flex-col form-demo card-form">
     <view class="form-demo__intro">
-      {{ t('formDemo.intro') }}
+      本页演示 com-form + configToSchema 的常用写法，包含基础字段、校验规则、条件校验与循环列表。
     </view>
     <view class="flex-1 overflow-hidden">
       <scroll-view class="container h-full" scroll-y :scroll-top="scrollTop" scroll-with-animation>
-  
+
         <wd-form ref="formRef" :model="formModel" :schema="schema" layout="horizontal" title-width="auto">
           <view class="form-demo__section">
-            <view class="form-demo__section-title">{{ t('formDemo.sections.basic') }}</view>
+            <view class="form-demo__section-title">基础信息</view>
             <com-form :config="basicConfig" :form="formModel" embedded />
           </view>
-  
+
           <view class="form-demo__section">
-            <view class="form-demo__section-title">{{ t('formDemo.sections.validation') }}</view>
+            <view class="form-demo__section-title">校验示例</view>
             <com-form :config="securityConfig" :form="formModel" embedded />
           </view>
-  
+
           <view class="form-demo__section">
-            <view class="form-demo__section-title">{{ t('formDemo.sections.members') }}</view>
+            <view class="form-demo__section-title">成员列表</view>
             <com-form :config="membersFormConfig" :form="formModel" embedded>
               <template #loop-head="{ loopIndex, title }">
                 <text>{{ title }}</text>
                 <wd-button size="small" type="error" plain @click="removeMember(loopIndex)">
-                  {{ t('common.delete') }}
+                  删除
                 </wd-button>
               </template>
             </com-form>
             <view class="form-demo__add-member">
               <wd-button size="small" plain block @click="addMember">
-                {{ t('formDemo.addMember') }}
+                添加成员
               </wd-button>
             </view>
           </view>
@@ -219,11 +217,11 @@ function handleReset() {
       </scroll-view>
     </view>
     <view class="footer-box">
-      <wd-button type="primary"  @click="handleSubmit">
-        {{ t('common.submit') }}
+      <wd-button type="primary" @click="handleSubmit">
+        提交
       </wd-button>
-      <wd-button  custom-class="form-demo__reset-btn" @click="handleReset">
-        {{ t('common.reset') }}
+      <wd-button custom-class="form-demo__reset-btn" @click="handleReset">
+        重置
       </wd-button>
     </view>
   </view>

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
-import i18n, { loadLocaleMessages } from '@/locale'
+import i18n, { isLocaleLoaded, switchLocale } from '@/locale'
 import { routeTitleMap } from '@/locale/route-map'
+import { enableI18n } from '@/utils/config'
 import {
   DEFAULT_LOCALE,
   LOCALE_OPTIONS,
@@ -10,44 +11,52 @@ import {
 export const useLocaleStore = defineStore('locale', () => {
   const locale = ref<LocaleType>(DEFAULT_LOCALE)
   const isReady = ref(false)
-  const isSwitching = ref(false)
 
   const currentOption = computed(() =>
     LOCALE_OPTIONS.find(item => item.value === locale.value) ?? LOCALE_OPTIONS[0],
   )
 
-  /** 切换语言：懒加载目标语言包后生效 */
-  async function setLocale(newLocale: LocaleType) {
+  /** 切换语言（启动时已加载，同步生效） */
+  function setLocale(newLocale: LocaleType) {
+    if (!enableI18n)
+      return
     if (locale.value === newLocale && isReady.value)
       return
 
-    isSwitching.value = true
+    if (!isLocaleLoaded(newLocale)) {
+      uni.showToast({
+        title: i18n.global.t('common.localeLoadFailed'),
+        icon: 'none',
+      })
+      return
+    }
+
+    switchLocale(newLocale)
+    locale.value = newLocale
+
     try {
-      await loadLocaleMessages(newLocale)
-      locale.value = newLocale
-
-      try {
-        uni.setLocale?.(newLocale === 'zh-CN' ? 'zh-Hans' : 'en')
-      }
-      catch (e) {
-        console.warn('setLocale failed', e)
-      }
-
-      refreshNavigationTitle()
+      uni.setLocale?.(newLocale === 'zh-CN' ? 'zh-Hans' : 'en')
     }
-    finally {
-      isSwitching.value = false
+    catch (e) {
+      console.warn('setLocale failed', e)
     }
+
+    refreshNavigationTitle()
   }
 
-  /** 应用启动后同步 store 状态 */
+  /** 应用启动后同步 store 与 i18n 状态 */
   function markReady(targetLocale: LocaleType) {
-    locale.value = targetLocale
+    if (enableI18n) {
+      locale.value = targetLocale
+      switchLocale(targetLocale)
+    }
     isReady.value = true
   }
 
   /** 根据路由翻译导航栏标题 */
   function translateRouteTitle(route: string, fallback = ''): string {
+    if (!enableI18n)
+      return fallback
     const key = routeTitleMap[route]
     if (key)
       return i18n.global.t(key)
@@ -72,7 +81,6 @@ export const useLocaleStore = defineStore('locale', () => {
   return {
     locale,
     isReady,
-    isSwitching,
     currentOption,
     localeOptions: LOCALE_OPTIONS,
     defaultLocale: DEFAULT_LOCALE,
@@ -81,8 +89,10 @@ export const useLocaleStore = defineStore('locale', () => {
     translateRouteTitle,
     refreshNavigationTitle,
   }
-}, {
-  unistorage: {
-    paths: ['locale'],
-  },
-})
+}, enableI18n
+  ? {
+      unistorage: {
+        paths: ['locale'],
+      },
+    }
+  : {})

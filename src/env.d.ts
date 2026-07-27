@@ -2,8 +2,12 @@
 
 interface ImportMetaEnv {
   readonly VITE_APP_TITLE: string
-  readonly VITE_API_BASE_URL: string
-  readonly VITE_STATIC_BASE_URL: string
+  /** 小程序 / App 专用，H5 不使用 */
+  readonly VITE_BASE_URL?: string
+  /** 是否启用多语言，true / 1 为启用 */
+  readonly VITE_ENABLE_I18N?: string
+  /** 远程语言包版本，用于 ?v= 缓存刷新 */
+  readonly VITE_LOCALE_REMOTE_VERSION?: string
 }
 
 interface ImportMeta {

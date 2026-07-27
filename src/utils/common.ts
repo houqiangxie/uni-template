@@ -1,3 +1,5 @@
+import { staticBaseUrl } from './config'
+
 /**
  *
  * @param target 源数据
@@ -141,14 +143,11 @@ export function dateFormat(time, type = 'date') {
   return type == 'date' ? (`${year}-${month}-${day}`) : (`${year}-${month}-${day} ${hours}:${minutes}:${seconds}`)
 }
 
-export function getUrl(url) {
-  if (!url) return ''
-  // if (isDevelopment) {
-  //   return new URL (`${url}`, staticBaseUrl).href
-  // }
-  // return new URL(`/wxStaticFile/static/station_h5/${url}`, 'http://172.17.30.234:5888').href
-  // return new URL(`/wxStaticFile/static/station_h5/${url}`, baseUrl).href
-  return `/static/${url}`
+export function getUrl(url: string) {
+  if (!url)
+    return ''
+  const path = url.startsWith('/') ? url.slice(1) : url
+  return `${staticBaseUrl}${path}`
 }
 
 

@@ -1,6 +1,7 @@
 import pagesjson from "@/pages.json";
 import i18n from '@/locale'
 import { routeTitleMap } from '@/locale/route-map'
+import { appTitle, enableI18n } from '@/utils/config'
 // const hiddenBackButtonList = [
 //     'pages/index',
 //     'pages-sub/pages/index',
@@ -43,9 +44,12 @@ export const useNavbarStore = defineStore('navbar', () => {
             }
         hideNavbar.value = config.value?.style?.hideNavbar ?? false
         showLeftButton.value = config.value?.style?.showLeftButton ?? true
-        // 翻译导航栏标题
-        const titleKey = routeTitleMap[currentRoute]
-        const translatedTitle = titleKey ? i18n.global.t(titleKey) : (t || i18n.global.t('route.appName'))
+        // 翻译导航栏标题（未启用多语言时使用 pages.json 中的静态标题）
+        let translatedTitle = t || appTitle
+        if (enableI18n) {
+            const titleKey = routeTitleMap[currentRoute]
+            translatedTitle = titleKey ? i18n.global.t(titleKey) : (t || i18n.global.t('route.appName'))
+        }
         title.value = translatedTitle
         if (translatedTitle && !hideNavbar.value)
             setNavigationBarTitle(translatedTitle)

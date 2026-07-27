@@ -9,7 +9,8 @@
 </route>
 
 <script setup lang="ts">
-const { t } = useI18n()
+import { appTitle, enableI18n } from '@/utils/config'
+
 const router = useRouter()
 const userStore = useUserStore()
 
@@ -31,15 +32,19 @@ function goUploadCenterDemo() {
   router.push({ path: '/pages-test/pages/upload-center-demo/index' })
 }
 
+function goComSelectDemo() {
+  router.push({ path: '/pages-test/pages/com-select-demo/index' })
+}
+
 async function handleLogout() {
   uni.showModal({
-    title: t('common.tip'),
-    content: t('common.logoutConfirm'),
+    title: '提示',
+    content: '确定要退出登录吗？',
     success: async (res) => {
       if (!res.confirm)
         return
       await userStore.logout()
-      uni.showToast({ title: t('common.logoutSuccess'), icon: 'success' })
+      uni.showToast({ title: '已退出登录', icon: 'success' })
     },
   })
 }
@@ -48,37 +53,38 @@ async function handleLogout() {
 <template>
   <view class="home">
     <view class="home-header">
-      <view class="home-title">{{ t('app.name') }}</view>
-      <view class="home-slogan">{{ t('app.slogan') }}</view>
+      <view class="home-title">{{ appTitle }}</view>
+      <view class="home-slogan">开箱即用的 uni-app 基础模板</view>
     </view>
 
-    <view class="home-card">
+    <view v-if="enableI18n" class="home-card">
       <ComLocaleSwitch />
     </view>
 
     <view class="home-card home-info">
-      <view class="home-info__label">{{ t('home.welcome') }}</view>
+      <view class="home-info__label">当前状态</view>
       <view v-if="isLoggedIn" class="home-info__value">
-        {{ userStore.userInfo?.info?.username || userStore.userInfo?.info?.nickName || t('home.loggedIn') }}
+        {{ userStore.userInfo?.info?.username || userStore.userInfo?.info?.nickName || '已登录' }}
       </view>
       <view v-else class="home-info__value home-info__value--muted">
-        {{ t('home.notLoggedIn') }}
+        未登录
       </view>
     </view>
 
     <view class="home-card home-demos">
-      <view class="home-demos__title">{{ t('home.demos') }}</view>
-      <wd-cell :title="t('home.formDemo')" is-link @click="goFormDemo" />
-      <wd-cell :title="t('home.chunkUploadDemo')" is-link @click="goChunkUploadDemo" />
-      <wd-cell :title="t('home.uploadCenterDemo')" is-link @click="goUploadCenterDemo" />
+      <view class="home-demos__title">示例页面</view>
+      <wd-cell title="表单示例" is-link @click="goFormDemo" />
+      <wd-cell title="大文件上传" is-link @click="goChunkUploadDemo" />
+      <wd-cell title="上传中心" is-link @click="goUploadCenterDemo" />
+      <wd-cell title="ComSelect 本地分页" is-link @click="goComSelectDemo" />
     </view>
 
     <view class="home-actions">
       <wd-button v-if="!isLoggedIn" type="primary" block @click="goLogin">
-        {{ t('login.login') }}
+        登录
       </wd-button>
       <wd-button v-else block @click="handleLogout">
-        {{ t('common.logout') }}
+        退出
       </wd-button>
     </view>
   </view>

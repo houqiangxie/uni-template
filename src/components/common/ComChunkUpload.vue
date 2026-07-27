@@ -3,7 +3,7 @@
     <view v-if="showOverallProgress && (internalList.length || activeQueue.length)" class="com-chunk-upload__overall">
       <view class="com-chunk-upload__overall-head">
         <text class="com-chunk-upload__overall-text">
-          {{ t('chunkUpload.overallProgress', { percent: overallProgress }) }}
+          总进度 {{ overallProgress }}%
         </text>
         <view class="com-chunk-upload__overall-actions">
           <wd-button
@@ -13,7 +13,7 @@
             plain
             @click="startAll"
           >
-            {{ t('chunkUpload.startAll') }}
+            全部上传
           </wd-button>
           <wd-button
             v-if="hasUploading"
@@ -21,7 +21,7 @@
             plain
             @click="pauseAll"
           >
-            {{ t('chunkUpload.pause') }}
+            暂停
           </wd-button>
           <wd-button
             v-if="hasResumable"
@@ -30,7 +30,7 @@
             plain
             @click="resumeAll"
           >
-            {{ t('chunkUpload.resumeAll') }}
+            继续全部
           </wd-button>
         </view>
       </view>
@@ -79,7 +79,7 @@
             plain
             @click="pauseFile(item.uid)"
           >
-            {{ t('chunkUpload.pause') }}
+            暂停
           </wd-button>
           <wd-button
             v-if="item.status === 'paused'"
@@ -88,7 +88,7 @@
             plain
             @click="resumeFile(item.uid)"
           >
-            {{ t('chunkUpload.resume') }}
+            继续
           </wd-button>
           <wd-button
             v-if="item.status === 'error'"
@@ -97,7 +97,7 @@
             plain
             @click="retryFile(item.uid)"
           >
-            {{ t('chunkUpload.retry') }}
+            重试
           </wd-button>
           <wd-button
             v-if="item.status !== 'success'"
@@ -106,7 +106,7 @@
             plain
             @click="handleCancelFile(item.uid)"
           >
-            {{ t('chunkUpload.cancel') }}
+            取消
           </wd-button>
           <wd-button
             v-if="!autoUpload && item.status === 'waiting'"
@@ -115,7 +115,7 @@
             plain
             @click="startUpload(item.uid)"
           >
-            {{ t('chunkUpload.start') }}
+            上传
           </wd-button>
         </view>
       </view>
@@ -124,7 +124,7 @@
 
     <view v-if="cachedTasks.length" class="com-chunk-upload__cache">
       <view class="com-chunk-upload__cache-title">
-        {{ t('chunkUpload.cachedTitle') }}
+        检测到未完成的上传任务（本地缓存）
       </view>
       <view
         v-for="cache in cachedTasks"
@@ -134,15 +134,15 @@
         <view class="com-chunk-upload__cache-info">
           <text>{{ cache.fileName }}</text>
           <text class="com-chunk-upload__cache-meta">
-            {{ t('chunkUpload.cachedChunks', { done: cache.uploadedChunks?.length || 0 }) }}
+            已上传 {{ cache.uploadedChunks?.length || 0 }} 个分片
           </text>
         </view>
         <view class="com-chunk-upload__cache-actions">
           <wd-button size="small" type="primary" plain @click="resumeCachedTask(cache.hash)">
-            {{ t('chunkUpload.resume') }}
+            继续
           </wd-button>
           <wd-button size="small" plain @click="dismissCache(cache.hash)">
-            {{ t('chunkUpload.cancel') }}
+            取消
           </wd-button>
         </view>
       </view>
@@ -238,8 +238,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'change', 'progress', 'success', 'error'])
-
-const { t } = useI18n()
 
 const acceptTypes = computed(() => {
   if (props.accept === 'image')
@@ -402,12 +400,12 @@ function formatSize(size) {
 
 function statusText(item) {
   const map = {
-    waiting: t('chunkUpload.status.waiting'),
-    hashing: t('chunkUpload.status.hashing'),
-    uploading: t('chunkUpload.status.uploading'),
-    paused: t('chunkUpload.status.paused'),
-    success: t('chunkUpload.status.success'),
-    error: t('chunkUpload.status.error'),
+    waiting: '等待中',
+    hashing: '校验中',
+    uploading: '上传中',
+    paused: '已暂停',
+    success: '已完成',
+    error: '上传失败',
   }
   const base = map[item.status] || item.status
   if (item.progress > 0 && item.status !== 'success')
@@ -417,7 +415,7 @@ function statusText(item) {
 
 function resolveErrorMessage(error) {
   if (error === 'fileExpired')
-    return t('chunkUpload.fileExpired')
+    return '文件已失效，请取消后重新选择同一文件可续传'
   return error
 }
 
@@ -429,7 +427,7 @@ function handleBeforeUpload({ files, fileList }) {
     successCount.value,
   )
   if (files.length + currentCount > Number(props.limit)) {
-    uni.$toast.show(t('chunkUpload.limitExceeded', { limit: props.limit }))
+    uni.$toast.show(`最多上传 ${props.limit} 个文件`)
     return false
   }
 
@@ -439,14 +437,14 @@ function handleBeforeUpload({ files, fileList }) {
       return acceptTypes.value.includes(suffix)
     })
     if (!valid) {
-      uni.$toast.show(t('chunkUpload.invalidType'))
+      uni.$toast.show('文件格式不正确')
       return false
     }
   }
 
   const validSize = files.every(item => (item.size || 0) / 1024 / 1024 <= props.maxSize)
   if (!validSize) {
-    uni.$toast.show(t('chunkUpload.maxSizeExceeded', { size: props.maxSize }))
+    uni.$toast.show(`文件不能超过 ${props.maxSize} MB`)
     return false
   }
 
@@ -510,7 +508,7 @@ function notifyUploadCanceled(uid) {
   if (!watcher)
     return
   watcher.stop?.()
-  watcher.options?.onError?.({ errMsg: t('chunkUpload.canceled') }, watcher.file, watcher.formData)
+  watcher.options?.onError?.({ errMsg: '已取消' }, watcher.file, watcher.formData)
   uploadWatchers.delete(uid)
 }
 

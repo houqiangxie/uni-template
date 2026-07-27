@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { LocaleType } from '@/locale/types'
+import { enableI18n } from '@/utils/config'
 
 const props = withDefaults(defineProps<{
   /** 展示模式：cell 列表项 / button 按钮 */
@@ -13,11 +14,8 @@ const localeStore = useLocaleStore()
 
 const currentLabel = computed(() => localeStore.currentOption.label)
 
-async function handleSelect(locale: LocaleType) {
-  if (localeStore.isSwitching)
-    return
-
-  await localeStore.setLocale(locale)
+function handleSelect(locale: LocaleType) {
+  localeStore.setLocale(locale)
   uni.showToast({
     title: t('common.success'),
     icon: 'success',
@@ -25,8 +23,6 @@ async function handleSelect(locale: LocaleType) {
 }
 
 function openPicker() {
-  if (localeStore.isSwitching)
-    return
 
   const itemList = localeStore.localeOptions.map(item => item.label)
   uni.showActionSheet({
@@ -42,7 +38,7 @@ function openPicker() {
 
 <template>
   <!-- 列表项模式 -->
-  <view v-if="mode === 'cell'" class="locale-cell" @click="openPicker">
+  <view v-if="enableI18n && mode === 'cell'" class="locale-cell" @click="openPicker">
     <view class="locale-cell__left">
       <text class="locale-cell__icon">🌐</text>
       <text class="locale-cell__label">{{ t('common.language') }}</text>
@@ -54,7 +50,7 @@ function openPicker() {
   </view>
 
   <!-- 按钮模式 -->
-  <view v-else class="locale-button" @click="openPicker">
+  <view v-else-if="enableI18n" class="locale-button" @click="openPicker">
     <text class="locale-button__icon">🌐</text>
     <text class="locale-button__text">{{ currentLabel }}</text>
   </view>
