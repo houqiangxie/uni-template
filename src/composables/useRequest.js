@@ -51,12 +51,12 @@ const getBase = (config) => {
 // 无需登录即可访问的页面白名单
 const checkAuthList = []
 
+// 相同 reqKey 的 in-flight 请求共享 Promise（dedupe）
 const requestMap = new Map()
+// cancelKey / 同接口 lastKey → 最新 RequestTask，用于按 key cancel 或分页 discard 旧请求
+const cancelKeyTaskMap = new Map()
+// 所有进行中的 RequestTask，供 abortAllRequests 全量 cancel
 const activeRequestTasks = new Set()
-// 记录每个页面当前正在进行的请求任务，用于在发起新请求时取消旧请求
-const pageRequestTaskMap = new Map()
-// 按页面实例跟踪请求，用于页面卸载时清理
-const pageInstanceTaskMap = new WeakMap()
 
 // 递归排序对象键值
 const sortObjectKeys = (obj) => {
@@ -96,29 +96,44 @@ const generateReqKey = (config) => {
 
 let toLogin = false
 
-export const abortAllRequests = () => {
-  activeRequestTasks.forEach((task) => {
-    try {
-      task?.abort?.()
-    } catch (e) { }
-  })
-  activeRequestTasks.clear()
-  requestMap.clear()
-  pageRequestTaskMap.clear()
+const abortTask = (task) => {
+  try {
+    task?.abort?.()
+  } catch (e) { }
 }
 
-// 按页面实例取消该页面的所有请求
-export const abortRequestsByPageInstance = (pageInstance) => {
-  if (!pageInstance) return
-  const tasks = pageInstanceTaskMap.get(pageInstance)
-  if (tasks) {
-    tasks.forEach((task) => {
-      try {
-        task?.abort?.()
-      } catch (e) { }
-    })
-    tasks.clear()
-  }
+const getRegistryKey = (configTemp, lastKey) => {
+  return configTemp.cancelKey || (configTemp.discardStaleResponses ? lastKey : null)
+}
+
+const abortPreviousByRegistryKey = (key) => {
+  if (!key) return
+  const prev = cancelKeyTaskMap.get(key)
+  if (prev?.task) abortTask(prev.task)
+  cancelKeyTaskMap.delete(key)
+}
+
+/** 按 cancelKey 取消对应进行中的请求（如 useList 实例销毁时） */
+export const abortRequestByKey = (cancelKey) => {
+  abortPreviousByRegistryKey(cancelKey)
+}
+
+/** 取消所有进行中的请求 */
+export const abortAllRequests = () => {
+  activeRequestTasks.forEach((task) => abortTask(task))
+  activeRequestTasks.clear()
+  cancelKeyTaskMap.clear()
+  requestMap.clear()
+}
+
+const CANCEL_KEY = '__cancelKey'
+
+function detachCancelKeyFromPayload(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return
+  if (!(CANCEL_KEY in data)) return
+  const cancelKey = data[CANCEL_KEY]
+  delete data[CANCEL_KEY]
+  return cancelKey
 }
 
 export const redirectPage = (flag = false, loginFlag = false) => {
@@ -254,9 +269,13 @@ async function useRequest(method, path, data = {}, config = {}) {
 
   configTemp.url = (configTemp.proxy ? getBase(configTemp) : '') + path
   configTemp.data = data
+  const payloadCancelKey = detachCancelKeyFromPayload(configTemp.data)
+  if (payloadCancelKey) configTemp.cancelKey = payloadCancelKey
+  if (config.cancelKey) configTemp.cancelKey = config.cancelKey
   if (configTemp.joinUrl) configTemp.url = appendQueryParams(configTemp.url, configTemp.data)
 
   const lastKey = configTemp.latestKey || `${(configTemp.method || "get").toLowerCase()} ${configTemp.url}`
+  const registryKey = getRegistryKey(configTemp, lastKey)
   configTemp.__reqTimestamp = Date.now()
   // 只有分页通过这个方法开启
   if (configTemp.latest || configTemp.data?.pageNum) configTemp.discardStaleResponses = true
@@ -276,8 +295,10 @@ async function useRequest(method, path, data = {}, config = {}) {
   // 共享 key
   const reqKey = generateReqKey(configTemp)
 
-  const shareRes = requestMap.get(reqKey)
-  if (shareRes) return shareRes
+  if (configTemp.sharePromise !== false) {
+    const shareRes = requestMap.get(reqKey)
+    if (shareRes) return shareRes
+  }
   if (configTemp.loading) {
     loadingCount++
     useLoadingStore().open()
@@ -288,7 +309,6 @@ async function useRequest(method, path, data = {}, config = {}) {
     let requestTask = null
     let timeoutTimer = null
     let finished = false
-    const requestPage = getCurrentPages()?.[getCurrentPages().length - 1]
 
     const cleanup = () => {
       if (finished) return
@@ -299,14 +319,10 @@ async function useRequest(method, path, data = {}, config = {}) {
       }
     }
 
-    // 如果开启了丢弃过期响应，在发起新请求前先取消同页面的上一次未完成请求
-    if (configTemp.discardStaleResponses && lastKey) {
+    // cancelKey 或分页场景：发起新请求前 cancel 同 key 的上一次请求
+    if (registryKey) {
       try {
-        const prev = pageRequestTaskMap.get(lastKey)
-        if (prev?.task?.abort) {
-          prev.task.abort()
-        }
-        pageRequestTaskMap.delete(lastKey)
+        abortPreviousByRegistryKey(registryKey)
       } catch (e) { }
     }
 
@@ -375,45 +391,33 @@ async function useRequest(method, path, data = {}, config = {}) {
         // if (e.statusCode == 403 && !currentPage?.includes('/pages/nopermission')) return uni.redirectTo({ url: '/pages/nopermission' })
         // if (useUserStore().userType == 1 && token && userStore.loginFlag != 1 && configTemp.checkAuth) redirectPage(false, true)
         requestMap.delete(generateReqKey(configTemp))
-        if (requestTask) {
-          activeRequestTasks.delete(requestTask)
-          // 从页面实例的任务集中移除
-          if (requestPage && pageInstanceTaskMap.has(requestPage)) {
-            pageInstanceTaskMap.get(requestPage).delete(requestTask)
+        if (requestTask) activeRequestTasks.delete(requestTask)
+        if (registryKey) {
+          if (configTemp.discardStaleResponses && configTemp.loading) closeLoading()
+          const latest = cancelKeyTaskMap.get(registryKey)
+          if (latest && latest.task === requestTask && latest.timestamp === configTemp.__reqTimestamp) {
+            cancelKeyTaskMap.delete(registryKey)
           }
-        }
-        // 如果本次请求是当前页面的最新请求，则清理记录（避免内存累积）
-        if (configTemp.discardStaleResponses) {
-          if (configTemp.loading) closeLoading()
-          // 清理页面请求任务记录
-          const pr = pageRequestTaskMap.get(lastKey)
-          if (pr && pr.timestamp === configTemp.__reqTimestamp) pageRequestTaskMap.delete(lastKey)
         }
       },
     })
 
     if (requestTask) {
       activeRequestTasks.add(requestTask)
-      // 记录该请求属于哪个页面实例
-      if (requestPage) {
-        if (!pageInstanceTaskMap.has(requestPage)) {
-          pageInstanceTaskMap.set(requestPage, new Set())
-        }
-        pageInstanceTaskMap.get(requestPage).add(requestTask)
-      }
     }
 
-    // 保存当前页面的请求任务，以便后续发起新请求时可以取消它
-    if (configTemp.discardStaleResponses && lastKey) {
+    if (registryKey) {
       try {
-        pageRequestTaskMap.set(lastKey, {
+        cancelKeyTaskMap.set(registryKey, {
           task: requestTask,
           timestamp: configTemp.__reqTimestamp,
         })
       } catch (e) { }
     }
   })
-  requestMap.set(generateReqKey(configTemp), sharePromise)
+  if (configTemp.sharePromise !== false) {
+    requestMap.set(generateReqKey(configTemp), sharePromise)
+  }
   return sharePromise
 }
 
