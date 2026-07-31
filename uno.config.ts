@@ -1,4 +1,5 @@
 import type { Preset, SourceCodeTransformer } from 'unocss'
+import { presetWot } from '@wot-ui/unocss-preset'
 import {
   defineConfig,
   presetAttributify,
@@ -49,6 +50,7 @@ export default defineConfig({
     },
   },
   presets: [
+    presetWot(),
     presetIcons({
       scale: 1.2,
       warn: true,

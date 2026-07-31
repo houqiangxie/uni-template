@@ -8,7 +8,7 @@
 -->
 <template>
     <view v-if="!localeStore.isReady" class="i18n-loading" />
-    <wd-config-provider v-else :theme="isDark ? 'dark' : ''" :theme-vars="themeVars" class="h-screen">
+    <wd-config-provider v-else :theme="isDark ? 'dark' : 'light'" :theme-vars="themeVars" class="h-screen">
         <KuRootView />
         <ComScanCode />
         <wd-toast />
@@ -19,14 +19,10 @@
 
 <script setup lang="ts">
 import ComScanCode from '@/components/common/ComScanCode.vue'
+import { isDark } from '@/composables/useDark'
+import { useConfigProvider } from '@wot-ui/ui'
 
 const themeVars = reactive({
-    // 主色：覆盖语义变量 primary-6（组件默认主色）
-    primary6: '#2D8CF0',
-    // primary5: '#57A3F3', // hover 态，可选
-    // primary7: '#2B85E4', // 点击态，可选
-    'navbarBg': 'transparent',
-    'navbarColor': '#fff',
     'upload-size': '60px',
     'input-cell-label-width': 'auto',
     'tabs-nav-height': '27px',
@@ -37,6 +33,11 @@ const themeVars = reactive({
     'radio-disabled-label-color': '#666',
     'radio-label-fs': '12px',
     'checkbox-label-fs': '12px',
+})
+
+useConfigProvider({
+    theme: computed(() => (isDark.value ? 'dark' : 'light')),
+    themeVars,
 })
 
 const navbarStore = useNavbarStore()

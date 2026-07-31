@@ -68,7 +68,7 @@
     "@wot-ui/ui": "^2.2.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
-    "echarts": "^5.6.0",
+    "echarts": "^6.1.0",
     "jsencrypt": "^3.3.2",
     "jsqr": "^1.4.0",
     "pinia": "^2.3.1",
@@ -79,7 +79,7 @@
     "uni-read-pages-vite": "^0.0.6",
     "vue": "^3.5.13",
     "vue-i18n": "9.1.9",
-    "zrender": "^5.6.1"
+    "zrender": "^6.1.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.39.8",
@@ -95,6 +95,7 @@
     "@unocss/eslint-config": "^0.53.6",
     "@vue-macros/reactivity-transform": "^0.3.23",
     "@vue/test-utils": "^2.4.6",
+    "@wot-ui/unocss-preset": "^1.0.0",
     "eslint": "^8.57.1",
     "lint-staged": "^13.3.0",
     "sass": "1.98.0",

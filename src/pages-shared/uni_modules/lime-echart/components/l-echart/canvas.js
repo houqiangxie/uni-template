@@ -147,14 +147,14 @@ export class Canvas {
 	}
 	createOffscreenCanvas(param){
 		if(!this.children) {
-			this.com.isOffscreenCanvas = true
-			this.com.offscreenWidth = param.width||300
-			this.com.offscreenHeight = param.height||300
-			const com = this.com
-			const canvasId = this.com.offscreenCanvasId
-			const context = uni.createCanvasContext(canvasId, this.com)
-			this._initStyle(context)
-			this.children = new OffscreenCanvas(context, com, canvasId)
+			// this.com.isOffscreenCanvas = true
+			// this.com.offscreenWidth = param.width||300
+			// this.com.offscreenHeight = param.height||300
+			// const com = this.com
+			// const canvasId = this.com.offscreenCanvasId
+			// const context = uni.createCanvasContext(canvasId, this.com)
+			// this._initStyle(context)
+			// this.children = new OffscreenCanvas(context, com, canvasId)
 		} 
 		return this.children
 	}
@@ -203,7 +203,7 @@ export class Canvas {
 			'lineJoin',
 			'lineDash',
 			'miterLimit',
-			// #ifdef H5
+			// #ifdef H5 || APP
 			'font',
 			// #endif
 		];
@@ -211,7 +211,7 @@ export class Canvas {
 		styles.forEach(style => {
 			Object.defineProperty(ctx, style, {
 				set: value => {
-					// #ifdef H5
+					// #ifdef H5 || APP
 					if (style === 'font' && fontSizeReg.test(value)) {
 						const match = fontSizeReg.exec(value);
 						ctx.setFontSize(match[1]);
@@ -352,7 +352,6 @@ export function dispatch(name, {x,y, wheelDelta}) {
 	});
 }
 export function setCanvasCreator(echarts, {canvas, node}) {
-	// echarts.setCanvasCreator(() => canvas);
 	if(echarts && !echarts.registerPreprocessor) {
 		return console.warn('echarts 版本不对或未传入echarts，vue3请使用esm格式')
 	}
@@ -391,5 +390,10 @@ export function setCanvasCreator(echarts, {canvas, node}) {
 				return uni.canIUse(key) && uni[key] ? uni[key]({type: '2d'}) : canvas
 			}
 		})
+	} else if(echarts.setCanvasCreator) {
+		echarts.setCanvasCreator(() => {
+		    return canvas;
+		});
 	}
+	
 }

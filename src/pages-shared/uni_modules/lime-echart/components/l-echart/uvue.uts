@@ -112,6 +112,9 @@ export class Echarts {
 		this.context.evalJS(`canvasToTempFilePath(${JSON.stringify(opt)})`);
 		this.temp.push(opt)
 	}
+	isDisposed():boolean {
+		return false
+	}
 }
 
 // #endif

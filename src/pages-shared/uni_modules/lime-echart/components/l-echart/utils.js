@@ -5,7 +5,7 @@
  * @see [uni.getDeviceInfo](https://uniapp.dcloud.net.cn/api/system/getDeviceInfo.html)
  */
 export function getDeviceInfo() {
-	if (uni.getDeviceInfo && uni.canIUse('getDeviceInfo')) {
+	if (uni.getDeviceInfo || uni.canIUse('getDeviceInfo')) {
 		return uni.getDeviceInfo();
 	} else {
 		return uni.getSystemInfoSync();
@@ -18,7 +18,7 @@ export function getDeviceInfo() {
  * @see [uni.getWindowInfo](https://uniapp.dcloud.net.cn/api/system/getWindowInfo.html)
  */
 export function getWindowInfo() {
-	if (uni.getWindowInfo && uni.canIUse('getWindowInfo')) {
+	if (uni.getWindowInfo || uni.canIUse('getWindowInfo')) {
 		return uni.getWindowInfo();
 	} else {
 		return uni.getSystemInfoSync();
@@ -31,7 +31,7 @@ export function getWindowInfo() {
  * @see [uni.getAppBaseInfo](https://uniapp.dcloud.net.cn/api/system/getAppBaseInfo.html)
  */
 export function getAppBaseInfo() {
-	if (uni.getAppBaseInfo && uni.canIUse('getAppBaseInfo')) {
+	if (uni.getAppBaseInfo || uni.canIUse('getAppBaseInfo')) {
 		return uni.getAppBaseInfo();
 	} else {
 		return uni.getSystemInfoSync();
@@ -162,12 +162,7 @@ export function sleep(time) {
 }
 
 
-export function getRect(selector, options = {}) {
-	const typeDefault = 'boundingClientRect'
-	const {
-		context,
-		type = typeDefault
-	} = options
+export function getRect(selector, context) {
 	return new Promise((resolve, reject) => {
 		const dom = uni.createSelectorQuery().in(context).select(selector);
 		const result = (rect) => {
@@ -177,14 +172,10 @@ export function getRect(selector, options = {}) {
 				reject()
 			}
 		}
-		if (type == typeDefault) {
-			dom[type](result).exec()
-		} else {
-			dom[type]({
-				node: true,
-				size: true,
-				rect: true
-			}, result).exec()
-		}
+		dom.fields({
+			node: true,
+			size: true,
+			rect: true
+		}, result).exec()
 	});
 };

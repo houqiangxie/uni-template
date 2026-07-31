@@ -6,7 +6,8 @@
 interface NavigateToOptions {
   url: "/pages/index" |
        "/pages/login/index" |
-       "/pages-shared/ComChart" |
+       "/pages-shared/pages/placeholder" |
+       "/pages-test/pages/chart-demo/index" |
        "/pages-test/pages/chunk-upload-demo/index" |
        "/pages-test/pages/form-demo/index" |
        "/pages-test/pages/scan-demo/index" |

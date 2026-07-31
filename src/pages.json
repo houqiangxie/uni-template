@@ -12,7 +12,8 @@
   "easycom": {
     "autoscan": true,
     "custom": {
-      "^wd-(.*)": "@wot-ui/ui/components/wd-$1/wd-$1.vue"
+      "^wd-(.*)": "@wot-ui/ui/components/wd-$1/wd-$1.vue",
+      "com-chart": "@/pages-shared/components/common/ComChart.vue"
     }
   },
   "pages": [
@@ -38,8 +39,7 @@
     "pages/index": {
       "network": "all",
       "packages": [
-        "pages-shared",
-        "pages-test"
+        "pages-shared"
       ]
     }
   },
@@ -49,7 +49,7 @@
       "root": "pages-shared",
       "pages": [
         {
-          "path": "ComChart",
+          "path": "pages/placeholder",
           "type": "page"
         }
       ]
@@ -57,6 +57,14 @@
     {
       "root": "pages-test",
       "pages": [
+        {
+          "path": "pages/chart-demo/index",
+          "type": "page",
+          "layout": "default",
+          "style": {
+            "navigationBarTitleText": "图表示例"
+          }
+        },
         {
           "path": "pages/chunk-upload-demo/index",
           "type": "page",

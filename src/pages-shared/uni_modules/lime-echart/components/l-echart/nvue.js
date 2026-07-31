@@ -6,6 +6,7 @@ export class Echarts {
 	}
 	setOption() {
 		this.options = arguments
+		console.log('setOption1')
 		this.webview.evalJs(`setOption(${JSON.stringify(arguments)})`);
 	}
 	getOption() {
@@ -47,5 +48,9 @@ export class Echarts {
 		if(handler){
 			handler(options)
 		}
+	}
+	// 不让报错 无实际作用
+	isDisposed() {
+		return !!this.webview
 	}
 }

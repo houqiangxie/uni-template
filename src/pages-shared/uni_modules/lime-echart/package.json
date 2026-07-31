@@ -1,8 +1,8 @@
 {
   "id": "lime-echart",
-  "displayName": "echarts",
-  "version": "0.9.8",
-  "description": "echarts 全端兼容，一款使echarts图表能跑在uniapp各端中的插件, 支持uniapp/uniappx(web,ios,安卓)",
+  "displayName": "lime-echart echarts图表",
+  "version": "2.0.7",
+  "description": "lime-echart 为 UniApp 和 UniAppX 提供 ECharts 图表兼容支持, 使 ECharts 图表能在H5、小程序、App中运行",
   "keywords": [
     "echarts",
     "canvas",
@@ -11,7 +11,9 @@
 ],
   "repository": "https://gitee.com/liangei/lime-echart",
   "engines": {
-    "HBuilderX": "^3.6.4"
+    "HBuilderX": "^3.6.4",
+    "uni-app": "^4.65",
+    "uni-app-x": "^4.71"
   },
   "dcloudext": {
     "sale": {
@@ -31,61 +33,79 @@
       "permissions": "无"
     },
     "npmurl": "",
-    "type": "component-vue"
+    "type": "component-vue",
+    "darkmode": "x",
+    "i18n": "x",
+    "widescreen": "x"
   },
   "uni_modules": {
     "dependencies": [],
     "encrypt": [],
     "platforms": {
       "cloud": {
-        "tcb": "y",
-        "aliyun": "y",
-        "alipay": "n"
+        "tcb": "x",
+        "aliyun": "x",
+        "alipay": "x"
       },
       "client": {
-        "App": {
-            "app-vue": "y",
-            "app-nvue": "y",
-            "app-uvue": "y",
-            "app-harmony": "u"
+        "uni-app": {
+          "vue": {
+            "vue2": "√",
+            "vue3": "√"
+          },
+          "web": {
+            "safari": "√",
+            "chrome": "√"
+          },
+          "app": {
+            "vue": "√",
+            "nvue": "√",
+            "android": {
+                "extVersion": "",
+                "minVersion": "21"
+            },
+            "ios": "√",
+            "harmony": "√"
+          },
+          "mp": {
+            "weixin": "√",
+            "alipay": "√",
+            "toutiao": "√",
+            "baidu": "√",
+            "kuaishou": "√",
+            "jd": "√",
+            "harmony": "-",
+            "qq": "√",
+            "lark": "√",
+            "xhs": "-"
+          },
+          "quickapp": {
+            "huawei": "-",
+            "union": "-"
+          }
         },
-        "H5-mobile": {
-          "Safari": "y",
-          "Android Browser": "y",
-          "微信浏览器(Android)": "y",
-          "QQ浏览器(Android)": "y"
-        },
-        "H5-pc": {
-          "Chrome": "u",
-          "IE": "u",
-          "Edge": "u",
-          "Firefox": "u",
-          "Safari": "u"
-        },
-        "小程序": {
-          "微信": "y",
-          "阿里": "y",
-          "百度": "y",
-          "字节跳动": "y",
-          "QQ": "y",
-          "钉钉": "u",
-          "快手": "u",
-          "飞书": "u",
-          "京东": "u"
-        },
-        "快应用": {
-          "华为": "u",
-          "联盟": "u"
-        },
-        "Vue": {
-          "vue2": "y",
-          "vue3": "y"
+        "uni-app-x": {
+          "web": {
+            "safari": "√",
+            "chrome": "√"
+          },
+          "app": {
+            "android": {
+                "extVersion": "",
+                "minVersion": "21"
+            },
+            "ios": "√",
+            "harmony": "√"
+          },
+          "mp": {
+            "weixin": "√"
+          }
         }
       }
     }
   },
   "dependencies": {
-    "echarts": "^5.4.1",
-    "zrender": "^5.4.3"
+    "echarts": "^6.1.0",
+    "zrender": "^6.1.0"
   }
 }

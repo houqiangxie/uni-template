@@ -1,195 +1,204 @@
 <template>
 	<!-- #ifdef APP -->
-	<web-view class="lime-echart" ref="chartRef" @load="loaded" :style="[customStyle]" 
-		:webview-styles="[webviewStyles]" src="/uni_modules/lime-echart/static/uvue.html?v=10112">
+	<web-view class="lime-echart" ref="chartRef" @load="loaded" :style="[lStyle]" :webview-styles="[webviewStyles]"
+		src="/pages-shared/uni_modules/lime-echart/static/uvue.html?v=10112">
 	</web-view>
 	<!-- #endif -->
-	<!-- #ifdef H5 -->
+	<!-- #ifdef WEB -->
 	<div class="lime-echart" ref="chartRef"></div>
 	<!-- #endif -->
-	<!-- #ifndef H5 || APP-->
-	<canvas class="lime-echart" :id="canvasid" :canvas-id="canvasid" 
-		@touchstart="touchstart"
-		@touchmove="touchmove"
-		@touchend="touchend">
-	</canvas>
+	<!-- #ifndef WEB || APP-->
+	<view  class="lime-echart">
+		<canvas style="width:100%; height:100%" v-if="canvasid" :id="canvasid" @touchstart="touchstart" @touchmove="touchmove" @touchend="touchend"></canvas>
+	</view>
 	<!-- #endif -->
 </template>
 
 <script lang="uts" setup>
 	// @ts-nocheck
-	import { getCurrentInstance, nextTick } from "vue";
+	import { echartsProps } from './type';
 	import { Echarts } from './uvue';
 	// #ifdef WEB
 	import { dispatch } from './canvas';
 	// #endif
 	// #ifndef APP || WEB
-	import {Canvas, setCanvasCreator, dispatch} from './canvas';
-	import {wrapTouch, convertTouchesToArray, devicePixelRatio ,sleep, canIUseCanvas2d, getRect} from './utils';
+	import { Canvas, setCanvasCreator, dispatch } from './canvas';
+	import { wrapTouch, convertTouchesToArray, devicePixelRatio, sleep, canIUseCanvas2d, getRect } from './utils';
 	// #endif
-	type EchartsResolve = (value : Echarts) => void
-	defineOptions({
-		name: 'l-echart'
-	})
+	type EChartsResolveCallback = (value : Echarts) => void
+	
 	const emits = defineEmits(['finished'])
-	const props = defineProps({
-		// #ifdef APP
-		webviewStyles: {
-			type: Object
-		},
-		customStyle: {
-			type: Object
-		},
-		// #endif
-		// #ifndef APP
-		webviewStyles: {
-			type: Object
-		},
-		customStyle: {
-			type: [String, Object]
-		},
-		// #endif
-		isDisableScroll: {
-			type: Boolean,
-			default: false
-		},
-		isClickable: {
-			type: Boolean,
-			default: true
-		},
-		enableHover: {
-			type: Boolean,
-			default: false
-		},
-		beforeDelay: {
-			type: Number,
-			default: 30
-		}
-	})
+	const props = withDefaults(defineProps<echartsProps>(), {
+		isDisableScroll: false,
+		isClickable: true,
+		autoHideTooltip: false,
+		enableHover: false,
+		landscape: false,
+		beforeDelay: 30,
+	}) 
 	const instance = getCurrentInstance()!;
 	const canvasid = `lime-echart-${instance.uid}`
 	const finished = ref(false)
-	const map = [] as EchartsResolve[]
-	const callbackMap = [] as EchartsResolve[]
+	const initializationQueue = [] as EChartsResolveCallback[]
+	const callbackQueue = [] as EChartsResolveCallback[]
 	// let context = null as UniWebViewElement | null
-	let chart = null as Echarts | null
+	let chartInstance = null as Echarts | null
 	let chartRef = ref<UniWebViewElement | null>(null)
-	
-	const trigger = () => {
+	let canvasNode:any|null = null
+	const processInitializationQueue = () => {
 		// #ifdef APP
 		if (finished.value) {
-			if (chart == null) {
-				chart = new Echarts(chartRef.value!)
+			if (chartInstance == null) {
+				chartInstance = new Echarts(chartRef.value!)
 			}
-			while (map.length > 0) {
-				const resolve = map.pop() as EchartsResolve
-				resolve(chart!)
+			while (initializationQueue.length > 0) {
+				const resolve = initializationQueue.pop() as EChartsResolveCallback
+				resolve(chartInstance!)
 			}
 		}
 		// #endif
 		// #ifndef APP
-		while (map.length > 0) {
-			if(chart != null){
-				const resolve = map.pop() as EchartsResolve
-				resolve(chart!)
+		while (initializationQueue.length > 0) {
+			if (chartInstance != null) {
+				const resolve = initializationQueue.pop() as EChartsResolveCallback
+				resolve(chartInstance!)
 			}
 		}
 		// #endif
-		
-		if(chart != null){
-			while(callbackMap.length > 0){
-				const callback = callbackMap.pop() as EchartsResolve
-				callback(chart!)
+
+		if (chartInstance != null) {
+			while (callbackQueue.length > 0) {
+				const callback = callbackQueue.pop() as EChartsResolveCallback
+				callback(chartInstance!)
 			}
 		}
 	}
-	
+
 	// #ifdef APP
 	const loaded = (event : UniWebViewLoadEvent) => {
 		event.stopPropagation()
 		event.preventDefault()
-		finished.value = true
-		trigger()
-		emits('finished')
+		nextTick(()=> {
+			chartRef.value?.getBoundingClientRectAsync()?.then(res => {
+				if(res.width > 0 && res.height > 0) {
+					finished.value = true
+					processInitializationQueue()
+					emits('finished')
+				} else {
+					console.warn('【lime-echart】获取尺寸失败，请检查代码样式')
+				}
+			})
+		})
 	}
 	// #endif
-	
-	
-	const _next = () : boolean => {
-		if (chart == null) {
+
+
+	const checkInitialization = () : boolean => {
+		if (chartInstance == null) {
 			console.warn(`组件还未初始化，请先使用 init`)
 			return true
 		}
 		return false
 	}
 	const setOption = (option : UTSJSONObject) => {
-		if (_next()) return
-		chart!.setOption(option);
+		if (checkInitialization()) return
+		chartInstance!.setOption(option);
 	}
 	const showLoading = () => {
-		if (_next()) return
-		chart!.showLoading();
+		if (checkInitialization()) return
+		chartInstance!.showLoading();
 	}
 	const hideLoading = () => {
-		if (_next()) return
-		chart!.hideLoading();
+		if (checkInitialization()) return
+		chartInstance!.hideLoading();
 	}
 	const clear = () => {
-		if (_next()) return
-		chart!.clear();
+		if (checkInitialization()) return
+		chartInstance!.clear();
 	}
 	const dispose = () => {
-		if (_next()) return
-		chart!.dispose();
+		if (checkInitialization()) return
+		chartInstance!.dispose();
 	}
 	const resize = (size : UTSJSONObject) => {
-		if (_next()) return
-		chart!.resize(size);
+		if (checkInitialization()) return
+		chartInstance!.resize(size);
 	}
 	const canvasToTempFilePath = (opt : UTSJSONObject) => {
-		if (_next()) return
-		chart!.canvasToTempFilePath(opt);
+		if (checkInitialization()) return
+		// #ifdef APP
+		chartInstance!.canvasToTempFilePath(opt);
+		// #endif
+		// #ifdef WEB
+		opt.success?.({
+			// @ts-ignore
+			tempFilePath: chartInstance!._api.getDataURL()
+		}) 
+		// #endif
+		// #ifndef WEB || APP
+		if(canvasNode) {
+			opt.success?.({
+				tempFilePath: canvasNode.toDataURL()
+			}) 
+		} else {
+			uni.canvasToTempFilePath({
+				...opt,
+				canvasId
+			}, instance.proxy);
+		}
+		// #endif
 	}
-	
-	// #ifdef APP
-	function init(callback : ((chart : Echarts) => void) | null) : Promise<Echarts> {
 
-		if(callback!=null){
-			callbackMap.push(callback)
+	// #ifdef APP
+	function init(callback : ((chartInstance : Echarts) => void) | null) : Promise<Echarts> {
+		if (callback != null) {
+			callbackQueue.push(callback)
 		}
 		return new Promise<Echarts>((resolve) => {
-			map.push(resolve)
-			trigger()
+			initializationQueue.push(resolve)
+			processInitializationQueue()
 		})
 	}
 	// #endif
 	// #ifndef APP 
 	// #ifndef WEB 
 	let use2dCanvas = canIUseCanvas2d()
-	const getContext = async () =>{
-		return getRect(`#${canvasid}`, {context: instance.proxy!, type: use2dCanvas ? 'fields': 'boundingClientRect'}).then(res => {
-			if(res) {
-				let dpr = uni.getWindowInfo().pixelRatio
-				let {width, height, node} = res
-				let canvas;
-				if(node) {
-					const ctx = node.getContext('2d');
-					canvas = new Canvas(ctx, instance.proxy, true, node);
-				} else {
-					const ctx = uni.createCanvasContext(canvasid, instance.proxy);
-					canvas =  new Canvas(ctx, instance.proxy, false);
+	const getContext = async () => {
+		return new Promise((resolve, reject)=>{
+			uni.createCanvasContextAsync({
+				id: canvasid,
+				component: instance.proxy!,
+				success: (context : CanvasContext) => {
+					canvasNode = context
+					const canvasContext = context.getContext('2d')!;
+					const canvas = canvasContext.canvas;
+					let uniCanvas;
+					const width = canvas.offsetWidth
+					const height = canvas.offsetHeight
+					// 处理高清屏逻辑
+					const dpr = devicePixelRatio//uni.getDeviceInfo().devicePixelRatio ?? 1;
+					canvas.width = canvas.offsetWidth * dpr;
+					canvas.height = canvas.offsetHeight * dpr;
+					canvasContext.scale(dpr, dpr); // 仅需调用一次，当调用 reset 方法后需要再次 scale
+					if(use2dCanvas) {
+						uniCanvas = new Canvas(canvasContext, instance.proxy, true, context);
+					} else {
+						uniCanvas =  new Canvas(canvasContext, instance.proxy, false);
+					}
+					resolve({ canvas: uniCanvas, width, height, devicePixelRatio: dpr, node: context});
+				},
+				fail(err) {
+					reject(err)
+					console.log('err', err)
 				}
-				
-				return { canvas, width, height, devicePixelRatio: dpr, node };
-			} else {
-				return {}
-			}
+			})
 		})
 	}
 	// #endif
 	const getTouch = (e) => {
 		const touches = e.touches[0]
 		// #ifdef WEB
+		// @ts-ignore
 		const rect = chart!.getZr().dom.getBoundingClientRect();
 		const touch = {
 			x: touches.clientX - rect.left,
@@ -204,93 +213,95 @@
 		// #endif
 		return touch
 	}
-	const touchstart = (e) => {
-		if(chart == null) return
-		const handler = chart.getZr().handler;
+	const handleTouchStart = (e) => {
+		if (chartInstance == null) return
+		const handler = chartInstance.getZr().handler;
 		const touch = getTouch(e)
 		dispatch.call(handler, 'mousedown', touch)
-		dispatch.call(handler, 'click', touch)
+		dispatch.call(handler, 'mousemove', touch)
+		handler.processGesture(wrapTouch(e), 'start');
 	}
-	const touchmove = (e) => {
-		if(chart == null) return
-		const handler = chart.getZr().handler;
+	const handleTouchMove = (e) => {
+		if (chartInstance == null) return
+		const handler = chartInstance.getZr().handler;
 		const touch = getTouch(e)
 		dispatch.call(handler, 'mousemove', touch)
-		// const rect = chart.getZr().dom.getBoundingClientRect()
-		// handler.dispatch('mousemove', {
-		// 	zrX: e.touches[0].clientX - rect.left,
-		// 	zrY: e.touches[0].clientY - rect.top
-		// })
+		handler.processGesture(wrapTouch(e), 'change');
 	}
-	const touchend = (e) => {
-		if(chart == null) return
-		const handler = chart.getZr().handler;
-		
-		const touch = {
-			x: 999999999,
-			y: 999999999
-		}
-		
-		dispatch.call(handler, 'mousemove', touch)
-		dispatch.call(handler, 'touchend', touch)
-		
+	const handleTouchEnd = (e) => {
+		if (chartInstance == null) return
+		const handler = chartInstance.getZr().handler;
+		const touch = e.changedTouches ? e.changedTouches[0] : {}
+		handler.processGesture(wrapTouch(e), 'end');
+		dispatch.call(handler, 'mouseup', touch)
+		dispatch.call(handler, 'click', touch)
 	}
-	async function init(echarts: any, ...args: any[]): Promise<Echarts>{
-		if(echarts == null){
+	async function init(echarts : any, ...args : any[]) : Promise<Echarts> {
+		const library = echarts
+		if (library == null) {
 			console.error('请确保已经引入了 ECharts 库');
 			return Promise.reject('请确保已经引入了 ECharts 库');
 		}
-		let theme:string|null=null
-		let opts={}
-		let callback:Function|null=null;
-		
-		args.forEach(item =>{
-			if(typeof item === 'function') {
+		let theme : string | null = null
+		let opts = {}
+		let callback : Function | null = null;
+
+		args.forEach(item => {
+			if (typeof item === 'function') {
 				callback = item
-			} else if(['string'].includes(typeof item)){
+			} else if (['string'].includes(typeof item)) {
 				theme = item
-			} else if(typeof item === 'object'){
+			} else if (typeof item === 'object') {
 				opts = item
 			}
 		})
-		
+
 		// #ifdef WEB
-		chart = echarts.init(chartRef.value, theme, opts)
-		window.addEventListener('touchstart', touchstart)
-		window.addEventListener('touchmove', touchmove)
-		window.addEventListener('touchend', touchend)
+		library.env.domSupported = true
+		library.env.hasGlobalWindow = true
+		library.env.node = false
+		library.env.pointerEventsSupported = false
+		library.env.svgSupported = true
+		library.env.touchEventsSupported = true
+		library.env.transform3dSupported = true
+		library.env.transformSupported = true
+		library.env.worker = false
+		library.env.wxa = false
+		chartInstance = library.init(chartRef.value, theme, opts)
+		// window.addEventListener('touchstart', touchstart)
+		// window.addEventListener('touchmove', touchmove)
+		// window.addEventListener('touchend', touchend)
 		// #endif
-		
+
 		// #ifndef WEB
 		let config = await getContext();
-		setCanvasCreator(echarts, config)
-		chart = echarts.init(config.canvas, theme, Object.assign({}, config, opts))
+		setCanvasCreator(library, config)
+		chartInstance = library.init(config.canvas, theme, Object.assign({}, config, opts))
 		// #endif
-		console.log('chart', chart)
-		if(callback!=null && typeof callback == 'function'){
-			callbackMap.push(callback)
+		if (callback != null && typeof callback == 'function') {
+			callbackQueue.push(callback)
 		}
 		return new Promise<Echarts>((resolve) => {
-			map.push(resolve)
-			trigger()
+			initializationQueue.push(resolve)
+			processInitializationQueue()
 		})
 	}
-	onMounted(()=>{
-		nextTick(()=>{
+	onMounted(() => {
+		nextTick(() => {
 			finished.value = true
-			trigger()
+			processInitializationQueue()
 			emits('finished')
 		})
 	})
-	onUnmounted(()=>{
+	onUnmounted(() => {
 		// #ifdef WEB
-		window.removeEventListener('touchstart', touchstart)
-		window.removeEventListener('touchmove', touchmove)
-		window.removeEventListener('touchend', touchend)
+		// window.removeEventListener('touchstart', touchstart)
+		// window.removeEventListener('touchmove', touchmove)
+		// window.removeEventListener('touchend', touchend)
 		// #endif
 	})
 	// #endif
-	
+
 	defineExpose({
 		init,
 		setOption,

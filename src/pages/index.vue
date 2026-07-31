@@ -40,6 +40,10 @@ function goScanDemo() {
   router.push({ path: '/pages-test/pages/scan-demo/index' })
 }
 
+function goChartDemo() {
+  router.push({ path: '/pages-test/pages/chart-demo/index' })
+}
+
 async function handleLogout() {
   uni.showModal({
     title: '提示',
@@ -82,6 +86,7 @@ async function handleLogout() {
       <wd-cell title="上传中心" is-link @click="goUploadCenterDemo" />
       <wd-cell title="ComSelect 本地分页" is-link @click="goComSelectDemo" />
       <wd-cell title="扫码示例" is-link @click="goScanDemo" />
+      <wd-cell title="图表示例" is-link @click="goChartDemo" />
     </view>
 
     <view class="home-actions">

@@ -1,530 +1,472 @@
 <template>
-	<view class="lime-echart" :style="[customStyle]" v-if="canvasId" ref="limeEchart" :aria-label="ariaLabel">
-		<!-- #ifndef APP-NVUE -->
-		<canvas
-			class="lime-echart__canvas"
-			v-if="use2dCanvas"
-			type="2d"
-			:id="canvasId"
-			:style="canvasStyle"
+	<!-- #ifndef APP-NVUE || WEB -->
+	<view class="lime-echart" 
+		:style="[lStyle]" 
+		v-if="canvasId" 
+		ref="chartContainer" 
+		:aria-label="'图表'">
+		<canvas class="lime-echart__canvas" 
+			type="2d" 
+			:style="[styles]"
+			:id="canvasId" 
 			:disable-scroll="isDisableScroll"
-			@touchstart="touchStart"
-			@touchmove="touchMove"
-			@touchend="touchEnd"
-		/>
-		<canvas
-			class="lime-echart__canvas"
-			v-else
-			:width="nodeWidth"
-			:height="nodeHeight"
-			:style="canvasStyle"
 			:canvas-id="canvasId"
-			:id="canvasId"
-			:disable-scroll="isDisableScroll"
-			@touchstart="touchStart"
-			@touchmove="touchMove"
-			@touchend="touchEnd"
-		/>
-		<view class="lime-echart__mask"
-			v-if="isPC"
-			@mousedown="touchStart"
-			@mousemove="touchMove"
-			@mouseup="touchEnd"
-			@touchstart="touchStart"
-			@touchmove="touchMove"
-			@touchend="touchEnd">
-		</view>
-		<canvas v-if="isOffscreenCanvas" :style="offscreenStyle" :canvas-id="offscreenCanvasId"></canvas>
-		<!-- #endif -->
-		<!-- #ifdef APP-NVUE -->
-		<web-view
-			class="lime-echart__canvas"
-			:id="canvasId"
-			:style="canvasStyle"
-			:webview-styles="webviewStyles"
-			ref="webview"
-			src="/uni_modules/lime-echart/static/uvue.html?v=1"
-			@pagefinish="finished = true"
-			@onPostMessage="onMessage"
-		></web-view>
-		<!-- #endif -->
+			@touchstart="handleTouchStart" 
+			@touchmove="handleTouchMove"
+			@touchend="handleTouchEnd">
+		</canvas>
 	</view>
+	<!-- #endif -->
+	<!-- #ifdef WEB -->
+	<div class="lime-echart" ref="chartContainer" :style="[styles, lStyle]"></div>
+	<!-- #endif -->
+	<!-- #ifdef APP-NVUE -->
+	<view class="lime-echart" :style="[lStyle]">
+		<web-view class="lime-echart__canvas" 
+			:webview-styles="webviewStyles" 
+			:style="[styles]"
+			ref="chartContainer"
+			src="/pages-shared/uni_modules/lime-echart/static/uvue.html?v=1" 
+			@pagefinish="isInitialized = true"
+			@onPostMessage="handleWebviewMessage"></web-view>
+	</view>
+	<!-- #endif -->
 </template>
 
-<script>
-// @ts-nocheck
-// #ifndef APP-NVUE
-import {Canvas, setCanvasCreator, dispatch} from './canvas';
-import {wrapTouch, convertTouchesToArray, devicePixelRatio ,sleep, canIUseCanvas2d, getRect, getDeviceInfo} from './utils';
-// #endif
-// #ifdef APP-NVUE
-import { base64ToPath, sleep } from './utils';
-import {Echarts} from './nvue'
-// #endif
-const charts = {}
-const echartsObj = {}
-
-
-/**
- * LimeChart 图表
- * @description 全端兼容的eCharts
- * @tutorial https://ext.dcloud.net.cn/plugin?id=4899
-
- * @property {String} customStyle 自定义样式
- * @property {String} type 指定 canvas 类型
- * @value 2d 使用canvas 2d，部分小程序支持
- * @value '' 使用原生canvas，会有层级问题
- * @value bottom right	不缩放图片，只显示图片的右下边区域
- * @property {Boolean} isDisableScroll	 
- * @property {number} beforeDelay = [30]  延迟初始化 (毫秒)
- * @property {Boolean} enableHover PC端使用鼠标悬浮
-
- * @event {Function} finished 加载完成触发
- */
-export default {
-	name: 'lime-echart',
-	props: {
-		// #ifdef MP-WEIXIN || MP-TOUTIAO
-		type: {
-			type: String,
-			default: '2d'
-		},
-		// #endif
-		// #ifdef APP-NVUE
-		webviewStyles: Object,
-		// hybrid: Boolean,
-		// #endif
-		customStyle: String,
-		isDisableScroll: Boolean,
-		isClickable: {
-			type: Boolean,
-			default: true
-		},
-		enableHover: Boolean,
-		beforeDelay: {
-			type: Number,
-			default: 30
-		},
-		landscape: Boolean
-	},
-	data() {
-		return {
-			// #ifdef MP-WEIXIN || MP-TOUTIAO || MP-ALIPAY
-			use2dCanvas: true,
-			// #endif
-			// #ifndef MP-WEIXIN || MP-TOUTIAO || MP-ALIPAY
-			use2dCanvas: false,
-			// #endif
-			ariaLabel: '图表',
-			width: null,
-			height: null,
-			nodeWidth: null,
-			nodeHeight: null,
-			// canvasNode: null,
-			config: {},
-			inited: false,
-			finished: false,
-			file: '',
-			platform: '',
-			isPC: false,
-			isDown: false,
-			isOffscreenCanvas: false,
-			offscreenWidth: 0,
-			offscreenHeight: 0,
-		};
-	},
-	computed: {
-		rootStyle() {
-			if(this.landscape) {
-				return `transform: translate(-50%,-50%) rotate(90deg); top:50%; left:50%;`
-			}
-		},
-		canvasId() {
-			return `lime-echart${this._ && this._.uid || this._uid}`
-		},
-		offscreenCanvasId() {
-			return `${this.canvasId}_offscreen`
-		},
-		offscreenStyle() {
-			return `width:${this.offscreenWidth}px;height: ${this.offscreenHeight}px; position: fixed; left: 99999px; background: red`
-		},
-		canvasStyle() {
-			return this.rootStyle + (this.width && this.height ? ('width:' + this.width + 'px;height:' + this.height + 'px') : '')
-		}
-	},
-	// #ifndef VUE3
-	beforeDestroy() {
-		this.clear()
-		this.dispose()
-		// #ifdef H5
-		if(this.isPC) {
-			document.removeEventListener('mousewheel', this.mousewheel)
-		}
-		// #endif
-	},
+<script lang="ts">
+	// @ts-nocheck
+	import { defineComponent, getCurrentInstance, ref, onMounted, nextTick, onBeforeUnmount, watch, computed } from './vue'
+	import echartProps from './props'
+	
+	// #ifndef APP-NVUE || WEB
+	import { Canvas, setCanvasCreator, dispatch } from './canvas';
+	import { wrapTouch, convertTouchesToArray, devicePixelRatio ,sleep, canIUseCanvas2d, getRect, getDeviceInfo } from './utils';
 	// #endif
-	// #ifdef VUE3
-	beforeUnmount() {
-		this.clear()
-		this.dispose()
-		// #ifdef H5
-		if(this.isPC) {
-			document.removeEventListener('mousewheel', this.mousewheel)
-		}
-		// #endif
-	},
+	// #ifdef APP-NVUE
+	import { base64ToPath, sleep } from './utils';
+	import { Echarts } from './nvue'
 	// #endif
-	created() {
-		// #ifdef H5
-		if(!('ontouchstart' in window)) {
-			this.isPC = true
-			document.addEventListener('mousewheel', this.mousewheel)
-		}
-		// #endif
-		// #ifdef MP-WEIXIN || MP-TOUTIAO || MP-ALIPAY
-		// const { platform } = uni.getSystemInfoSync();
-		const { platform } = getDeviceInfo();
-		this.isPC = /windows/i.test(platform)
-		// #endif
-		this.use2dCanvas = this.type === '2d' && canIUseCanvas2d()
-	},
-	mounted() {
-		this.$nextTick(() => {
-			this.$emit('finished')
-		})
-	},
-	methods: {
-		// #ifdef APP-NVUE
-		onMessage(e) {
-			const detail = e?.detail?.data[0] || null;
-			const data = detail?.data
-			const key = detail?.event
-			const options = data?.options
-			const event = data?.event
-			const file = detail?.file
-			if (key == 'log' && data) {
-				console.log(data)
-			}
-			if(event) {
-				this.chart.dispatchAction(event.replace(/"/g,''), options)
-			}
-			if(file) {
-				thie.file = file
-			}
-		},
-		// #endif
-		setChart(callback) {
-			if(!this.chart) {
-				console.warn(`组件还未初始化，请先使用 init`)
-				return
-			}
-			if(typeof callback === 'function' && this.chart) {
-				callback(this.chart);
-			}
-			// #ifdef APP-NVUE
-			if(typeof callback === 'function') {
-				this.$refs.webview.evalJs(`setChart(${JSON.stringify(callback.toString())}, ${JSON.stringify(this.chart.options)})`);
-			}
+	
+	export default defineComponent({
+		props: echartProps,
+		emits: ['finished'],
+		setup(props, { emit, expose }) {
+			// #ifndef APP-NVUE
+			let echartsLibrary = null
 			// #endif
-		},
-		setOption() {
-			if (!this.chart || !this.chart.setOption) {
+			
+			const instance = getCurrentInstance()!;
+			const canvasId = `lime-echart-${instance.uid}`
+			const isInitialized = ref(false)
+			const chartContainer = ref(null)
+			
+			type ChartOptions = Record<string, any>
+			type EChartsInstance = typeof echartsLibrary
+			type EChartsResolveCallback = (value: EChartsInstance) => void
+			
+			const initializationQueue = [] as EChartsResolveCallback[]
+			const callbackQueue = [] as EChartsResolveCallback[]
+			
+			let chartInstance: null | EChartsInstance = null
+			
+			const styles = computed(()=> {
+				if(props.landscape) {
+					return {
+						transform: 'translate(-50%,-50%) rotate(90deg)', 
+						top: '50%',
+						left: '50%',
+					}
+				}
+				return {}
+			})
+			
+			const checkInitialization = (): boolean => {
+				if(chartInstance) return false
 				console.warn(`组件还未初始化，请先使用 init`)
-				return
+				return true
 			}
-			this.chart.setOption(...arguments);
-		},
-		showLoading() {
-			if(this.chart) {
-				this.chart.showLoading(...arguments)
+			
+			const setOption = (options: ChartOptions) => {
+				if (checkInitialization()) return
+				chartInstance!.setOption(options);
 			}
-		},
-		hideLoading() {
-			if(this.chart) {
-				this.chart.hideLoading()
+			
+			const hideLoading = () => {
+				if (checkInitialization()) return
+				chartInstance!.showLoading();
 			}
-		},
-		clear() {
-			if(this.chart) {
-				this.chart.clear()
+			
+			const showLoading = () => {
+				if (checkInitialization()) return
+				chartInstance!.hideLoading();
 			}
-		},
-		dispose() {
-			if(this.chart) {
-				this.chart.dispose()
+			
+			const clear = () => {
+				if (checkInitialization()) return
+				chartInstance!.clear();
 			}
-		},
-		resize(size) {
-			if(size && size.width && size.height) {
-				this.height = size.height
-				this.width = size.width
-				if(this.chart) {this.chart.resize(size)}
-			} else {
-				this.$nextTick(() => {
-					uni.createSelectorQuery()
-						.in(this)
-						.select(`.lime-echart`)
-						.boundingClientRect()
-						.exec(res => {
-							if (res) {
-								let { width, height } = res[0];
-								this.width = width = width || 300;
-								this.height = height = height || 300;
-								this.chart.resize({width, height})
-							}
-						});
-				})
+			
+			const dispose = () => {
+				if (checkInitialization()) return
+				chartInstance!.dispose();
+			}
+			const processInitializationQueue = () => {
+				while (initializationQueue.length > 0) {
+					if (chartInstance != null) {
+						const resolve = initializationQueue.pop() as EChartsResolveCallback
+						resolve(chartInstance!)
+					}
+				}
 				
+				if (chartInstance != null) {
+					while (callbackQueue.length > 0) {
+						const callback = callbackQueue.pop() as EChartsResolveCallback
+						callback(chartInstance!)
+					}
+				}
 			}
 			
-		},
-		canvasToTempFilePath(args = {}) {
-			// #ifndef APP-NVUE
-			const { use2dCanvas, canvasId } = this;
-			return new Promise((resolve, reject) => {
-				const copyArgs = Object.assign({
-					canvasId,
-					success: resolve,
-					fail: reject
-				}, args);
-				if (use2dCanvas) {
-					delete copyArgs.canvasId;
-					copyArgs.canvas = this.canvasNode;
-				}
-				uni.canvasToTempFilePath(copyArgs, this);
-			});
-			// #endif
+			const resize = (dimensions?: { width?: number; height?: number }) => {
+				if (checkInitialization()) return
+				// #ifdef APP-NVUE || WEB
+				chartInstance!.resize(dimensions);
+				// #endif
+				// #ifndef APP-NVUE || WEB
+				getRect(`#${canvasId}`, instance.proxy).then(res => {
+					chartInstance!.resize({width: res.width, height: res.height});
+				})
+				// #endif
+			}
+			
 			// #ifdef APP-NVUE
-			this.file = ''
-			this.$refs.webview.evalJs(`canvasToTempFilePath()`);
-			return new Promise((resolve, reject) => {
-				this.$watch('file', async (file) => {
-					if(file) {
-						const tempFilePath = await base64ToPath(file)
-						resolve(args.success({tempFilePath}))
-					} else {
-						reject(args.fail({error: ``}))
+			let chartFile = ref(null);
+			const handleWebviewMessage = (e) => {
+				const detail = e?.detail?.data[0] || null;
+				const data = detail?.data
+				const key = detail?.event
+				const options = data?.options
+				const event = data?.event
+				const file = detail?.file
+				if (key == 'log' && data) {
+					console.log(data)
+				}
+				if(event) {
+					chartInstance.dispatchAction(event.replace(/"/g,''), options)
+				}
+				if(file) {
+					chartFile.value = file
+				}
+			}
+			
+			const canvasToTempFilePath = (options: ChartOptions) => {
+				if (checkInitialization()) return
+				chartContainer.value.evalJs(`canvasToTempFilePath()`);
+				watch(chartFile, async (file) =>{
+					if(!file) return
+					const tempFilePath = await base64ToPath(file)
+					options.success({tempFilePath})
+				})
+			}
+			
+			const getContext = () => {
+				if(isInitialized.value) {
+					return Promise.resolve(isInitialized.value)
+				}
+				return new Promise(resolve => {
+					watch(isInitialized, (val) =>{
+						if(!val) return
+						resolve(val)
+					})
+				})
+			}
+			const init = async (echarts, ...args) => {
+				let theme: string | null = null
+				let config:Record<string, any> = {}
+				let callback: Function | null = null;
+							
+				args.forEach(item => {
+					if (typeof item === 'function') {
+						callback = item
+					} else if (typeof item === 'string') {
+						theme = item
+					} else if (typeof item === 'object') {
+						config = item
 					}
 				})
-			})
-			// #endif
-		},
-		async init(echarts, ...args) {
-			// #ifndef APP-NVUE
-			if(args && args.length == 0 && !echarts) {
-				console.error('缺少参数：init(echarts, theme?:string, opts?: object, callback?: function)')
-				return
+				if(props.beforeDelay) {
+					await sleep(props.beforeDelay)
+				}
+				await getContext();
+				chartInstance = new Echarts(chartContainer.value)
+				chartContainer.value.evalJs(`init(null, null, ${JSON.stringify(config)}, ${theme})`)
+				if (callback && typeof callback === 'function') {
+					callbackQueue.push(callback)
+				}
+				
+				return new Promise<EChartsInstance>((resolve) => {
+					nextTick(()=>{
+						initializationQueue.push(resolve)
+						processInitializationQueue()
+					})
+				})
 			}
+			
 			// #endif
-			let theme=null,opts={},callback;
 			
-			Array.from(arguments).forEach(item => {
-				if(typeof item === 'function') {
-					callback = item
-				}
-				if(['string'].includes(typeof item)) {
-					theme = item
-				}
-				if(typeof item === 'object') {
-					opts = item
-				}
-			})
 			
-			if(this.beforeDelay) {
-				await sleep(this.beforeDelay)
-			}
-			let config = await this.getContext();
-			// #ifndef APP-NVUE
-			setCanvasCreator(echarts, config)
-			try {
-				this.chart = echarts.init(config.canvas, theme, Object.assign({}, config, opts))
-				if(typeof callback === 'function') {
-					callback(this.chart)
+			// #ifndef APP-NVUE || WEB
+			let canvasNode;
+			const canvasToTempFilePath = (options: ChartOptions) => {
+				if (checkInitialization()) return
+				if(canvasNode) {
+					options.success?.({
+						tempFilePath: canvasNode.toDataURL()
+					}) 
 				} else {
-					return this.chart
+					uni.canvasToTempFilePath({
+						...options,
+						canvasId
+					}, instance.proxy);
 				}
-			} catch(e) {
-				console.error(e.messges)
-				return null
 			}
-			// #endif
-			// #ifdef APP-NVUE
-			this.chart = new Echarts(this.$refs.webview)
-			this.$refs.webview.evalJs(`init(null, null, ${JSON.stringify(opts)}, ${theme})`)
-			if(callback) {
-				callback(this.chart)
-			} else {
-				return this.chart
-			}
-			// #endif
-		},
-		getContext() {
-			// #ifdef APP-NVUE
-			if(this.finished) {
-				return Promise.resolve(this.finished)
-			}
-			return new Promise(resolve => {
-				this.$watch('finished', (val) => {
-					if(val) {
-						resolve(this.finished)
-					}
-				})
-			})
-			// #endif
-			// #ifndef APP-NVUE
-			return getRect(`#${this.canvasId}`, {context: this, type: this.use2dCanvas ? 'fields': 'boundingClientRect'}).then(res => {
-				if(res) {
+			
+			const getContext = () => {
+				return getRect(`#${canvasId}`, instance.proxy).then(res => {
 					let dpr = devicePixelRatio
 					let {width, height, node} = res
-					let canvas;
-					this.width = width = width || 300;
-					this.height = height = height || 300;
-					if(node) {
-						const ctx = node.getContext('2d');
-						canvas = new Canvas(ctx, this, true, node);
-						this.canvasNode = node
-					} else {
-						// #ifdef MP-TOUTIAO
-						dpr = !this.isPC ? devicePixelRatio : 1// 1.25
-						// #endif
-						// #ifndef MP-ALIPAY || MP-TOUTIAO
-						dpr = this.isPC ? devicePixelRatio : 1
-						// #endif
-						// #ifdef MP-ALIPAY || MP-LARK
-						dpr = devicePixelRatio
-						// #endif
-						// #ifdef WEB
-						dpr = 1
-						// #endif
-						this.rect = res
-						this.nodeWidth = width * dpr;
-						this.nodeHeight = height * dpr;
-						const ctx = uni.createCanvasContext(this.canvasId, this);
-						canvas =  new Canvas(ctx, this, false);
+					let canvas: Canvas | null = null;
+					if(!(width || height)) {
+						return Promise.reject('no rect')
 					}
-					
-					return { canvas, width, height, devicePixelRatio: dpr, node };
-				} else {
-					return {}
-				}
-			})
-			// #endif
-		},
-		// #ifndef APP-NVUE
-		getRelative(e, touches) {
-			let { clientX, clientY } = e
-			if(!(clientX && clientY) && touches && touches[0]) {
-				clientX = touches[0].clientX
-				clientY = touches[0].clientY
-			}
-			return {x: clientX - this.rect.left, y: clientY - this.rect.top, wheelDelta: e.wheelDelta || 0}
-		},
-		getTouch(e, touches) {
-			const {x} = touches && touches[0] || {}
-			const touch = x ? touches[0] : this.getRelative(e, touches);
-			if(this.landscape) {
-				[touch.x, touch.y] = [touch.y, this.height - touch.x]
-			}
-			return touch;
-		},
-		touchStart(e) {
-			this.isDown = true
-			const next = () => {
-				const touches = convertTouchesToArray(e.touches)
-				if(this.chart) {
-					const touch = this.getTouch(e, touches)
-					this.startX = touch.x
-					this.startY = touch.y
-					this.startT = new Date()
-					const handler = this.chart.getZr().handler;
-					dispatch.call(handler, 'mousedown', touch)
-					dispatch.call(handler, 'mousemove', touch)
-					handler.processGesture(wrapTouch(e), 'start');
-					clearTimeout(this.endTimer);
-				}
-				
-			}
-			if(this.isPC) {
-				getRect(`#${this.canvasId}`, {context: this}).then(res => {
-					this.rect = res
-					next()
+					if(node && node.getContext) {
+						const ctx = node.getContext('2d');
+						canvas = new Canvas(ctx, instance.proxy, true, node);
+						canvasNode = node
+					} else {
+						dpr = 1
+						const ctx = uni.createCanvasContext(canvasId, instance.proxy);
+						canvas = new Canvas(ctx, instance.proxy, false);
+					}
+					return { canvas, width, height, devicePixelRatio: dpr, node }
 				})
-				return
 			}
-			next()
-		},
-		touchMove(e) {
-			if(this.isPC && this.enableHover && !this.isDown) {this.isDown = true}
-			const touches = convertTouchesToArray(e.touches)
-			if (this.chart && this.isDown) {
-				const handler = this.chart.getZr().handler;
-				dispatch.call(handler, 'mousemove', this.getTouch(e, touches))
+			const getTouch = (e) => {
+				const touches = e.touches[0]
+				const touch = props.landscape 
+					? 	{
+							x: touches.y,
+							y: touches.x
+						}
+					:  {
+							x: touches.x,
+							y: touches.y
+						}
+				return touch
+			}
+			const handleTouchStart = (e) => {
+				if (chartInstance == null) return
+				const handler = chartInstance.getZr().handler;
+				const touch = getTouch(e)
+				dispatch.call(handler, 'mousedown', touch)
+				dispatch.call(handler, 'mousemove', touch)
+				handler.processGesture(wrapTouch(e), 'start');
+			}
+			const handleTouchMove = (e) => {
+				if (chartInstance == null) return
+				const handler = chartInstance.getZr().handler;
+				const touch = getTouch(e)
+				dispatch.call(handler, 'mousemove', touch)
 				handler.processGesture(wrapTouch(e), 'change');
 			}
-			
-		},
-		touchEnd(e) {
-			this.isDown = false
-			if (this.chart) {
-				const touches = convertTouchesToArray(e.changedTouches)
-				const {x} = touches && touches[0] || {}
-				const touch = (x ? touches[0] : this.getRelative(e, touches)) || {};
-				if(this.landscape) {
-					[touch.x, touch.y] = [touch.y,  this.height - touch.x]
-				}
-				const handler = this.chart.getZr().handler;
-				const isClick = Math.abs(touch.x - this.startX) < 10 && new Date() - this.startT < 200;
-				dispatch.call(handler, 'mouseup', touch)
+			const handleTouchEnd = (e) => {
+				if (chartInstance == null) return
+				const handler = chartInstance.getZr().handler;
+				const touch = e.changedTouches ? e.changedTouches[0] : {}
 				handler.processGesture(wrapTouch(e), 'end');
-				if(isClick) {
-					dispatch.call(handler, 'click', touch)
-				} else {
-					this.endTimer = setTimeout(() => {
-						dispatch.call(handler, 'mousemove', {x: 999999999,y: 999999999});
-						dispatch.call(handler, 'mouseup', {x: 999999999,y: 999999999});
-					},50)
-				}
+				dispatch.call(handler, 'mouseup', touch)
+				dispatch.call(handler, 'click', touch)
 			}
-		},
-		// #endif
-		// #ifdef H5
-		mousewheel(e){
-			if(this.chart) {
-				// dispatch.call(this.chart.getZr().handler, 'mousewheel', this.getTouch(e))
+			const init = async (echartsLib: EChartsInstance, ...args: any[]): Promise<EChartsInstance> => {
+				const library = echartsLib || echartsLibrary
+				if (!library) {
+					console.error('ECharts library is required');
+					return Promise.reject('ECharts library is required');
+				}
+				let theme: string | null = null
+				let config:Record<string, any> = {}
+				let callback: Function | null = null;
+			
+				args.forEach(item => {
+					if (typeof item === 'function') {
+						callback = item
+					} else if (typeof item === 'string') {
+						theme = item
+					} else if (typeof item === 'object') {
+						config = item
+					}
+				})
+				if(props.beforeDelay) {
+					await sleep(props.beforeDelay)
+				}
+				let options = await getContext();
+				setCanvasCreator(library, options)
+				chartInstance = library.init(options.canvas, theme, Object.assign({}, options, config))
+				if (callback && typeof callback === 'function') {
+					callbackQueue.push(callback)
+				}
+				return new Promise<EChartsInstance>((resolve) => {
+					initializationQueue.push(resolve)
+					processInitializationQueue()
+				})
+			}
+			
+			// #endif
+			
+			
+			// #ifdef WEB
+			const canvasToTempFilePath = (options: ChartOptions) => {
+				if (checkInitialization()) return
+				options.success?.({
+					tempFilePath: chartInstance._api.getDataURL()
+				}) 
+			}
+			
+			const init = async (echarts: EChartsInstance, ...args: any[]): Promise<EChartsInstance> => {
+				const library = echarts
+				if (!library) {
+					console.error('ECharts library is required');
+					return Promise.reject('ECharts library is required');
+				}
+				
+				let theme: string | null = null
+				let config = {}
+				let callback: Function | null = null;
+
+				args.forEach(item => {
+					if (typeof item === 'function') {
+						callback = item
+					} else if (typeof item === 'string') {
+						theme = item
+					} else if (typeof item === 'object') {
+						config = item
+					}
+				})
+				
+				// Configure ECharts environment
+				library.env.domSupported = true
+				library.env.hasGlobalWindow = true
+				library.env.node = false
+				library.env.pointerEventsSupported = false
+				library.env.svgSupported = true
+				library.env.touchEventsSupported = true
+				library.env.transform3dSupported = true
+				library.env.transformSupported = true
+				library.env.worker = false
+				library.env.wxa = false
+				
+				chartInstance = library.init(chartContainer.value, theme, config)
+				
+				if (callback != null && typeof callback === 'function') {
+					callbackQueue.push(callback)
+				}
+				
+				return new Promise<EChartsInstance>((resolve) => {
+					initializationQueue.push(resolve)
+					processInitializationQueue()
+				})
+			}
+			// #endif
+			
+			
+			
+			
+			onMounted(() => {
+				nextTick(() => {
+					// #ifndef APP-NVUE
+					isInitialized.value = true
+					// #endif
+					emit('finished')
+					processInitializationQueue()
+				})
+			})
+			onBeforeUnmount(()=> {
+				clear()
+				dispose()
+			})
+			
+			// #ifdef VUE3
+			expose({
+				init,
+				setOption,
+				hideLoading,
+				showLoading,
+				clear,
+				dispose,
+				resize,
+				canvasToTempFilePath
+			})
+			// #endif
+
+			return {
+				canvasId,
+				chartContainer,
+				styles,
+				// #ifndef WEB || APP-NVUE
+				handleTouchStart,
+				handleTouchMove,
+				handleTouchEnd,
+				// #endif
+				
+				// #ifdef APP-NVUE
+				handleWebviewMessage,
+				isInitialized,
+				// #endif
+				
+				// #ifdef VUE2
+				init,
+				setOption,
+				hideLoading,
+				showLoading,
+				clear,
+				dispose,
+				resize,
+				canvasToTempFilePath,
+				// #endif
 			}
 		}
-		// #endif
-	}
-};
+	})
 </script>
-<style>	
-.lime-echart {
-	position: relative;
+
+<style>
+	.lime-echart {
+		position: relative;
+		/* #ifndef APP-NVUE */
+		width: 100%;
+		height: 100%;
+		/* #endif */
+		/* #ifdef APP-NVUE */
+		flex: 1;
+		/* #endif */
+	}
+
+	.lime-echart__canvas {
+		/* #ifndef APP-NVUE */
+		width: 100%;
+		height: 100%;
+		/* #endif */
+		/* #ifdef APP-NVUE */
+		flex: 1;
+		/* #endif */
+	}
+
 	/* #ifndef APP-NVUE */
-	width: 100%;
-	height: 100%;
+	.lime-echart__mask {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		left: 0;
+		top: 0;
+		z-index: 1;
+	}
 	/* #endif */
-	/* #ifdef APP-NVUE */
-	flex: 1;
-	/* #endif */
-}
-.lime-echart__canvas {
-	/* #ifndef APP-NVUE */
-	width: 100%;
-	height: 100%;
-	/* #endif */
-	/* #ifdef APP-NVUE */
-	flex: 1;
-	/* #endif */
-}
-/* #ifndef APP-NVUE */
-.lime-echart__mask {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	left: 0;
-	top: 0;
-	z-index: 1;
-}
-/* #endif */
 </style>

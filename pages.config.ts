@@ -24,20 +24,21 @@ export default defineUniPages({
     //     "backButton": { //自定义 backButton
     //       "background": "#fff"
     //     }
-    //   }
+  //   }
     // },
   },
   "easycom": {
     "autoscan": true,
     "custom": {
       "^wd-(.*)": "@wot-ui/ui/components/wd-$1/wd-$1.vue",
+      "com-chart":"@/pages-shared/components/common/ComChart.vue",
     }
   },
   pages: [],
   preloadRule: {
     'pages/index': {
       network: 'all',
-      packages: ['pages-shared', 'pages-test'],
+      packages: ['pages-shared'],
     },
   }
 })

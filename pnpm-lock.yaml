@@ -90,8 +90,8 @@ importers:
         specifier: ^1.11.13
         version: 1.11.21
       echarts:
-        specifier: ^5.6.0
-        version: 5.6.0
+        specifier: ^6.1.0
+        version: 6.1.0
       jsencrypt:
         specifier: ^3.3.2
         version: 3.3.2
@@ -123,8 +123,8 @@ importers:
         specifier: 9.1.9
         version: 9.1.9(vue@3.5.13(typescript@5.8.2))
       zrender:
-        specifier: ^5.6.1
-        version: 5.6.1
+        specifier: ^6.1.0
+        version: 6.1.0
     devDependencies:
       '@antfu/eslint-config':
         specifier: ^0.39.8
@@ -165,6 +165,9 @@ importers:
       '@vue/test-utils':
         specifier: ^2.4.6
         version: 2.4.6
+      '@wot-ui/unocss-preset':
+        specifier: ^1.0.0
+        version: 1.0.0(unocss@66.7.5(vite@5.2.8(@types/node@18.19.130)(sass@1.98.0)(terser@5.39.0)))
       eslint:
         specifier: ^8.57.1
         version: 8.57.1(supports-color@8.1.1)
@@ -2514,6 +2517,9 @@ packages:
   '@unocss/core@0.53.6':
     resolution: {integrity: sha512-wuaLjWCzKUisHUxo4pjIdzcimdSmVa2hMHA3V7wVFBiSFX96/s7l0bvhHGFF/gMjbOnvJ+y+lBl3VKqcj9kwbA==}
 
+  '@unocss/core@66.0.0':
+    resolution: {integrity: sha512-PdVbSMHNDDkr++9nkqzsZRAkaU84gxMTEgYbqI7dt2p1DXp/5tomVtmMsr2/whXGYKRiUc0xZ3p4Pzraz8TcXA==}
+
   '@unocss/core@66.7.5':
     resolution: {integrity: sha512-UdJb8MiMywcau8QrWEVgUAz0kvoFHyR+sACwYCgmBh/BpKJGyR/zw/Ys3wvysbm0f+i/20VGBex/QQxYVlzdyQ==}
 
@@ -2792,6 +2798,11 @@ packages:
     engines: {HBuilderX: ^3.8.7}
     peerDependencies:
       vue: '>=3.2.47'
+
+  '@wot-ui/unocss-preset@1.0.0':
+    resolution: {integrity: sha512-lA4dEmuGJ+SQ2gAm/oTsab5/zvt7XdbuIkVRPVWg/4LmwjYDEvS+kZC+UFZSximzP6ZJ4UNDqK0BhVwO18mkAA==}
+    peerDependencies:
+      unocss: '>=0.66.0'
 
   abab@2.0.6:
     resolution: {integrity: sha512-j2afSsaIENvHZN2B8GOpF566vZ5WVk5opAiMTvWgaQT8DkbOqsTfvNAvHoRGU2zzP8cPoqys+xHTRDWW8L+/BA==}
@@ -3515,8 +3526,8 @@ packages:
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
-  echarts@5.6.0:
-    resolution: {integrity: sha512-oTbVTsXfKuEhxftHqL5xprgLoc0k7uScAwtryCgWF6hPYFLRwOUHiFmHGCBKP5NPFNkDVopOieyUqYGH8Fa3kA==}
+  echarts@6.1.0:
+    resolution: {integrity: sha512-q0yaFPggC9FUdsWH4blavRWFmxdrIodbkoKNAjJudAI6CA9gNPxHtV2RcZNEepZVlk4yvBYkOkbk6HIVpIyHZA==}
 
   editorconfig@1.0.4:
     resolution: {integrity: sha512-L9Qe08KWTlqYMVvMcTIvMAdl1cDUubzRNYL+WfA4bLDMHe4nemKkpmYzkznE1FwLKu0EEmy6obgQKzMJrg4x9Q==}
@@ -6464,8 +6475,8 @@ packages:
     resolution: {integrity: sha512-b4JR1PFR10y1mKjhHY9LaGo6tmrgjit7hxVIeAmyMw3jegXR4dhYqLaQF5zMXZxY7tLpMyJeLjr1C4rLmkVe8g==}
     engines: {node: '>=12.20'}
 
-  zrender@5.6.1:
-    resolution: {integrity: sha512-OFXkDJKcrlx5su2XbzJvj/34Q3m6PvyCZkVPHGYpcCJ52ek4U/ymZyfuV1nKE23AyBJ51E/6Yr0mhZ7xGTO4ag==}
+  zrender@6.1.0:
+    resolution: {integrity: sha512-oEGMDB6pOP2S6OwRR4PdVv610zrjnA3Bh+JnSG12fYJlBKjtNAoEb5fSUoCOOINlH96I2fU38/A2UpRKs67xYQ==}
 
 snapshots:
 
@@ -9501,6 +9512,8 @@ snapshots:
 
   '@unocss/core@0.53.6': {}
 
+  '@unocss/core@66.0.0': {}
+
   '@unocss/core@66.7.5': {}
 
   '@unocss/eslint-config@0.53.6(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.8.2)':
@@ -9914,6 +9927,11 @@ snapshots:
   '@wot-ui/ui@2.2.0(vue@3.5.13(typescript@5.8.2))':
     dependencies:
       vue: 3.5.13(typescript@5.8.2)
+
+  '@wot-ui/unocss-preset@1.0.0(unocss@66.7.5(vite@5.2.8(@types/node@18.19.130)(sass@1.98.0)(terser@5.39.0)))':
+    dependencies:
+      '@unocss/core': 66.0.0
+      unocss: 66.7.5(vite@5.2.8(@types/node@18.19.130)(sass@1.98.0)(terser@5.39.0))
 
   abab@2.0.6: {}
 
@@ -10616,10 +10634,10 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
-  echarts@5.6.0:
+  echarts@6.1.0:
     dependencies:
       tslib: 2.3.0
-      zrender: 5.6.1
+      zrender: 6.1.0
 
   editorconfig@1.0.4:
     dependencies:
@@ -14022,6 +14040,6 @@ snapshots:
 
   yocto-queue@1.1.1: {}
 
-  zrender@5.6.1:
+  zrender@6.1.0:
     dependencies:
       tslib: 2.3.0

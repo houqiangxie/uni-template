@@ -8,6 +8,13 @@
 		<title></title>
 		<style type="text/css">
 			html,
+			body {
+				overflow: hidden;
+				/* 隐藏滚动条 */
+				overscroll-behavior: none;
+				/* 禁止橡皮筋效果 */
+			}
+			html,
 			body,
 			.canvas {
 				padding: 0;
@@ -20,7 +27,7 @@
 		</style>
 	</head>
 	<body>
-		<view class="canvas" id="limeChart"></view>
+		<div class="canvas" id="limeChart"></div>
 		<script type="text/javascript" src="./uni.webview.1.5.5.js"></script>
 		<script type="text/javascript" src="./echarts.min.js"></script>
 		<script type="text/javascript" src="./ecStat.min.js"></script>
@@ -168,9 +175,9 @@
 					})
 				}
 			}
-			
+
 			document.addEventListener('touchmove', () => {
-				
+
 			})
 		</script>
 	</body>
