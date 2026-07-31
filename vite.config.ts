@@ -80,7 +80,7 @@ export default defineConfig(async ({ command, mode }) => {
        */
       UniPages({
         subPackages: [
-          'src/pages-echarts',
+          'src/pages-shared',
           'src/pages-test',
         ],
         exclude: ['**/components/**/*.*', '**/uni_modules/**/*.*']
@@ -132,13 +132,17 @@ export default defineConfig(async ({ command, mode }) => {
        */
       Components({
         dts: 'src/components.d.ts',
-        dirs: ['./src/**/components'],
+        // 主包组件放后面，同名时覆盖分包（如 ComScanCode / ComChunkUpload 必须在主包）
+        dirs: [
+          './src/pages-shared/components',
+          './src/components',
+        ],
         exclude: [/[\\/]lime-echart[\\/]/,],
       }),
       UniKuRoot(),
       uni(),
       // vueJsx(), //jsx
-      uniSubpackagePlaceholder(['pages-echarts', 'pages-test']),
+      uniSubpackagePlaceholder(['pages-shared', 'pages-test']),
     ].filter(Boolean),
     define: {
       ROUTES: new TransformPages().routes, // 注入路由表
@@ -161,7 +165,7 @@ export default defineConfig(async ({ command, mode }) => {
       },
     },
     server: {
-      port: 80,
+      port: 88,
       host: '0.0.0.0',
       open: true,
       hmr: {

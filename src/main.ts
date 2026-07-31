@@ -12,7 +12,6 @@ import { createUnistorage } from 'pinia-plugin-unistorage'
 import App from './App.vue'
 import 'uno.css'
 import router from './router'
-import { setupPermissionDirective } from './composables/vPermission'
 import i18n, { setupI18n, switchLocale } from './locale'
 import { DEFAULT_LOCALE } from './locale/types'
 
@@ -34,8 +33,6 @@ export function createApp() {
       switchLocale(DEFAULT_LOCALE)
       localeStore.markReady(DEFAULT_LOCALE)
     })
-
-  setupPermissionDirective(app)
 
   return {
     app,

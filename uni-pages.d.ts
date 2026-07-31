@@ -6,9 +6,10 @@
 interface NavigateToOptions {
   url: "/pages/index" |
        "/pages/login/index" |
-       "/pages-echarts/ComChart" |
+       "/pages-shared/ComChart" |
        "/pages-test/pages/chunk-upload-demo/index" |
        "/pages-test/pages/form-demo/index" |
+       "/pages-test/pages/scan-demo/index" |
        "/pages-test/pages/upload-center-demo/index";
 }
 interface RedirectToOptions extends NavigateToOptions {}

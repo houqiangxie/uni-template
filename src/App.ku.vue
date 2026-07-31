@@ -10,6 +10,7 @@
     <view v-if="!localeStore.isReady" class="i18n-loading" />
     <wd-config-provider v-else :theme="isDark ? 'dark' : ''" :theme-vars="themeVars" class="h-screen">
         <KuRootView />
+        <ComScanCode />
         <wd-toast />
         <wd-notify />
         <wd-dialog></wd-dialog>
@@ -17,6 +18,8 @@
 </template>
 
 <script setup lang="ts">
+import ComScanCode from '@/components/common/ComScanCode.vue'
+
 const themeVars = reactive({
     // 主色：覆盖语义变量 primary-6（组件默认主色）
     primary6: '#2D8CF0',

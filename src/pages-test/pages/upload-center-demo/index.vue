@@ -8,8 +8,6 @@
 </route>
 
 <script setup lang="ts">
-import { destroyChunkUploadSession } from '@/composables/useChunkUpload'
-
 const router = useRouter()
 
 const UPLOAD_SESSION_ID = 'upload-center-demo'

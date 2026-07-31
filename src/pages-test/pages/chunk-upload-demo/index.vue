@@ -10,7 +10,6 @@
 <script setup lang="ts">
 import { configToSchema } from '@/utils/formConfig'
 import { useForm } from '@/composables/useForm'
-import { destroyChunkUploadSession } from '@/composables/useChunkUpload'
 
 const formModel = reactive({
   attachments: [] as Record<string, any>[],

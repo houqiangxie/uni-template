@@ -37,7 +37,7 @@ export default defineUniPages({
   preloadRule: {
     'pages/index': {
       network: 'all',
-      packages: ['pages-echarts', 'pages-test'],
+      packages: ['pages-shared', 'pages-test'],
     },
   }
 })

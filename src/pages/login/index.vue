@@ -9,7 +9,6 @@
 
 <script setup>
 import { onMounted } from "vue";
-import logoImg from "@/static/logo.png";
 import { enableI18n } from '@/utils/config'
 
 const { t } = useI18n()
@@ -131,7 +130,7 @@ onLoad((option) => {
     <view class="brand-section">
       <!-- Logo -->
       <view class="logo-wrapper">
-        <image :src="logoImg" class="logo" />
+        <CustomImage src="logo.png" class="logo" />
       </view>
 
       <!-- 主标题 -->

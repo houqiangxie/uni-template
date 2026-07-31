@@ -38,7 +38,7 @@
     "pages/index": {
       "network": "all",
       "packages": [
-        "pages-echarts",
+        "pages-shared",
         "pages-test"
       ]
     }
@@ -46,7 +46,7 @@
   "__esModule": true,
   "subPackages": [
     {
-      "root": "pages-echarts",
+      "root": "pages-shared",
       "pages": [
         {
           "path": "ComChart",
@@ -71,6 +71,14 @@
           "layout": "default",
           "style": {
             "navigationBarTitleText": "表单示例"
+          }
+        },
+        {
+          "path": "pages/scan-demo/index",
+          "type": "page",
+          "layout": "default",
+          "style": {
+            "navigationBarTitleText": "扫码示例"
           }
         },
         {

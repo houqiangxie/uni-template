@@ -12,9 +12,9 @@
 </template>
 
 <script>
-	import LEchart from '@/pages-echarts/uni_modules/lime-echart/components/l-echart/l-echart.vue';
+	import LEchart from '@/pages-shared/uni_modules/lime-echart/components/l-echart/l-echart.vue';
 	// #ifdef MP-WEIXIN
-	// import * as echarts from '@/pages-echarts/uni_modules/lime-echart/static/echarts.min';
+	// import * as echarts from '@/pages-shared/uni_modules/lime-echart/static/echarts.min';
 	const echarts = require('../../uni_modules/lime-echart/static/echarts.min');
 	// #endif
 	// #ifndef MP-WEIXIN
