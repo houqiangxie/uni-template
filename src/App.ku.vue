@@ -23,6 +23,7 @@ import { isDark } from '@/composables/useDark'
 import { useConfigProvider } from '@wot-ui/ui'
 
 const themeVars = reactive({
+    'primary-6': '#2d8cf0',
     'upload-size': '60px',
     'input-cell-label-width': 'auto',
     'tabs-nav-height': '27px',

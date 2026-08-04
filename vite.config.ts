@@ -80,7 +80,8 @@ export default defineConfig(async ({ command, mode }) => {
        */
       UniPages({
         subPackages: [
-          'src/pages-shared',
+          'src/pages-shared-core',
+          'src/pages-shared-heavy',
           'src/pages-test',
         ],
         exclude: ['**/components/**/*.*', '**/uni_modules/**/*.*']
@@ -134,7 +135,8 @@ export default defineConfig(async ({ command, mode }) => {
         dts: 'src/components.d.ts',
         // 主包组件放后面，同名时覆盖分包（如 ComScanCode / ComChunkUpload 必须在主包）
         dirs: [
-          './src/pages-shared/components',
+          './src/pages-shared-core/components',
+          './src/pages-shared-heavy/components',
           './src/components',
         ],
         exclude: [/[\\/]lime-echart[\\/]/,],
@@ -142,7 +144,7 @@ export default defineConfig(async ({ command, mode }) => {
       UniKuRoot(),
       uni(),
       // vueJsx(), //jsx
-      uniSubpackagePlaceholder(['pages-shared', 'pages-test']),
+      uniSubpackagePlaceholder(['pages-shared-core', 'pages-shared-heavy', 'pages-test']),
     ].filter(Boolean),
     define: {
       ROUTES: new TransformPages().routes, // 注入路由表

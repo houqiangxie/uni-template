@@ -13,7 +13,18 @@
     "autoscan": true,
     "custom": {
       "^wd-(.*)": "@wot-ui/ui/components/wd-$1/wd-$1.vue",
-      "com-chart": "@/pages-shared/components/common/ComChart.vue"
+      "mp-html": "@/pages-shared-heavy/uni_modules/mp-html/mp-html.vue",
+      "com-chart": "@/pages-shared-heavy/components/common/ComChart.vue",
+      "uni-datetime-picker": "@/pages-shared-core/uni_modules/uni-datetime-picker/components/uni-datetime-picker/uni-datetime-picker.vue",
+      "da-dropdown": "@/pages-shared-core/components/common/da-dropdown/index.vue",
+      "com-date-time-range-select": "@/pages-shared-core/components/common/ComDateTimeRangeSelect.vue",
+      "com-select": "@/pages-shared-core/components/common/ComSelect/index.vue",
+      "com-tree": "@/pages-shared-core/components/common/ComTree/index.vue",
+      "com-upload": "@/pages-shared-core/components/common/ComUpload.vue",
+      "com-form": "@/pages-shared-core/components/common/com-form/index.vue",
+      "com-locale-switch": "@/pages-shared-core/components/common/ComLocaleSwitch.vue",
+      "scroll-list": "@/pages-shared-core/components/common/ScrollList.vue",
+      "empty": "@/pages-shared-core/components/common/Empty.vue"
     }
   },
   "pages": [
@@ -39,14 +50,23 @@
     "pages/index": {
       "network": "all",
       "packages": [
-        "pages-shared"
+        "pages-shared-core"
       ]
     }
   },
   "__esModule": true,
   "subPackages": [
     {
-      "root": "pages-shared",
+      "root": "pages-shared-core",
+      "pages": [
+        {
+          "path": "pages/placeholder",
+          "type": "page"
+        }
+      ]
+    },
+    {
+      "root": "pages-shared-heavy",
       "pages": [
         {
           "path": "pages/placeholder",
@@ -71,6 +91,14 @@
           "layout": "default",
           "style": {
             "navigationBarTitleText": "大文件上传"
+          }
+        },
+        {
+          "path": "pages/da-dropdown-demo/index",
+          "type": "page",
+          "layout": "default",
+          "style": {
+            "navigationBarTitleText": "Dropdown 示例"
           }
         },
         {

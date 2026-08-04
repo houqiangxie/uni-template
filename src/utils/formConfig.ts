@@ -1,6 +1,6 @@
 /**
  * 表单 config 处理、rules 构建与 schema 转换。
- * 组件用法见：src/components/common/com-form/README.md
+ * 组件用法见：src/pages-shared-core/components/common/com-form/README.md
  *
  * 推荐链路：config → configToSchema → wd-form :schema
  */

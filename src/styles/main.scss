@@ -1,7 +1,7 @@
 @import '../uni.scss';
 page,root-portal {
   box-sizing: border-box;
-  background-color: #f5f7fa;
+  // background-color: #f5f7fa;
   // 组件级变量不会随 ConfigProvider 传到小程序自定义组件，需在 page 声明
   --wot-navbar-bg: transparent;
   --wot-navbar-color: #fff;

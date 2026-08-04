@@ -27,6 +27,18 @@ export default {
     switchLanguage: 'Switch Language',
     localeLoadFailed: 'Failed to load language pack',
   },
+  comTree: {
+    title: 'Please select',
+    placeholder: 'Please select',
+    searchPlaceholder: 'Search keyword',
+    empty: 'No matching data',
+  },
+  comSelect: {
+    title: 'Please select',
+    placeholder: 'Please select',
+    searchPlaceholder: 'Search keyword',
+    empty: 'No data',
+  },
   home: {
     welcome: 'Status',
     loggedIn: 'Logged in',

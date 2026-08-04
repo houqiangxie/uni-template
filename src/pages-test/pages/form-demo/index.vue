@@ -27,6 +27,24 @@ const hobbyOptions = [
   { text: '音乐', value: 'music' },
 ]
 
+const deptTreeOptions = [
+  {
+    id: 'root',
+    name: '总公司',
+    children: [
+      {
+        id: 'rd',
+        name: '研发中心',
+        children: [
+          { id: 'fe', name: '前端组' },
+          { id: 'be', name: '后端组' },
+        ],
+      },
+      { id: 'mkt', name: '市场部' },
+    ],
+  },
+]
+
 const formModel = reactive({
   name: '',
   phone: '',
@@ -40,6 +58,7 @@ const formModel = reactive({
   endDate: '',
   serviceMode: 'online',
   address: '',
+  deptId: '',
   members: [{ name: '', phone: '' }],
 })
 
@@ -91,6 +110,14 @@ const securityConfig = computed(() => [
     label: '服务方式',
     compType: 'select',
     columns: serviceModeOptions,
+  },
+  {
+    prop: 'deptId',
+    label: '所属部门',
+    compType: 'tree',
+    options: deptTreeOptions,
+    leafOnly: true,
+    showFullPath: true,
   },
   { prop: 'address', label: '地址', compType: 'input' },
 ])

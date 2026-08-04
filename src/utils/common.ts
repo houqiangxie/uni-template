@@ -186,28 +186,29 @@ export const findItemById=(list, id)=> {
 }
 
 
-export const  debounce=(func, delay, immediate)=> {
-  let timer;
-  return function () {
-    if (timer) clearTimeout(timer);
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  delay: number,
+  immediate = false,
+) {
+  let timer: ReturnType<typeof setTimeout> | null = null
+  return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+    if (timer)
+      clearTimeout(timer)
     if (immediate) {
-      // 复杂的防抖函数
-      // 判断定时器是否为空，如果为空，则会直接执行回调函数
-      let firstRun = !timer;
-      // 不管定时器是否为空，都会重新开启一个新的定时器,不断输入，不断开启新的定时器，当不在输入的delay后，再次输入就会立即执行回调函数
+      const firstRun = !timer
       timer = setTimeout(() => {
-        timer = null;
-      }, delay);
-      if (firstRun) {
-        func.apply(this, arguments);
-      }
-      // 简单的防抖函数
-    } else {
-      timer = setTimeout(() => {
-        func.apply(this, arguments);
-      }, delay);
+        timer = null
+      }, delay)
+      if (firstRun)
+        func.apply(this, args)
     }
-  };
+    else {
+      timer = setTimeout(() => {
+        func.apply(this, args)
+      }, delay)
+    }
+  }
 }
 
 
