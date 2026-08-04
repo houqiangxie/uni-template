@@ -11,7 +11,7 @@ import Components from 'unplugin-vue-components/vite'
 import UniPages from '@uni-helper/vite-plugin-uni-pages'
 import UniLayouts from '@uni-helper/vite-plugin-uni-layouts'
 // import vueJsx from '@vitejs/plugin-vue-jsx';
-import TransformPages from 'uni-read-pages-vite'
+import { generateRouter } from '@meng-xi/vite-plugin'
 import UniKuRoot from '@uni-ku/root'
 import uniSubpackagePlaceholder from 'vite-plugin-uni-subpackage-placeholder'
 
@@ -88,6 +88,17 @@ export default defineConfig(async ({ command, mode }) => {
       }),
 
       /**
+       * @meng-xi/vite-plugin generateRouter
+       * @see https://mengxi-studio.github.io/vite-plugin/plugins/generate-router.html
+       */
+      generateRouter({
+        pagesJsonPath: 'src/pages.json',
+        outputPath: 'src/router/config.ts',
+        dts: 'src/router.d.ts',
+        includeSubPackages: true,
+      }),
+
+      /**
        * vite-plugin-uni-layouts
        * @see https://github.com/uni-helper/vite-plugin-uni-layouts
        */
@@ -111,7 +122,7 @@ export default defineConfig(async ({ command, mode }) => {
           'pinia',
           'vue-i18n',
           {
-            from: 'uni-mini-router',
+            from: '@meng-xi/uni-router',
             imports: ['createRouter', 'useRouter', 'useRoute']
           }
         ],
@@ -147,7 +158,6 @@ export default defineConfig(async ({ command, mode }) => {
       uniSubpackagePlaceholder(['pages-shared-core', 'pages-shared-heavy', 'pages-test']),
     ].filter(Boolean),
     define: {
-      ROUTES: new TransformPages().routes, // 注入路由表
       __VUE_I18N_FULL_INSTALL__: true,
       __VUE_I18N_LEGACY_API__: false,
       __VUE_I18N_PROD_DEVTOOLS__: false,

@@ -1,36 +1,88 @@
-/*
- * @Author: houqiangxie
- * @Date: 2021-10-13 11:15:00
- * @LastEditTime: 2024-07-11 15:18:16
- * @LastEditors: houqiangxie
- * @Description:
- * @FilePath: \uniapp-vue3-fant-ts\src\router\index.ts
- * 记得注释
- */
+import {
+  ChannelPlugin,
+  createRouter,
+  InterceptorPlugin,
+  ParamsPlugin,
+} from '@meng-xi/uni-router'
+import routes from './config'
+
+const LOGIN_ROUTE = 'pagesLoginIndex' as const
+const HOME_ROUTE = 'pagesIndex' as const
+
+let launchOptions: App.LaunchShowOption | undefined
+let coldStartGuardDone = false
+
+function isLoggedIn(): boolean {
+  const userStore = useUserStore()
+  return !!userStore.userInfo?.token
+}
+
+function resolveLaunchPath(options?: App.LaunchShowOption): string | undefined {
+  if (options?.path) {
+    return options.path.startsWith('/') ? options.path : `/${options.path}`
+  }
+  return undefined
+}
+
 const router = createRouter({
-  routes: ROUTES
+  routes,
+  plugins: [ParamsPlugin, ChannelPlugin, InterceptorPlugin],
+  interceptUniApi: true,
 })
-// router.beforeEach((to, from, next) => {
-//   const token = uni.getStorageSync("TOKEN")
-//   if (!token && to && to.name !== 'login') {
-//     // 如果没有登录信息且目标路由不是登录页面则跳转到登录页面
-//     next({ name: 'login', navType: 'replaceAll' })
-//   } else if (token && to && to.name === 'login') {
-//     // 如果已经登录且目标页面是登录页面则跳转至首页
-//     next({ name: 'home', navType: 'replaceAll' })
-//   } else {
-//     next()
-//   }
-// })
-// router.afterEach((to, from) => {
-//   const token = uni.getStorageSync("TOKEN")
-//   if (!token && to.name !== 'login') {
-//     // 如果没有登录信息且目标路由不是登录页面则跳转到登录页面
-//     router.replaceAll({ name: 'login' })
-//   } else if (token && to.name === 'login') {
-//     // 如果已经登录且目标页面是登录页面则跳转至首页
-//     router.replaceAll({ name: 'home' })
-//   }
-// })
+
+router.beforeEach((to, from, next) => {
+  const loggedIn = isLoggedIn()
+
+  // if (!loggedIn && to.name !== LOGIN_ROUTE) {
+  //   next(
+  //     {
+  //       name: LOGIN_ROUTE,
+  //       query: { returnUrl: encodeURIComponent(to.fullPath) },
+  //     },
+  //     { mode: 'replace' },
+  //   )
+  //   return
+  // }
+
+  // if (loggedIn && to.name === LOGIN_ROUTE) {
+  //   next({ name: HOME_ROUTE }, { mode: 'replace' })
+  //   return
+  // }
+
+  next()
+})
+
+/** 记录 App 冷启动参数（deeplink / 分享等） */
+export function setLaunchOptions(options?: App.LaunchShowOption) {
+  launchOptions = options
+}
+
+/**
+ * 冷启动 / H5 刷新 / App deeplink 时补执行守卫。
+ * 需在首个 onShow 调用，此时页面栈已就绪。
+ */
+export function runColdStartGuard() {
+  if (coldStartGuardDone)
+    return Promise.resolve()
+
+  return router.isReady().then(async () => {
+    router.syncRoute()
+    const launchPath = resolveLaunchPath(launchOptions)
+
+    try {
+      await router.guardRoute(launchPath, {
+        onAbort: () => {
+          router.relaunch({ name: LOGIN_ROUTE })
+        },
+      })
+    }
+    catch {
+      // 守卫重定向或 onAbort 已处理
+    }
+    finally {
+      coldStartGuardDone = true
+    }
+  })
+}
 
 export default router

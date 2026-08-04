@@ -9,8 +9,14 @@
 <script lang="ts" setup>
 const router = useRouter()
 const navbarStore = useNavbarStore()
-const handleClickLeft = () => {
-  router.back()
+function handleClickLeft() {
+  if (getCurrentPages().length > 1) {
+    router.back().catch(() => {
+      router.relaunch({ name: 'pagesIndex' })
+    })
+    return
+  }
+  router.relaunch({ name: 'pagesIndex' })
 }
 
 </script>

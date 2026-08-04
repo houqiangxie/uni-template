@@ -258,7 +258,6 @@ let token = ''
 // 全局请求封装
 async function useRequest(method, path, data = {}, config = {}) {
   const userStore = useUserStore()
-  console.log('userStore: ', userStore);
   token = config.token || userStore?.userInfo?.token || userStore?.token || ''
   let Authorization = token
   const finalMethod = (config.method || method || 'GET').toUpperCase()

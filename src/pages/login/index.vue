@@ -12,8 +12,9 @@ import { onMounted } from "vue";
 import { enableI18n } from '@/utils/config'
 
 const { t } = useI18n()
-const router = useRouter();
-const userStore = useUserStore();
+const router = useRouter()
+const route = useRoute()
+const userStore = useUserStore()
 const form = reactive({
   username: "",
   password: "",
@@ -90,7 +91,7 @@ function login() {
       });
       nextTick(() => {
         router.replace({
-          path: returnUrl || '/pages/index',
+          path: returnUrl.value || '/pages/index',
         })
       })
     }
@@ -113,10 +114,22 @@ onMounted(() => {
   getCode();
 });
 
-let returnUrl = "";
+const fallbackReturnUrl = ref('')
+
+const returnUrl = computed(() => {
+  const raw = route.value.query.returnUrl
+  if (raw) {
+    const value = Array.isArray(raw) ? raw[0] : raw
+    if (value)
+      return decodeURIComponent(value)
+  }
+  return fallbackReturnUrl.value
+})
+
 onLoad((option) => {
-  returnUrl = option.returnUrl ? decodeURIComponent(option.returnUrl) : "";
-});
+  if (option.returnUrl)
+    fallbackReturnUrl.value = decodeURIComponent(option.returnUrl)
+})
 
 </script>
 

@@ -45,9 +45,9 @@ const navbarStore = useNavbarStore()
 const localeStore = useLocaleStore()
 
 const route = useRoute()
-watch(() => route?.path, () => {
+watch(() => route.value.path, () => {
     navbarStore.setPageConfig()
-},{immediate:true})
+}, { immediate: true })
 
 // 语言切换时刷新导航栏标题
 watch(() => localeStore.locale, () => {
