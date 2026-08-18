@@ -172,7 +172,8 @@ export async function compressSingle(file, opt = {}) {
         const newBlob = await compressImageH5(blob, opt);
 
         const ext = newBlob.type === 'image/png' ? 'png' : 'jpg';
-        const newName = fileName;
+        const lastDot = fileName.lastIndexOf('.');
+        const newName = (lastDot > -1 ? fileName.slice(0, lastDot) : fileName) + '.' + ext;
         const newFile = new File([newBlob], newName, { type: newBlob.type });
 
         return {
@@ -192,6 +193,7 @@ export async function compressSingle(file, opt = {}) {
     // #ifndef H5
     const lastDot = fileName.lastIndexOf('.');
     const extSrc = lastDot > -1 ? fileName.slice(lastDot + 1).toLowerCase() : '';
+    const newName = (lastDot > -1 ? fileName.slice(0, lastDot) : fileName) + '.' + extSrc;
     const format = extSrc === 'png' ? 'png' : 'jpg';
     const res = await compressMpOrApp(filePath, (opt.quality || 30), format, opt.targetKB||300);
 
@@ -200,7 +202,7 @@ export async function compressSingle(file, opt = {}) {
         url: res.path,
         size: res.size,
         file: null,
-        name: getSafeName(fileName, format),
+        name: newName,
         extname: format
     };
     // #endif
