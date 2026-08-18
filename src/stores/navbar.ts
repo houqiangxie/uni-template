@@ -19,6 +19,7 @@ export const useNavbarStore = defineStore('navbar', () => {
     const showLeftButton = ref(true)
     const config = ref({})
     const hideNavbar = ref(false)
+    const isTab = ref(false)
     // 更新菜单信息
     const setPageConfig = () => {
         let t=''
@@ -44,6 +45,9 @@ export const useNavbarStore = defineStore('navbar', () => {
             }
         hideNavbar.value = config.value?.style?.hideNavbar ?? false
         showLeftButton.value = config.value?.style?.showLeftButton ?? true
+        // const tabList = (pagesjson as { tabBar?: { list?: Array<{ pagePath: string }> } }).tabBar?.list
+        // isTab.value = !!currentRoute && !!tabList?.some(item => item.pagePath === currentRoute)
+        isTab.value = config.value?.style?.isTab ?? false
         // 翻译导航栏标题（未启用多语言时使用 pages.json 中的静态标题）
         let translatedTitle = t || appTitle
         if (enableI18n) {
@@ -65,5 +69,5 @@ export const useNavbarStore = defineStore('navbar', () => {
         }
     }
     
-    return { title, showLeftButton, config, setPageConfig, setTitle, hideNavbar }
+    return { title, showLeftButton, config, setPageConfig, setTitle, hideNavbar, isTab }
 })

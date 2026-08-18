@@ -1,26 +1,30 @@
 <template>
   <view>
-    <wd-upload v-model:fileList="previewList" :accept="accept" :source-type="['camera', 'album']"
+    <wd-upload
+      v-model:file-list="previewList" :accept="accept" :source-type="['camera', 'album']"
       :custom-evoke-class="{ 'opacity-0': disabled }" :capture="['camera', 'album']" :multiple="multiple"
       :before-preview="beforePreview" :disabled="disabled" :limit="disabled ? 1 : limit" :before-upload="beforeUpload"
-      :upload-method="customUpload">
+      :upload-method="customUpload"
+    >
       <template #default>
         <view class="bg-[#f5f5f5] w-15 h-15 flex flex-col items-center justify-center">
-          <wd-icon :name="accept == 'all' ? 'file' : 'camera-fill'" size="24px" color="#b8b8b8"/>
-          <view class="mt-2 text-sm text-[#b8b8b8]">({{ previewList.length??0 }}/{{ limit }})</view>
+          <wd-icon :name="accept == 'all' ? 'file' : 'camera-fill'" size="24px" color="#b8b8b8" />
+          <view class="mt-2 text-sm text-[#b8b8b8]">
+            ({{ previewList.length ?? 0 }}/{{ limit }})
+          </view>
         </view>
       </template>
     </wd-upload>
     <wd-root-portal>
-      <wd-img-cropper style="z-index: 10000" v-model="cropperShow" :img-src="cropperSrc" :aspect-ratio="aspectRatio"
-        @confirm="handleConfirmUpload" @cancel="handleCancel">
-      </wd-img-cropper>
+      <wd-img-cropper
+        v-model="cropperShow" style="z-index: 10000" :img-src="cropperSrc" :aspect-ratio="aspectRatio"
+        @confirm="handleConfirmUpload" @cancel="handleCancel"
+      />
     </wd-root-portal>
   </view>
 </template>
 
 <script setup>
-const router = useRouter()
 defineOptions({
   inheritAttrs: false,
 })
@@ -31,47 +35,48 @@ const props = defineProps({
   },
   accept: {
     type: String,
-    default: 'image'
+    default: 'image',
   },
   limit: {
     type: [Number, String],
-    default: 9
+    default: 9,
   },
   multiple: {
     type: Boolean,
-    default: true
+    default: true,
   },
   maxSize: {
     type: Number,
-    default: 30
+    default: 30,
   },
   disabled: {
     type: Boolean,
-    default: false
+    default: false,
   },
   // 是否压缩
   compress: {
     type: Boolean,
-    default: false
+    default: false,
   },
   // 是否裁减
   cropper: {
     type: Boolean,
-    default: false
+    default: false,
   },
   // 裁减比例
   aspectRatio: {
     type: String,
-    default: '16:9'
+    default: '16:9',
   },
 })
 const emit = defineEmits(['update:modelValue', 'change'])
-let upUrl = (useUserStore().userType == 1 ? '' : '/jgzf') + '/api/system/sys/file/upload'
+const router = useRouter()
+let upUrl = `${apiPrefix}/system/sys/file/upload`
 // #ifndef H5
 upUrl = baseUrl + upUrl
 // #endif
 
-const userInfo = useUserStore().userInfo
+const userStore = useUserStore()
 
 const acceptTypes = computed(() => {
   return props.accept === 'image' ? ['jpg', 'jpeg', 'png', 'heif', 'heic', 'jfif'] : []
@@ -79,36 +84,42 @@ const acceptTypes = computed(() => {
 
 const previewList = computed({
   get() {
-    if (!props.modelValue || (props.modelValue && Object.keys(props.modelValue).length == 0)) return []
-    return (Array.isArray(props.modelValue) ? props.modelValue : [props.modelValue]).map(item => {
-      item.name = item.name || item.fileName
-      item.fileName = item.fileName || item.name
-      item.fileId = item.fileId || item.filePath || item.fileUrl || item.url || item.id
-      item.filePath = item.filePath || item.fileId || item.fileUrl
-      item.fileUrl = item.fileUrl || item.filePath || item.fileId
-      item.url = formatUrl(item.fileId, '', item.fileName?.toLowerCase().match(/\.(mp4)$/))
-      return item
+    if (!props.modelValue || (props.modelValue && Object.keys(props.modelValue).length == 0))
+      return []
+    return (Array.isArray(props.modelValue) ? props.modelValue : [props.modelValue]).map((item) => {
+      const fileId = item.fileId || item.filePath || item.fileUrl || item.url || item.id
+      const filePath = item.filePath || fileId || item.fileUrl
+      const fileUrl = item.fileUrl || filePath || fileId
+      return {
+        ...item,
+        name: item.name || item.fileName,
+        fileName: item.fileName || item.name,
+        fileId,
+        filePath,
+        fileUrl,
+        url: formatUrl(fileId),
+      }
     }).filter(v => (v.status && v.status !== 'fail') || !v.status)
   },
   set(val) {
-    const vals=val?.filter(v => (v.status && v.status !== 'fail') || !v.status)
+    const vals = val?.filter(v => (v.status && v.status !== 'fail') || !v.status)
     const value = props.limit == 1 ? vals[0] : vals
     emit('update:modelValue', value)
     emit('change', value)
-  }
+  },
 })
 
-const beforePreview = ({ file, resolve }) => {
+function beforePreview({ file, resolve }) {
   const isVideo = file.fileName?.toLowerCase()?.match(/\.(mp4)$/)
   const isImage = acceptTypes.value.length ? acceptTypes.value.includes(file.name?.slice(file.name.lastIndexOf('.') + 1)?.toLowerCase()) : file.name?.toLowerCase().match(/\.(jpg|jpeg|png|heif|heic|jfif)$/)
   if (isImage || isVideo) {
     resolve(true)
-  } else {
-    new Download(file.url, file.name,false)
+  }
+  else {
+    new Download(file.url, file.name, false)
     resolve(false)
   }
 }
-
 
 function beforeUpload({ files }) {
   if (files.length + (props.modelValue?.length || 0) > props.limit) {
@@ -116,7 +127,7 @@ function beforeUpload({ files }) {
     return false
   }
   if (acceptTypes.value.length) {
-    const correct = files.every(item => {
+    const correct = files.every((item) => {
       const suffix = item.name ? item.name.slice(item.name.lastIndexOf('.') + 1) : item.path ? item.path.slice(item.path.lastIndexOf('.') + 1) : item.url.slice(item.url.lastIndexOf('.') + 1)
       return acceptTypes.value.includes(suffix?.toLowerCase())
     })
@@ -138,14 +149,13 @@ function beforeUpload({ files }) {
   return true
 }
 
-
-const customUpload = async (file, formData, options) => {
+async function customUpload(file, formData, options) {
   let method = 'uploadFile'
-  let url=''
+  let url = ''
   let uploadConfig = {
     url: upUrl,
     header: {
-      Authorization: userInfo?.token,
+      Authorization: userStore.userInfo?.token,
       platformType,
     },
   }
@@ -161,7 +171,8 @@ const customUpload = async (file, formData, options) => {
   const form = new FormData()
   // helper: 将 dataURL 或 URL 转为 Blob
   const toBlob = async (url) => {
-    if (!url) return null
+    if (!url)
+      return null
     // dataURL (base64)
     if (url.startsWith && url.startsWith('data:')) {
       const arr = url.split(',')
@@ -169,9 +180,9 @@ const customUpload = async (file, formData, options) => {
       const bstr = atob(arr[1] || '')
       let n = bstr.length
       const u8arr = new Uint8Array(n)
-      while (n--) {
+      while (n--)
         u8arr[n] = bstr.charCodeAt(n)
-      }
+
       return new Blob([u8arr], { type: mime })
     }
     // 其它 URL：fetch 并取 blob（支持本地临时文件或远程地址）
@@ -183,26 +194,27 @@ const customUpload = async (file, formData, options) => {
   const fileObj = compressed?.file
   if (fileObj) {
     form.append('file', fileObj, filename)
-  } else {
-    const blob = await toBlob(url || file.url)
-    if (blob) form.append('file', blob, filename)
   }
-  form.append('uploadSource', useUserStore().userType == 1 ? '2' : '1')
+  else {
+    const blob = await toBlob(url || file.url)
+    if (blob)
+      form.append('file', blob, filename)
+  }
+  form.append('uploadSource', '1')
   uploadConfig.data = form
   uploadConfig.method = 'POST'
   // 不要手动设置 Content-Type，浏览器会自动添加 boundary
-  if (uploadConfig.header && uploadConfig.header['Content-Type']) {
+  if (uploadConfig.header && uploadConfig.header['Content-Type'])
     delete uploadConfig.header['Content-Type']
-  }
-  
+
   // #endif
-  // #ifndef  H5
+  // #ifndef H5
   uploadConfig = {
     ...uploadConfig,
     name: 'file',
     filePath: url || file.url,
     formData: {
-      uploadSource: useUserStore().userType == 1 ? '2' : '1',
+      uploadSource: '1',
     },
   }
   // #endif
@@ -211,8 +223,9 @@ const customUpload = async (file, formData, options) => {
     // res 结构：{ statusCode, data }
     let response
     try {
-      response = JSON.parse(res.data)
-    } catch (e) {
+      response = typeof res.data === 'string' ? JSON.parse(res.data) : (res.data || {})
+    }
+    catch (e) {
       response = { data: null, code: res.statusCode }
     }
     const { data, code } = response || {}
@@ -230,17 +243,23 @@ const customUpload = async (file, formData, options) => {
         return
       }
       options?.onSuccess(data, file, formData)
-    } else {
-      uni.$notify.showNotify({
-        type: 'danger',
-        message: code == 401 ? '登录已过期,请重新登录' : response?.message || '上传失败',
-        safeHeight: uni.getSystemInfoSync().statusBarHeight
-      })
+    }
+    else {
+      const message = code == 401 ? '登录已过期,请重新登录' : response?.message || '上传失败'
+      if (uni.$notify?.showNotify) {
+        uni.$notify.showNotify({
+          type: 'danger',
+          message,
+          safeHeight: uni.getSystemInfoSync().statusBarHeight,
+        })
+      }
+      else {
+        uni.showToast({ title: message, icon: 'none' })
+      }
       // 设置上传失败
       options?.onError({ ...res, errMsg: res.errMsg || '' }, file, formData)
-      if (code === 401) {
+      if (code === 401)
         router.replace('/pages/login/index')
-      }
     }
   }
 
@@ -249,6 +268,7 @@ const customUpload = async (file, formData, options) => {
   }
 
   let uploadTask = null
+  // #ifdef H5
   if (method === 'request') {
     // H5: 使用原生 XMLHttpRequest 发送 FormData，确保文件字段被正确提交，并支持进度回调
     const xhr = new XMLHttpRequest()
@@ -257,17 +277,18 @@ const customUpload = async (file, formData, options) => {
     const headers = uploadConfig.header || {}
     Object.keys(headers).forEach((k) => {
       // 不设置 Content-Type，让浏览器自动加 boundary
-      if (k.toLowerCase() === 'content-type') return
-      try { xhr.setRequestHeader(k, headers[k]) } catch (e) { /* ignore */ }
+      if (k.toLowerCase() === 'content-type')
+        return
+      try { xhr.setRequestHeader(k, headers[k]) }
+      catch (e) { /* ignore */ }
     })
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         const res = { statusCode: xhr.status, data: xhr.responseText }
-        if (xhr.status >= 200 && xhr.status < 300) {
+        if (xhr.status >= 200 && xhr.status < 300)
           handleSuccess(res)
-        } else {
+        else
           handleFail(res)
-        }
       }
     }
     xhr.onerror = function (e) {
@@ -277,23 +298,31 @@ const customUpload = async (file, formData, options) => {
     uploadTask = {
       onProgressUpdate(cb) {
         xhr.upload.onprogress = function (e) {
-          if (e.lengthComputable) {
+          if (e.lengthComputable)
             cb({ progress: Math.floor((e.loaded / e.total) * 100), totalBytesSent: e.loaded, totalBytesExpectedToSend: e.total })
-          } else {
+          else
             cb({ progress: 0 })
-          }
         }
       },
-      abort() { xhr.abort() }
+      abort() { xhr.abort() },
     }
     xhr.send(uploadConfig.data)
-  } else {
+  }
+  else {
     uploadTask = uni[method]({
       ...uploadConfig,
       success(res) { handleSuccess(res) },
-      fail(err) { handleFail(err) }
+      fail(err) { handleFail(err) },
     })
   }
+  // #endif
+  // #ifndef H5
+  uploadTask = uni.uploadFile({
+    ...uploadConfig,
+    success(res) { handleSuccess(res) },
+    fail(err) { handleFail(err) },
+  })
+  // #endif
 
   // 设置当前文件加载的百分比
   uploadTask && uploadTask.onProgressUpdate && uploadTask.onProgressUpdate((res) => {
@@ -301,11 +330,13 @@ const customUpload = async (file, formData, options) => {
   })
 }
 
-
 const cropperShow = ref(false)
 const cropperSrc = ref('')
-const handleConfirmUpload = (e) => {
+function handleConfirmUpload(e) {
   customUpload({ url: e.tempFilePath }, {}, { name: 'file' })
+}
+function handleCancel() {
+  cropperShow.value = false
 }
 </script>
 

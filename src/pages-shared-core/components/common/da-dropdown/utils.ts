@@ -6,57 +6,60 @@ const RUNTIME_MENU_KEYS = ['value', 'isActived', 'isClick', 'isLoading', 'displa
 
 /** 提取菜单结构快照（prop / type） */
 export function getMenuStructureSnapshot(menu) {
-  if (!menu?.length) return '[]'
+  if (!menu?.length)
+    return '[]'
   return JSON.stringify(menu.map(item => ({ prop: item.prop, type: item.type })))
 }
 
 /** 提取 options 配置快照（不含 checked / isActived 等运行时字段） */
 export function getOptionsConfigSnapshot(options) {
-  if (!options?.length) return '[]'
+  if (!options?.length)
+    return '[]'
   return JSON.stringify(options.map((item) => {
     const snapshot = { ...item }
     delete snapshot.checked
     delete snapshot.isActived
-    if (snapshot.children?.length) {
+    if (snapshot.children?.length)
       snapshot.children = JSON.parse(getOptionsConfigSnapshot(snapshot.children))
-    }
+
     return snapshot
   }))
 }
 
 /** 提取菜单配置快照（不含 value 等运行时状态） */
 export function getMenuConfigSnapshot(menu) {
-  if (!menu?.length) return '[]'
+  if (!menu?.length)
+    return '[]'
   return JSON.stringify(menu.map((item) => {
     const snapshot = { ...item }
-    RUNTIME_MENU_KEYS.forEach((key) => delete snapshot[key])
+    RUNTIME_MENU_KEYS.forEach(key => delete snapshot[key])
     delete snapshot.syncDataFn
-    if (snapshot.options?.length) {
+    if (snapshot.options?.length)
       snapshot.options = JSON.parse(getOptionsConfigSnapshot(snapshot.options))
-    }
+
     return snapshot
   }))
 }
 
 /** 提取 v-model 值快照，用于外部受控同步 */
 export function getModelValuesSnapshot(modelValue) {
-  if (!modelValue || typeof modelValue !== 'object') {
+  if (!modelValue || typeof modelValue !== 'object')
     return '{}'
-  }
+
   return JSON.stringify(modelValue)
 }
 
 /** 比较两个值是否相同 */
 export function isSameValue(a, b) {
-  if (Object.is(a, b)) {
+  if (Object.is(a, b))
     return true
-  }
-  if (a == null || b == null) {
+
+  if (a == null || b == null)
     return a === b
-  }
-  if (typeof a === 'object' && typeof b === 'object') {
+
+  if (typeof a === 'object' && typeof b === 'object')
     return JSON.stringify(a) === JSON.stringify(b)
-  }
+
   return false
 }
 
@@ -71,28 +74,30 @@ export function deepClone(originData) {
   let data
   if (type === '[object Array]') {
     data = []
-    for (let i = 0; i < originData.length; i++) {
+    for (let i = 0; i < originData.length; i++)
       data.push(deepClone(originData[i]))
-    }
-  } else if (type === '[object Map]') {
+  }
+  else if (type === '[object Map]') {
     data = new Map()
     originData.forEach((value, key) => {
       data.set(deepClone(key), deepClone(value))
     })
-  } else if (type === '[object Set]') {
+  }
+  else if (type === '[object Set]') {
     data = new Set()
     originData.forEach((value) => {
       data.add(deepClone(value))
     })
-  } else if (type === '[object Object]') {
+  }
+  else if (type === '[object Object]') {
     data = {}
     for (const prop in originData) {
       // eslint-disable-next-line no-prototype-builtins
-      if (originData.hasOwnProperty(prop)) {
+      if (originData.hasOwnProperty(prop))
         data[prop] = deepClone(originData[prop])
-      }
     }
-  } else {
+  }
+  else {
     data = originData
   }
   return data
@@ -100,11 +105,10 @@ export function deepClone(originData) {
 
 export function getValueByKey(object, path, defaultVal = undefined) {
   let newPath = []
-  if (Array.isArray(path)) {
+  if (Array.isArray(path))
     newPath = path
-  } else {
+  else
     newPath = path.replace(/\[/g, '.').replace(/\]/g, '').split('.')
-  }
 
   return newPath.reduce((o, k) => {
     return (o || {})[k]
@@ -115,9 +119,8 @@ export function getValueByKey(object, path, defaultVal = undefined) {
  * 处理部分初始数据，统一 label / value / suffix / children 字段
  */
 export function checkDataField(options, fields) {
-  if (!fields || !options || options.length === 0) {
+  if (!fields || !options || options.length === 0)
     return options
-  }
 
   for (let i = 0; i < options.length; i++) {
     const k = options[i]
@@ -125,18 +128,17 @@ export function checkDataField(options, fields) {
     k.value = k[fields.value || 'value'] || null
     k.suffix = k[fields.suffix || 'suffix'] || null
     k.children = k[fields.children || 'children'] || null
-    if (k.children?.length) {
+    if (k.children?.length)
       checkDataField(k.children, fields)
-    }
   }
   return options
 }
 
 /** 判断对象是否为空 */
 export function isEmptyObject(obj) {
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj))
     return !obj
-  }
+
   return Object.keys(obj).length === 0
 }
 
@@ -202,10 +204,10 @@ export function needsFieldFooter(type) {
 export function applyFilterItemValue(item, value) {
   if (item.type === 'input-range') {
     item.value = Array.isArray(value) ? [...value] : getFilterEmptyValue('input-range')
-    if (item.value.length < 2) {
+    if (item.value.length < 2)
       item.value = [...item.value, '', ''].slice(0, 2)
-    }
-  } else {
+  }
+  else {
     item.value = value === undefined ? getFilterEmptyValue(item.type) : deepClone(value)
   }
 
@@ -224,24 +226,24 @@ export function resolveFilterValueMap(dropdownItem, mode = 'current') {
 
   for (let i = 0; i < options.length; i++) {
     const item = options[i]
-    if (!item?.prop) continue
+    if (!item?.prop)
+      continue
 
     if (mode === 'reset') {
-      if (item.defaultValue !== undefined) {
+      if (item.defaultValue !== undefined)
         map[item.prop] = deepClone(item.defaultValue)
-      } else if (Object.prototype.hasOwnProperty.call(defaultValue, item.prop)) {
+      else if (Object.prototype.hasOwnProperty.call(defaultValue, item.prop))
         map[item.prop] = deepClone(defaultValue[item.prop])
-      } else {
+      else
         map[item.prop] = getFilterEmptyValue(item.type)
-      }
+
       continue
     }
 
-    if (Object.prototype.hasOwnProperty.call(value, item.prop)) {
+    if (Object.prototype.hasOwnProperty.call(value, item.prop))
       map[item.prop] = deepClone(value[item.prop])
-    } else {
+    else
       map[item.prop] = getFilterEmptyValue(item.type)
-    }
   }
 
   return map
@@ -250,9 +252,8 @@ export function resolveFilterValueMap(dropdownItem, mode = 'current') {
 /** 由配置与 valueMap 生成 filter 编辑态列表 */
 export function createFilterList(dropdownItem, mode = 'current') {
   const { options = [] } = dropdownItem || {}
-  if (!options.length) {
+  if (!options.length)
     return []
-  }
 
   const valueMap = resolveFilterValueMap(dropdownItem, mode)
   const list = deepClone(options)
@@ -268,30 +269,30 @@ export function createFilterList(dropdownItem, mode = 'current') {
 
 /** 判断 filter 子项是否有有效提交值 */
 export function hasFilterValue(type, value) {
-  if (value === null || value === undefined) {
+  if (value === null || value === undefined)
     return false
-  }
-  if (type === 'search') {
+
+  if (type === 'search')
     return true
-  }
-  if (type === 'date-picker') {
+
+  if (type === 'date-picker')
     return Array.isArray(value) ? value.length > 0 : !!value
-  }
-  if (type === 'checkbox') {
+
+  if (type === 'checkbox')
     return Array.isArray(value) && value.length > 0
-  }
+
   if (type === 'input-range') {
-    if (!Array.isArray(value)) {
+    if (!Array.isArray(value))
       return false
-    }
+
     return value.some(v => v !== null && v !== undefined && v !== '')
   }
-  if (value === '') {
+  if (value === '')
     return false
-  }
-  if (typeof value === 'number' || typeof value === 'boolean') {
+
+  if (typeof value === 'number' || typeof value === 'boolean')
     return true
-  }
+
   return !!value
 }
 
@@ -312,9 +313,11 @@ export function createStandaloneFieldItem(dropdownItem, mode = 'current') {
     fieldValue = dropdownItem?.defaultValue !== undefined
       ? deepClone(dropdownItem.defaultValue)
       : getFilterEmptyValue(item.type)
-  } else if (dropdownItem?.value !== undefined) {
+  }
+  else if (dropdownItem?.value !== undefined) {
     fieldValue = deepClone(dropdownItem.value)
-  } else {
+  }
+  else {
     fieldValue = getFilterEmptyValue(item.type)
   }
 
@@ -335,9 +338,9 @@ export function hasFieldValue(type, value) {
 /** cell 下拉列表编辑态 */
 export function createCellOptions(options, selectedValue) {
   const list = deepClone(options || [])
-  for (let i = 0; i < list.length; i++) {
+  for (let i = 0; i < list.length; i++)
     list[i].checked = list[i].value === selectedValue
-  }
+
   return list
 }
 
@@ -347,9 +350,8 @@ export function createPickerState(options, selectedValues) {
   const viewRow = []
   const list = deepClone(options || [])
 
-  if (!list.length) {
+  if (!list.length)
     return { viewCol, viewRow }
-  }
 
   if (selectedValues?.length) {
     function applySelected(selected, opts) {
@@ -360,16 +362,17 @@ export function createPickerState(options, selectedValues) {
             node.checked = true
             viewCol.push(node.value)
             viewRow.push(opts)
-            if (node.children?.length) {
+            if (node.children?.length)
               applySelected(selected, node.children)
-            }
+
             break
           }
         }
       }
     }
     applySelected(selectedValues, list)
-  } else {
+  }
+  else {
     viewCol.push('tmpValue')
     viewRow.push(list)
   }
@@ -389,18 +392,16 @@ export function createDrillPickerState(options, selectedValues) {
   const stack = []
   let currentList = rootList
 
-  if (!selectedValues?.length) {
+  if (!selectedValues?.length)
     return { stack, currentList, rootList }
-  }
 
   for (let i = 0; i < selectedValues.length; i++) {
     const val = selectedValues[i]
     const node = currentList.find(k => k.value === val)
-    if (!node) {
+    if (!node)
       break
-    }
 
-    currentList.forEach(k => {
+    currentList.forEach((k) => {
       k.checked = false
     })
     node.checked = true
@@ -409,10 +410,11 @@ export function createDrillPickerState(options, selectedValues) {
     if (!isLast) {
       stack.push(node)
       currentList = deepClone(node.children || [])
-    } else if (node.children?.length) {
+    }
+    else if (node.children?.length) {
       stack.push(node)
       currentList = deepClone(node.children)
-      currentList.forEach(k => {
+      currentList.forEach((k) => {
         k.checked = false
       })
     }
@@ -459,15 +461,14 @@ export function hasDaterangeValue(daterange) {
 /** 由 filter 编辑态列表构建提交对象 */
 export function buildFilterResult(list) {
   const obj = {}
-  if (!list?.length) {
+  if (!list?.length)
     return obj
-  }
 
   for (let i = 0; i < list.length; i++) {
     const item = list[i]
-    if (item.hidden || !hasFilterValue(item.type, item.value)) {
+    if (item.hidden || !hasFilterValue(item.type, item.value))
       continue
-    }
+
     obj[item.prop] = item.value
     if (item.type === 'input-range') {
       obj[`${item.prop}Start`] = item.value[0] ?? null
@@ -484,20 +485,20 @@ export function isAllValue(value) {
 
 /** 在 options 头部插入「不限」项 */
 export function ensureAllOption(options, showAll) {
-  if (!showAll || !options?.length) {
+  if (!showAll || !options?.length)
     return options
-  }
-  if (options.findIndex(k => k.value === ALL_ITEM_VALUE) === -1) {
+
+  if (options.findIndex(k => k.value === ALL_ITEM_VALUE) === -1)
     options.unshift({ ...ALL_ITEM })
-  }
+
   return options
 }
 
 /** 计算菜单项激活状态 */
 export function computeMenuActived(item) {
-  if (typeof item.value === 'undefined') {
+  if (typeof item.value === 'undefined')
     return false
-  }
+
   switch (item.type) {
     case 'cell':
       return item.options?.some(k => k.value === item.value) ?? false
@@ -534,12 +535,12 @@ export function computeMenuActived(item) {
 
 /** 格式化 date-picker 选中值用于菜单展示 */
 export function formatDatePickerDisplayLabel(value) {
-  if (value == null || value === '') {
+  if (value == null || value === '')
     return ''
-  }
-  if (Array.isArray(value)) {
+
+  if (Array.isArray(value))
     return value.filter(v => v != null && v !== '').join(' - ')
-  }
+
   return String(value)
 }
 
@@ -569,12 +570,12 @@ export function updateMenuDisplayLabel(item) {
  * 格式化数值-个位数补零
  */
 export function formatNumber(n) {
-  let s = parseInt(n)
-  if (isNaN(s)) {
+  let s = Number.parseInt(n)
+  if (Number.isNaN(s))
     s = '0'
-  } else {
+  else
     s = s.toString()
-  }
+
   return s[1] ? s : `0${s}`
 }
 
@@ -595,9 +596,9 @@ export function formatTime(date, format) {
   if (format) {
     tmp.push(year, month, day, hour, minute, second)
     tmp = tmp.map(formatNumber)
-    for (let i = 0; i < tmp.length; i++) {
+    for (let i = 0; i < tmp.length; i++)
       format = format.toLowerCase().replace(fromatsRule[i], tmp[i])
-    }
+
     return format
   }
 
@@ -617,7 +618,7 @@ export function getRangeDate(v) {
   const nowMonth = now.getMonth()
   const nowYear = now.getFullYear()
 
-  const getMonthDays = function(month) {
+  const getMonthDays = function (month) {
     const monthStartDate = new Date(nowYear, month, 1)
     const monthEndDate = new Date(nowYear, month + 1, 1)
     const days = (monthEndDate - monthStartDate) / oneDay
@@ -627,22 +628,26 @@ export function getRangeDate(v) {
   if (v === '-1') {
     dateRange.start = formatTime(new Date(nowTime - oneDay), 'y-m-d')
     dateRange.end = dateRange.start
-  } else if (v === '-7') {
+  }
+  else if (v === '-7') {
     const weekStart = new Date(nowYear, nowMonth, nowDay - nowWeekDay + 1)
     const weekEnd = new Date(nowTime + oneDay)
     dateRange.start = formatTime(weekStart, 'y-m-d')
     dateRange.end = formatTime(weekEnd, 'y-m-d')
-  } else if (v === '-14') {
+  }
+  else if (v === '-14') {
     const weekStart = new Date(nowYear, nowMonth, nowDay - nowWeekDay - 6)
     const weekEnd = new Date(nowYear, nowMonth, nowDay - nowWeekDay)
     dateRange.start = formatTime(weekStart, 'y-m-d')
     dateRange.end = formatTime(weekEnd, 'y-m-d')
-  } else if (v === '-30') {
+  }
+  else if (v === '-30') {
     const monthStart = new Date(nowYear, nowMonth, 1)
     const monthEnd = new Date(nowTime + oneDay)
     dateRange.start = formatTime(monthStart, 'y-m-d')
     dateRange.end = formatTime(monthEnd, 'y-m-d')
-  } else if (v === '-60') {
+  }
+  else if (v === '-60') {
     const lastMonthDate = new Date()
     lastMonthDate.setDate(1)
     lastMonthDate.setMonth(lastMonthDate.getMonth() - 1)
@@ -651,8 +656,9 @@ export function getRangeDate(v) {
     const lastMonthEnd = new Date(nowMonth === 0 ? nowYear - 1 : nowYear, lastMonth, getMonthDays(lastMonth))
     dateRange.start = formatTime(lastMonthStart, 'y-m-d')
     dateRange.end = formatTime(lastMonthEnd, 'y-m-d')
-  } else if (v > 0) {
-    dateRange.start = formatTime(new Date(nowTime - oneDay * parseInt(v)), 'y-m-d')
+  }
+  else if (v > 0) {
+    dateRange.start = formatTime(new Date(nowTime - oneDay * Number.parseInt(v)), 'y-m-d')
     dateRange.end = formatTime(new Date(nowTime - oneDay), 'y-m-d')
   }
   return dateRange
@@ -661,24 +667,24 @@ export function getRangeDate(v) {
 const slotMenuOpts = { showArrow: true }
 
 export const menuInitOpts = {
-  cell: { showArrow: true },
-  click: {},
-  sort: { showSort: true },
-  filter: { showArrow: true },
-  picker: { showArrow: true },
-  daterange: { showQuick: true, showArrow: true },
+  'cell': { showArrow: true },
+  'click': {},
+  'sort': { showSort: true },
+  'filter': { showArrow: true },
+  'picker': { showArrow: true },
+  'daterange': { showQuick: true, showArrow: true },
   'com-select': { showArrow: true, showLabel: true },
   'com-tree': { showArrow: true },
   'date-picker': { showArrow: true },
-  slider: { showArrow: true },
+  'slider': { showArrow: true },
   'input-range': { showArrow: true },
-  radio: { showArrow: true, showLabel: true },
-  checkbox: { showArrow: true },
-  slot: slotMenuOpts,
-  slot1: slotMenuOpts,
-  slot2: slotMenuOpts,
-  slot3: slotMenuOpts,
-  slot4: slotMenuOpts,
-  slot5: slotMenuOpts,
-  search: { showSearch: true },
+  'radio': { showArrow: true, showLabel: true },
+  'checkbox': { showArrow: true },
+  'slot': slotMenuOpts,
+  'slot1': slotMenuOpts,
+  'slot2': slotMenuOpts,
+  'slot3': slotMenuOpts,
+  'slot4': slotMenuOpts,
+  'slot5': slotMenuOpts,
+  'search': { showSearch: true },
 }

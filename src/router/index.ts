@@ -1,6 +1,5 @@
 import {
   ChannelPlugin,
-  createRouter,
   InterceptorPlugin,
   ParamsPlugin,
 } from '@meng-xi/uni-router'
@@ -8,6 +7,24 @@ import routes from './config'
 
 const LOGIN_ROUTE = 'pagesLoginIndex' as const
 const HOME_ROUTE = 'pagesIndex' as const
+
+/** 无需登录可访问的路由 name（主包首页、登录、示例分包） */
+const PUBLIC_ROUTE_NAMES = new Set<string>([
+  LOGIN_ROUTE,
+  HOME_ROUTE,
+])
+
+function isPublicRoute(name?: string, path?: string): boolean {
+  if (name && PUBLIC_ROUTE_NAMES.has(name))
+    return true
+  if (name?.startsWith('pagesTest'))
+    return true
+  if (path?.includes('/pages-test/'))
+    return true
+  if (path === '/pages/index' || path?.startsWith('/pages/login/'))
+    return true
+  return false
+}
 
 let launchOptions: App.LaunchShowOption | undefined
 let coldStartGuardDone = false
@@ -18,9 +35,8 @@ function isLoggedIn(): boolean {
 }
 
 function resolveLaunchPath(options?: App.LaunchShowOption): string | undefined {
-  if (options?.path) {
+  if (options?.path)
     return options.path.startsWith('/') ? options.path : `/${options.path}`
-  }
   return undefined
 }
 
@@ -32,22 +48,24 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const loggedIn = isLoggedIn()
+  const toName = to.name as string | undefined
+  const toPath = to.path as string | undefined
 
-  // if (!loggedIn && to.name !== LOGIN_ROUTE) {
-  //   next(
-  //     {
-  //       name: LOGIN_ROUTE,
-  //       query: { returnUrl: encodeURIComponent(to.fullPath) },
-  //     },
-  //     { mode: 'replace' },
-  //   )
-  //   return
-  // }
+  if (!loggedIn && !isPublicRoute(toName, toPath)) {
+    next(
+      {
+        name: LOGIN_ROUTE,
+        query: { returnUrl: encodeURIComponent(to.fullPath) },
+      },
+      { mode: 'replace' },
+    )
+    return
+  }
 
-  // if (loggedIn && to.name === LOGIN_ROUTE) {
-  //   next({ name: HOME_ROUTE }, { mode: 'replace' })
-  //   return
-  // }
+  if (loggedIn && toName === LOGIN_ROUTE) {
+    next({ name: HOME_ROUTE }, { mode: 'replace' })
+    return
+  }
 
   next()
 })

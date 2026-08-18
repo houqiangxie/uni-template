@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import TreeNode from './TreeNode.vue'
 import type { TreeNodeModel } from '../index.vue'
 
 const props = withDefaults(defineProps<{
@@ -40,7 +39,7 @@ const emit = defineEmits<{
   'update:keyword': [value: string]
   search: []
   clear: []
-  'add-custom': []
+  'addCustom': []
 }>()
 
 const { t } = useI18n()
@@ -61,7 +60,7 @@ function handleClear() {
 
 <template>
   <view class="com-tree-panel" :class="panelClass">
-    <view v-if="showSearch" class="com-tree-panel__search flex items-center">
+    <view v-if="showSearch" class="flex items-center com-tree-panel__search">
       <wd-search
         v-model="keywordModel"
         :placeholder="searchPlaceholder"
@@ -74,12 +73,12 @@ function handleClear() {
       <view
         v-if="multiple && allowCreate"
         class="com-tree-panel__create-btn mr-2"
-        @click="emit('add-custom')"
+        @click="emit('addCustom')"
       >
         {{ t('common.add') }}
       </view>
     </view>
-    <view class="com-tree-panel__body overflow-hidden flex-1 min-h-0 px-2">
+    <view class="overflow-hidden flex-1 com-tree-panel__body min-h-0 px-2">
       <view v-if="loading" class="com-tree-panel__state">
         {{ t('common.loading') }}
       </view>

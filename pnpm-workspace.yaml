@@ -5,10 +5,11 @@ allowBuilds:
   esbuild: true
   json-editor-vue: true
   sharp: false
-  simple-git-hooks: true
+  simple-git-hooks: set this to true or false
   vue-demi: true
 
 overrides:
+  caniuse-lite: 1.0.30001809
   '@intlify/core-base': 9.1.9
   '@intlify/devtools-if': 9.1.9
   '@intlify/message-compiler': 9.1.9

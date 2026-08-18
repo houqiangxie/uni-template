@@ -1,7 +1,11 @@
-
 /** 去除末尾斜杠 */
 function trimTrailingSlash(url: string): string {
   return url.replace(/\/$/, '')
+}
+
+/** 读取 API 基础地址 */
+function resolveEnvBaseUrl(): string {
+  return trimTrailingSlash(import.meta.env.VITE_BASE_URL || '')
 }
 
 /**
@@ -18,13 +22,24 @@ export const baseUrl = trimTrailingSlash(
 // #endif
 
 // #ifndef H5
-export const baseUrl = trimTrailingSlash(import.meta.env.VITE_BASE_URL || '')
+export const baseUrl = resolveEnvBaseUrl()
 // #endif
 
-/** 远程静态资源根路径：baseUrl + /wxStaticFile/static/ */
+/** 请求路径前缀（如 /api），拼在 baseUrl 之后 */
+export const apiPrefix = trimTrailingSlash(import.meta.env.VITE_API_PREFIX || '/api') || '/api'
+
+/**
+ * 远程静态资源路径段（相对站点根），默认 /wxStaticFile/static
+ * 可通过 VITE_STATIC_PREFIX 覆盖；勿以 / 结尾
+ */
+export const staticPrefix = trimTrailingSlash(
+  import.meta.env.VITE_STATIC_PREFIX || '/wxStaticFile/static',
+) || '/wxStaticFile/static'
+
+/** 远程静态资源根路径：baseUrl + staticPrefix + / */
 export const staticBaseUrl = baseUrl
-  ? `${baseUrl}/wxStaticFile/static/`
-  : '/wxStaticFile/static/'
+  ? `${baseUrl}${staticPrefix}/`
+  : `${staticPrefix}/`
 
 // 应用标题
 export const appTitle = import.meta.env.VITE_APP_TITLE || 'Uni 模板'

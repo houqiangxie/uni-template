@@ -94,6 +94,14 @@
           }
         },
         {
+          "path": "pages/com-select-demo/index",
+          "type": "page",
+          "layout": "default",
+          "style": {
+            "navigationBarTitleText": "ComSelect 本地分页"
+          }
+        },
+        {
           "path": "pages/da-dropdown-demo/index",
           "type": "page",
           "layout": "default",

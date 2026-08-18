@@ -33,6 +33,11 @@ export const routes: RouteConfig[] = [
 		meta: { title: '大文件上传' }
 	},
 	{
+		path: '/pages-test/pages/com-select-demo/index',
+		name: 'pagesTestPagesComSelectDemoIndex',
+		meta: { title: 'ComSelect 本地分页' }
+	},
+	{
 		path: '/pages-test/pages/da-dropdown-demo/index',
 		name: 'pagesTestPagesDaDropdownDemoIndex',
 		meta: { title: 'Dropdown 示例' }

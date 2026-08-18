@@ -6,4 +6,7 @@ export const routeTitleMap: Record<string, string> = {
   'pages-test/pages/chunk-upload-demo/index': 'route.chunkUploadDemo',
   'pages-test/pages/upload-center-demo/index': 'route.uploadCenterDemo',
   'pages-test/pages/com-select-demo/index': 'route.comSelectDemo',
+  'pages-test/pages/scan-demo/index': 'route.scanDemo',
+  'pages-test/pages/chart-demo/index': 'route.chartDemo',
+  'pages-test/pages/da-dropdown-demo/index': 'route.daDropdownDemo',
 }

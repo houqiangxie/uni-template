@@ -24,15 +24,6 @@
 外层 `wd-form` 承载 model 与 schema，`com-form` 只负责渲染字段：
 
 ```vue
-<template>
-  <scroll-view class="container" scroll-y :scroll-top="scrollTop" scroll-with-animation>
-    <wd-form ref="formRef" :model="formModel" :schema="schema" layout="horizontal" title-width="auto">
-      <com-form :config="formConfig" :form="formModel" embedded />
-    </wd-form>
-    <wd-button type="primary" block @click="handleSubmit">提交</wd-button>
-  </scroll-view>
-</template>
-
 <script setup>
 import { configToSchema } from '@/utils/formConfig'
 import { useForm } from '@/composables/useForm'
@@ -53,13 +44,24 @@ const schema = computed(() => configToSchema(formConfig))
 
 const { scrollTop, formRef, validate } = useForm()
 
-const handleSubmit = async () => {
+async function handleSubmit() {
   const valid = await validate()
   if (valid) {
     // 提交逻辑
   }
 }
 </script>
+
+<template>
+  <scroll-view class="container" scroll-y :scroll-top="scrollTop" scroll-with-animation>
+    <wd-form ref="formRef" :model="formModel" :schema="schema" layout="horizontal" title-width="auto">
+      <com-form :config="formConfig" :form="formModel" embedded />
+    </wd-form>
+    <wd-button type="primary" block @click="handleSubmit">
+      提交
+    </wd-button>
+  </scroll-view>
+</template>
 ```
 
 > `scroll-view` 需绑定 `:scroll-top="scrollTop"`，且 `class="container"` 写在 scroll-view 上，校验失败时才会自动滚动到首个错误字段。
@@ -126,8 +128,8 @@ slot 字段不在 config 自动 rules 里，需手动补；也可按 model 动�
 ```javascript
 const schema = computed(() => configToSchema(formConfig, {
   extraRules: (model) => ({
-    stationName: [{
-      modelValidator: ({ model: m }) => !!m.stationInfoId || '请选择站点',
+    categoryName: [{
+      modelValidator: ({ model: m }) => !!m.categoryId || '请选择分类',
     }],
     ...(model.serviceMode === 'offline'
       ? { address: [{ required: true, message: '线下服务请输入地址' }] }
@@ -139,8 +141,8 @@ const schema = computed(() => configToSchema(formConfig, {
 模板中 slot 字段需手写 `wd-form-item`：
 
 ```vue
-<wd-form-item title="站点" prop="stationName">
-  <wd-input v-model="formModel.stationName" bordered readonly placeholder="选择后自动填充" />
+<wd-form-item title="分类" prop="categoryName">
+  <wd-input v-model="formModel.categoryName" bordered readonly placeholder="选择后自动填充" />
 </wd-form-item>
 ```
 
@@ -203,17 +205,6 @@ const schema = computed(() => configToSchema(blockAConfig, blockBConfig))
 综合以上用法的完整页面示例：
 
 ```vue
-<template>
-  <scroll-view class="container" scroll-y :scroll-top="scrollTop" scroll-with-animation>
-    <wd-form ref="formRef" :model="formModel" :schema="schema" layout="horizontal" title-width="auto">
-      <com-form :config="blockAConfig" :form="formModel" embedded />
-      <com-form :config="blockBConfig" :form="formModel" embedded />
-      <com-form :config="membersFormConfig" :form="formModel" embedded />
-    </wd-form>
-    <wd-button type="primary" block @click="handleSubmit">提交</wd-button>
-  </scroll-view>
-</template>
-
 <script setup>
 import { configToSchema, loopField, modelRules } from '@/utils/formConfig'
 import { useForm } from '@/composables/useForm'
@@ -227,8 +218,8 @@ const formModel = reactive({
   endDate: '',
   serviceMode: 'online',
   address: '',
-  stationInfoId: '',
-  stationName: '',
+  categoryId: '',
+  categoryName: '',
   members: [{ name: '', phone: '' }],
 })
 
@@ -286,9 +277,9 @@ const schema = computed(() => configToSchema(
   blockAConfig,
   () => blockBConfig.value,
   {
-    extraRules: (model) => ({
-      stationName: [{
-        modelValidator: ({ model: m }) => !!m.stationInfoId || '请选择站点',
+    extraRules: model => ({
+      categoryName: [{
+        modelValidator: ({ model: m }) => !!m.categoryId || '请选择分类',
       }],
       ...(model.serviceMode === 'offline'
         ? { address: [{ required: true, message: '线下服务请输入地址' }] }
@@ -314,13 +305,26 @@ const schema = computed(() => configToSchema(
 
 const { scrollTop, formRef, validate } = useForm()
 
-const handleSubmit = async () => {
+async function handleSubmit() {
   const valid = await validate()
-  if (valid) {
+  if (valid)
     console.log('表单数据：', formModel)
-  }
+
 }
 </script>
+
+<template>
+  <scroll-view class="container" scroll-y :scroll-top="scrollTop" scroll-with-animation>
+    <wd-form ref="formRef" :model="formModel" :schema="schema" layout="horizontal" title-width="auto">
+      <com-form :config="blockAConfig" :form="formModel" embedded />
+      <com-form :config="blockBConfig" :form="formModel" embedded />
+      <com-form :config="membersFormConfig" :form="formModel" embedded />
+    </wd-form>
+    <wd-button type="primary" block @click="handleSubmit">
+      提交
+    </wd-button>
+  </scroll-view>
+</template>
 ```
 
 ## 配置项说明

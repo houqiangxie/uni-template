@@ -22,8 +22,8 @@
     </view>
     <PartDropdownFooter
       v-if="showFooter"
-      :resetText="dropdownItem.resetText"
-      :confirmText="dropdownItem.confirmText"
+      :reset-text="dropdownItem.resetText"
+      :confirm-text="dropdownItem.confirmText"
       @reset="handleReset"
       @confirm="handleConfirm"
     />
@@ -31,10 +31,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
 import { createStandaloneFieldItem, getFieldConfirmValue, isFieldInstantConfirmType, isFieldPopupType } from '../utils'
-import FilterField from './filter-field.vue'
-import PartDropdownFooter from './part-dropdown-footer.vue'
 
 const props = defineProps({
   dropdownItem: { type: Object, default: null },
@@ -77,9 +74,8 @@ function handleConfirm() {
 }
 
 function handleInstantChange() {
-  if (instantConfirm.value) {
+  if (instantConfirm.value)
     emitSuccess()
-  }
 }
 
 function handlePopupCancel() {

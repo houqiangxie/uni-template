@@ -151,14 +151,12 @@ export function createRemoteRequestCoordinator() {
 </script>
 
 <script setup lang="ts">
-import { debounce } from '@/utils/common'
-
 defineOptions({
   name: 'ComSelect',
-  styleIsolation: 'shared',
+  options: {
+    styleIsolation: 'shared',
+  },
 })
-
-type SelectParams = Record<string, unknown>
 
 const props = withDefaults(
   defineProps<{
@@ -218,7 +216,7 @@ const props = withDefaults(
     showArrow: true,
     defaultData: () => [],
     embedded: false,
-    searchKey: 'enterpriseName',
+    searchKey: 'name',
     wrap: false,
     params: null,
     formatLabel: undefined,
@@ -238,6 +236,8 @@ const emit = defineEmits<{
   'update:modelName': [name: string]
   cancel: []
 }>()
+
+type SelectParams = Record<string, unknown>
 
 const { t } = useI18n()
 const resolvedTitle = computed(() => props.title || t('comSelect.title'))
@@ -384,8 +384,7 @@ const handleSearch = debounce(onSearch, 300)
 const handleRemoteRefresh = debounce(onSearch, 200)
 
 async function onSearch() {
-  if (!props.remote)
-    resetLocalPageDisplay()
+  if (!props.remote) { resetLocalPageDisplay() }
   else {
     pageNum.value = 1
     isFinished.value = false
@@ -615,8 +614,8 @@ defineExpose({
 </script>
 
 <template>
-  <view class="com-select border-box w-full" :class="{ 'b-none': disabled }">
-    <view class="uni-input border-box h-full w-full flex items-center text-sm relative" @click="open">
+  <view class="w-full com-select border-box" :class="{ 'b-none': disabled }">
+    <view class="border-box w-full flex items-center uni-input h-full text-sm relative" @click="open">
       <view class="flex-1 overflow-hidden flex">
         <slot :data="data">
           <wd-input
@@ -640,7 +639,7 @@ defineExpose({
           />
           <view
             v-if="multiple && showTags && data.text"
-            class="flex items-center justify-end gap-1 absolute right-0 w-full z-10 whitespace-nowrap pr-3"
+            class="flex items-center w-full justify-end gap-1 absolute right-0 z-10 whitespace-nowrap pr-3"
           >
             <scroll-view scroll-x>
               <wd-tag
@@ -669,8 +668,8 @@ defineExpose({
 
     <wd-popup v-model="show" position="bottom" custom-class="rounded-t-lg overflow-hidden" root-portal>
       <view class="select-list">
-        <view class="h-10 relative">
-          <view class="flex items-center justify-center h-full text-base">
+        <view class="relative h-10">
+          <view class="flex items-center h-full justify-center text-base">
             {{ resolvedTitle }}
           </view>
           <wd-icon name="close" size="16" color="#666" custom-class="absolute top-3 right-5" @click="onCancel" />

@@ -10,6 +10,7 @@ interface NavigateToOptions {
        "/pages-shared-heavy/pages/placeholder" |
        "/pages-test/pages/chart-demo/index" |
        "/pages-test/pages/chunk-upload-demo/index" |
+       "/pages-test/pages/com-select-demo/index" |
        "/pages-test/pages/da-dropdown-demo/index" |
        "/pages-test/pages/form-demo/index" |
        "/pages-test/pages/scan-demo/index" |

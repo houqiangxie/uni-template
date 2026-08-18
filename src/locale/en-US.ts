@@ -48,6 +48,9 @@ export default {
     chunkUploadDemo: 'Large File Upload',
     uploadCenterDemo: 'Upload Center',
     comSelectDemo: 'ComSelect Local Pagination',
+    scanDemo: 'Scan Demo',
+    chartDemo: 'Chart Demo',
+    daDropdownDemo: 'Dropdown Demo',
   },
   login: {
     username: 'Username',
@@ -60,6 +63,13 @@ export default {
     login: 'Login',
     loginSuccess: 'Login successful',
   },
+  request: {
+    sessionExpired: 'Session expired, please sign in again',
+    networkAbnormal: 'Network error, please refresh and try again',
+    invalidParams: 'Request blocked: URL or params contain undefined',
+    networkFailed: 'Request failed, please try again later',
+    timeout: 'Request timed out, please try again later',
+  },
   route: {
     appName: 'Uni Template',
     home: 'Home',
@@ -68,6 +78,9 @@ export default {
     chunkUploadDemo: 'Large File Upload',
     uploadCenterDemo: 'Upload Center',
     comSelectDemo: 'ComSelect Local Pagination',
+    scanDemo: 'Scan Demo',
+    chartDemo: 'Chart Demo',
+    daDropdownDemo: 'Dropdown Demo',
   },
   formDemo: {
     intro: 'This page demonstrates com-form + configToSchema: basic fields, validation, conditional rules, and loop lists.',

@@ -8,23 +8,22 @@
   </route>
 
 <script setup>
-import { onMounted } from "vue";
-import { enableI18n } from '@/utils/config'
-
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 const form = reactive({
-  username: "",
-  password: "",
-});
-const codes = ref("");
-const codeUrl = ref("");
-const showPassword = ref(false);
+  username: '',
+  password: '',
+  captchaCode: '',
+  captchaKey: '',
+})
+const codeUrl = ref('')
+const showPassword = ref(false)
 
 function customBlurValidate(prop) {
-  if (prop == "password" || prop == "username") form[prop] = form[prop]?.trim();
+  if (prop == 'password' || prop == 'username')
+    form[prop] = form[prop]?.trim()
   // 自定义表单不需要WOT表单验证
 }
 
@@ -33,25 +32,25 @@ function validateForm() {
   if (!form.username?.trim()) {
     uni.showToast({
       title: t('login.usernameRequired'),
-      icon: 'none'
-    });
-    return false;
+      icon: 'none',
+    })
+    return false
   }
   if (!form.password?.trim()) {
     uni.showToast({
       title: t('login.passwordRequired'),
-      icon: 'none'
-    });
-    return false;
+      icon: 'none',
+    })
+    return false
   }
   if (!form.captchaCode?.trim()) {
     uni.showToast({
       title: t('login.captchaRequired'),
-      icon: 'none'
-    });
-    return false;
+      icon: 'none',
+    })
+    return false
   }
-  return true;
+  return true
 }
 /** 将后端 base64 验证码图片转为 data URL */
 function toCaptchaDataUrl(img) {
@@ -66,29 +65,29 @@ function getCode() {
   getAuthCode().then((res) => {
     const data = res.data ?? {}
     codeUrl.value = toCaptchaDataUrl(data.authImg)
-    form.captchaKey = data.uuid;
-    form.captchaCode = "";
-  });
+    form.captchaKey = data.uuid
+    form.captchaCode = ''
+  })
 }
 
 function login() {
   // 使用自定义验证
-  if (!validateForm()) {
-    return;
-  }
+  if (!validateForm())
+    return
+
   // 执行登录逻辑
-  const data = JSON.parse(JSON.stringify(form));
-  data.password = encryptAes128(data.password);
+  const data = JSON.parse(JSON.stringify(form))
+  data.password = encryptAes128(data.password)
   loginUser(data).then(async (res) => {
     if (res) {
       userStore.setUserInfo({
-        token: res.data.token
-      });
-      const {data: info } = await getInfo()
+        token: res.data.token,
+      })
+      const { data: info } = await getInfo()
       userStore.setUserInfo({
         info,
         token: res.data.token,
-      });
+      })
       nextTick(() => {
         router.replace({
           path: returnUrl.value || '/pages/index',
@@ -96,23 +95,17 @@ function login() {
       })
     }
   }).catch((error) => {
-    console.log('登录失败', error);
+    console.log('登录失败', error)
   }).finally(() => {
     // 无论成功还是失败，都刷新验证码
-    getCode();
-  });
+    getCode()
+  })
 }
 
 onMounted(() => {
-  // if (import.meta.env.DEV) {
-  //   // this.form.username = '深圳森丰真空镀膜有限公司'
-  //   // form.username = '深圳巨涛机械设备有限公司'
-  //   // // this.form.password = 'Qyjgzf@3349'
-  //   // form.password = 'Aa@1159359'
-  // }
-  uni.removeStorageSync("tab");
-  getCode();
-});
+  uni.removeStorageSync('tab')
+  getCode()
+})
 
 const fallbackReturnUrl = ref('')
 
@@ -130,7 +123,6 @@ onLoad((option) => {
   if (option.returnUrl)
     fallbackReturnUrl.value = decodeURIComponent(option.returnUrl)
 })
-
 </script>
 
 <template>
@@ -143,7 +135,7 @@ onLoad((option) => {
     <view class="brand-section">
       <!-- Logo -->
       <view class="logo-wrapper">
-        <CustomImage src="logo.png" class="logo" />
+        <CustomImg src="logo.png" class="logo" />
       </view>
 
       <!-- 主标题 -->
@@ -226,8 +218,8 @@ onLoad((option) => {
         type="primary"
         size="large"
         block
-        @click="login"
         custom-class="login-button"
+        @click="login"
       >
         {{ t('login.login') }}
       </wd-button>

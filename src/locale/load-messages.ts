@@ -1,4 +1,3 @@
-import { localeRemoteVersion, staticBaseUrl } from '@/utils/config'
 import type { LocaleType } from './types'
 
 const LOCALE_REMOTE_DIR = 'locale/'

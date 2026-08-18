@@ -9,7 +9,9 @@
         :class="item.value === opt.value ? 'is-actived' : ''"
         @click="handleRadioChange(opt)"
       >
-        <text class="da-dropdown-tag--text">{{ opt.label }}</text>
+        <text class="da-dropdown-tag--text">
+          {{ opt.label }}
+        </text>
       </view>
     </block>
     <!-- 多选 -->
@@ -21,7 +23,9 @@
         :class="opt.isActived ? 'is-actived' : ''"
         @click="handleCheckboxChange(opt)"
       >
-        <text class="da-dropdown-tag--text">{{ opt.label }}</text>
+        <text class="da-dropdown-tag--text">
+          {{ opt.label }}
+        </text>
       </view>
     </block>
     <!-- 滑块 -->
@@ -32,7 +36,7 @@
         :min="sliderProps.min || 0"
         :max="sliderProps.max || 100"
         :step="sliderProps.step || 1"
-        :activeColor="sliderProps.activeColor"
+        :active-color="sliderProps.activeColor"
         :show-value="sliderProps.showValue"
         @change="handleSliderChange"
       />
@@ -76,7 +80,7 @@
         v-model="item.value"
         type="date"
         :clearable="false"
-        bgColor="#f5f5f5"
+        bg-color="#f5f5f5"
         v-bind="componentProps"
         class="!mx-0"
         @change="handleDateChange"
@@ -102,7 +106,6 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref } from 'vue'
 import { isFieldPopupType } from '../utils'
 
 const props = defineProps({
@@ -136,22 +139,21 @@ function emitChange() {
 
 function handleRadioChange(opt) {
   props.item.value = props.item.value === opt.value ? null : opt.value
-  if (props.instantConfirm) {
+  if (props.instantConfirm)
     emitChange()
-  }
 }
 
 function handleCheckboxChange(opt) {
-  if (!Array.isArray(props.item.value)) {
+  if (!Array.isArray(props.item.value))
     props.item.value = []
-  }
+
   if (opt.isActived) {
     opt.isActived = false
     const idx = props.item.value.findIndex(k => k === opt.value)
-    if (idx > -1) {
+    if (idx > -1)
       props.item.value.splice(idx, 1)
-    }
-  } else {
+  }
+  else {
     opt.isActived = true
     props.item.value.push(opt.value)
   }
@@ -162,27 +164,24 @@ function handleSliderChange(event) {
 }
 
 function handleSelectChange(v) {
-  if (v?.value !== undefined) {
+  if (v?.value !== undefined)
     props.item.value = v.value
-  } else if (v !== undefined) {
+  else if (v !== undefined)
     props.item.value = v
-  }
-  if (props.instantConfirm) {
+
+  if (props.instantConfirm)
     emitChange()
-  }
 }
 
 function handleDateChange(v) {
   props.item.value = v
-  if (props.instantConfirm) {
+  if (props.instantConfirm)
     emitChange()
-  }
 }
 
 function handleLink(url) {
-  if (url) {
+  if (url)
     uni.navigateTo({ url })
-  }
 }
 
 function handleInputRangeChange(index) {
@@ -194,9 +193,8 @@ function handlePopupCancel() {
 }
 
 function openFieldPopup() {
-  if (!props.autoOpen || !isFieldPopupType(props.item?.type)) {
+  if (!props.autoOpen || !isFieldPopupType(props.item?.type))
     return
-  }
 
   nextTick(() => {
     switch (props.item.type) {

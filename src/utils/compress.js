@@ -4,7 +4,6 @@
  * 兼容 wot-design-uni 上传组件
  */
 
-const isH5 = typeof window !== 'undefined' && typeof document !== 'undefined';
 
 /* --------------------------
    H5 压缩（核心）
@@ -158,26 +157,21 @@ function compressMpOrApp(filePath, quality = 80,format = 'jpg',targetKB = 300) {
    单张压缩（最终调用入口）
 --------------------------- */
 export async function compressSingle(file, opt = {}) {
-    const sys = uni.getSystemInfoSync();
-    const isMp = sys.platform.startsWith("mp-");
-    const isApp = sys.platform === "app-plus";
-
     let filePath = file.url || '';
     let fileName = file.name || "image.jpg";
 
     /* --------------------------
-         H5 走 Canvas 多轮压缩
+         H5 走 Canvas 多轮压缩（App WebView 也有 window/document，不能用运行时探测）
     --------------------------- */
-    if (isH5) {
+    // #ifdef H5
+    {
         const blob = file.file instanceof Blob
             ? file.file
             : await fetch(filePath).then(r => r.blob());
 
-            
         const newBlob = await compressImageH5(blob, opt);
-        
+
         const ext = newBlob.type === 'image/png' ? 'png' : 'jpg';
-        // const newName = getSafeName(fileName, ext);
         const newName = fileName;
         const newFile = new File([newBlob], newName, { type: newBlob.type });
 
@@ -190,10 +184,12 @@ export async function compressSingle(file, opt = {}) {
             extname: ext
         };
     }
+    // #endif
 
     /* --------------------------
         小程序 / APP 使用 uni.compressImage
     --------------------------- */
+    // #ifndef H5
     const lastDot = fileName.lastIndexOf('.');
     const extSrc = lastDot > -1 ? fileName.slice(lastDot + 1).toLowerCase() : '';
     const format = extSrc === 'png' ? 'png' : 'jpg';
@@ -207,6 +203,7 @@ export async function compressSingle(file, opt = {}) {
         name: getSafeName(fileName, format),
         extname: format
     };
+    // #endif
 }
 
 /* --------------------------

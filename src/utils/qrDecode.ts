@@ -338,7 +338,7 @@ export function mapBoundsToDisplay(
   bounds: QrBounds,
   imageWidth: number,
   imageHeight: number,
-  displayRect: { offsetX: number, offsetY: number, width: number, height: number },
+  displayRect: { offsetX: number; offsetY: number; width: number; height: number },
 ) {
   const scaleX = displayRect.width / imageWidth
   const scaleY = displayRect.height / imageHeight
@@ -398,7 +398,6 @@ async function decodeAllFromTilesAsync(
         }
       }
     }
-
   }
 
   return mergeDetectedCodes(results).map(code => scaleDetectedQr(code, scaleToOriginal))
@@ -781,6 +780,31 @@ function detectAllFromPathSync(path: string, width: number, height: number): Pro
     }),
     Promise.resolve(),
   ).then(() => detectAllFromScales(width, height, renderAtScale))
+}
+
+/** H5 专用 API 的空实现：条件编译后 named export 仍在，避免 auto-import 在小程序 / App 导入失败 */
+export function detectAllQrFromImageUrl(_url: string): Promise<ImageQrDetectResult> {
+  return Promise.reject(new Error('detectAllQrFromImageUrl 仅支持 H5'))
+}
+
+export function decodeQrFromImageUrl(_url: string): Promise<QrDecodeResult | null> {
+  return Promise.resolve(null)
+}
+
+export function detectAllQrFromFile(_file: File): Promise<ImageQrDetectResult & { path: string }> {
+  return Promise.reject(new Error('detectAllQrFromFile 仅支持 H5'))
+}
+
+export async function pickAndDetectAllQrH5(): Promise<ImageQrDetectResult & { path: string }> {
+  throw new Error('pickAndDetectAllQrH5 仅支持 H5')
+}
+
+export function isCameraSupported(): boolean {
+  return false
+}
+
+export function isDesktopH5(): boolean {
+  return false
 }
 // #endif
 

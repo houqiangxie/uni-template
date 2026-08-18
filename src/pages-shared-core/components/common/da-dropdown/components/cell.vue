@@ -1,20 +1,24 @@
 <template>
   <view class="da-dropdown-cell">
     <view
-      class="da-dropdown-cell-item"
-      :class="[item.checked ? 'is-actived' : '', item.disabled ? 'is-disabled' : '']"
       v-for="item in cellOptions"
       :key="item.value"
-      @click="handleSelect(item)">
-      <text class="da-dropdown-cell-item--label">{{ item.label }}</text>
-      <text class="da-dropdown-cell-item--suffix">{{ item.suffix }}</text>
-      <text class="da-dropdown-cell-item--check" v-if="item.checked && showIcon" />
+      class="da-dropdown-cell-item"
+      :class="[item.checked ? 'is-actived' : '', item.disabled ? 'is-disabled' : '']"
+      @click="handleSelect(item)"
+    >
+      <text class="da-dropdown-cell-item--label">
+        {{ item.label }}
+      </text>
+      <text class="da-dropdown-cell-item--suffix">
+        {{ item.suffix }}
+      </text>
+      <text v-if="item.checked && showIcon" class="da-dropdown-cell-item--check" />
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
 import { createCellOptions } from '../utils'
 
 const props = defineProps({
@@ -29,18 +33,17 @@ const showIcon = ref(false)
 
 function syncCellOptions() {
   const item = props.dropdownItem
-  if (item?.options?.length) {
+  if (item?.options?.length)
     cellOptions.value = createCellOptions(item.options, item.value)
-  } else {
+  else
     cellOptions.value = []
-  }
+
   showIcon.value = item?.showIcon || false
 }
 
 function handleSelect(item) {
-  if (item.disabled) {
+  if (item.disabled)
     return
-  }
 
   const menuProp = props.dropdownItem?.prop
   if (!menuProp) {

@@ -1,5 +1,3 @@
-import { useUserStore } from '@/stores/user'
-
 interface UserInfo {
   permissions?: string[]
   roles?: Array<{ roleKey: string }>
@@ -33,7 +31,7 @@ export function hasRole(roleKey: string): boolean {
   const userStore = useUserStore()
   const userInfo = userStore.userInfo as UserInfo
   const roles = userInfo?.roles || []
-  
+
   // 如果没有角色数组或为空，则默认无角色
   if (!roles || roles.length === 0)
     return false

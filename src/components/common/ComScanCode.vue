@@ -1,23 +1,6 @@
 <script setup lang="ts">
 import type { ScanCodeResult } from '@/composables/useScanCode'
-import {
-  rejectScan,
-  resolveScan,
-  scanState,
-} from '@/composables/useScanCode'
 import type { DetectedQr, PixelData, QrBounds } from '@/utils/qrDecode'
-import {
-  calcAspectFitRect,
-  decodeAllQrFromImageData,
-  detectAllQrFromPath,
-  mapBoundsToDisplay,
-  // #ifdef H5
-  detectAllQrFromFile,
-  isCameraSupported,
-  isDesktopH5,
-  pickImageFileH5,
-  // #endif
-} from '@/utils/qrDecode'
 
 const instance = getCurrentInstance()
 
@@ -282,7 +265,7 @@ function handleSuccess(result: string) {
 async function enterPickerMode(
   imageUrl: string,
   codes: DetectedQr[],
-  imageSize: { width: number, height: number },
+  imageSize: { width: number; height: number },
 ) {
   stopCamera()
   decoding.value = false
@@ -355,7 +338,7 @@ function onPickerImageLoad() {
 async function handleDetectResult(
   codes: DetectedQr[],
   imageUrl: string,
-  imageSize: { width: number, height: number },
+  imageSize: { width: number; height: number },
 ) {
   if (!scanState.visible)
     return
@@ -513,8 +496,8 @@ function withDecodeTimeout<T>(promise: Promise<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = window.setTimeout(() => reject(new Error('识别超时，请换一张图片重试')), DECODE_TIMEOUT_MS)
     promise.then(
-      val => { clearTimeout(timer); resolve(val) },
-      err => { clearTimeout(timer); reject(err) },
+      (val) => { clearTimeout(timer); resolve(val) },
+      (err) => { clearTimeout(timer); reject(err) },
     )
   })
 }
@@ -771,9 +754,9 @@ onBeforeUnmount(() => {
   <view v-if="scanState.visible" class="scan-code">
     <!-- #ifdef H5 -->
     <video
-      ref="videoRef"
       v-show="!pickerMode && !decoding && scanning"
       :id="SCAN_VIDEO_ID"
+      ref="videoRef"
       class="scan-code__video"
       autoplay
       playsinline
@@ -825,7 +808,9 @@ onBeforeUnmount(() => {
           <view class="scan-code__marker-corner scan-code__marker-corner--bl" />
           <view class="scan-code__marker-corner scan-code__marker-corner--br" />
           <view class="scan-code__marker-badge">
-            <text class="scan-code__marker-index">{{ index + 1 }}</text>
+            <text class="scan-code__marker-index">
+              {{ index + 1 }}
+            </text>
           </view>
         </view>
         <!-- #endif -->
@@ -842,7 +827,9 @@ onBeforeUnmount(() => {
           <view class="scan-code__marker-corner scan-code__marker-corner--bl" />
           <view class="scan-code__marker-corner scan-code__marker-corner--br" />
           <view class="scan-code__marker-badge">
-            <text class="scan-code__marker-index">{{ index + 1 }}</text>
+            <text class="scan-code__marker-index">
+              {{ index + 1 }}
+            </text>
           </view>
         </view>
         <!-- #endif -->
@@ -853,15 +840,21 @@ onBeforeUnmount(() => {
       <view class="scan-code__header">
         <!-- #ifdef H5 -->
         <view class="scan-code__close" @click.stop="onCloseTap">
-          <text class="scan-code__close-icon">{{ pickerMode ? '‹' : '×' }}</text>
+          <text class="scan-code__close-icon">
+            {{ pickerMode ? '‹' : '×' }}
+          </text>
         </view>
         <!-- #endif -->
         <!-- #ifndef H5 -->
         <view class="scan-code__close" @tap="onCloseTap">
-          <text class="scan-code__close-icon">{{ pickerMode ? '‹' : '×' }}</text>
+          <text class="scan-code__close-icon">
+            {{ pickerMode ? '‹' : '×' }}
+          </text>
         </view>
         <!-- #endif -->
-        <text class="scan-code__title">{{ pickerMode ? '选择二维码' : '扫一扫' }}</text>
+        <text class="scan-code__title">
+          {{ pickerMode ? '选择二维码' : '扫一扫' }}
+        </text>
       </view>
 
       <!-- 相机扫描框 -->
@@ -880,34 +873,46 @@ onBeforeUnmount(() => {
           <!-- #ifndef H5 -->
           <!-- #ifndef MP-WEIXIN -->
           <view v-if="scanState.options.mode !== 'camera'" class="scan-code__native-hint">
-            <text class="scan-code__native-hint-text">点击扫描</text>
+            <text class="scan-code__native-hint-text">
+              点击扫描
+            </text>
           </view>
           <!-- #endif -->
           <!-- #endif -->
         </view>
-        <text class="scan-code__tip">{{ tipText }}</text>
+        <text class="scan-code__tip">
+          {{ tipText }}
+        </text>
       </view>
 
       <!-- 多码点选提示 -->
       <view v-if="pickerMode" class="scan-code__picker-tip-wrap">
-        <text class="scan-code__tip">{{ tipText }}</text>
+        <text class="scan-code__tip">
+          {{ tipText }}
+        </text>
       </view>
 
       <!-- 识别中遮罩 -->
       <view v-if="decoding" class="scan-code__decoding">
         <view class="scan-code__decoding-spinner" />
-        <text class="scan-code__decoding-text">正在识别...</text>
+        <text class="scan-code__decoding-text">
+          正在识别...
+        </text>
       </view>
 
       <view v-if="showAlbum && !decoding" class="scan-code__footer">
         <!-- #ifdef H5 -->
         <view class="scan-code__album" @click.stop="openH5FilePicker">
-          <text class="scan-code__album-text">{{ isDesktop ? '选择图片' : '相册' }}</text>
+          <text class="scan-code__album-text">
+            {{ isDesktop ? '选择图片' : '相册' }}
+          </text>
         </view>
         <!-- #endif -->
         <!-- #ifndef H5 -->
         <view class="scan-code__album" @tap="handleChooseAlbum">
-          <text class="scan-code__album-text">相册</text>
+          <text class="scan-code__album-text">
+            相册
+          </text>
         </view>
         <!-- #endif -->
       </view>

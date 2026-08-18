@@ -1,13 +1,12 @@
 import { createI18n } from 'vue-i18n'
-import { enableI18n } from '@/utils/config'
 import { fetchAllLocaleMessages } from './load-messages'
 import enUS from './en-US'
 import zhCN from './zh-CN'
 import {
   DEFAULT_LOCALE,
   LOCALE_STORAGE_KEY,
-  SUPPORTED_LOCALES,
   type LocaleType,
+  SUPPORTED_LOCALES,
   isSupportedLocale,
 } from './types'
 

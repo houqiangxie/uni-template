@@ -66,12 +66,18 @@
       class="com-chunk-upload__item"
     >
       <view class="com-chunk-upload__item-head">
-        <text class="com-chunk-upload__item-name">{{ item.name }}</text>
-        <text class="com-chunk-upload__item-size">{{ formatSize(item.size) }}</text>
+        <text class="com-chunk-upload__item-name">
+          {{ item.name }}
+        </text>
+        <text class="com-chunk-upload__item-size">
+          {{ formatSize(item.size) }}
+        </text>
       </view>
       <wd-progress :percentage="item.progress" />
       <view class="com-chunk-upload__item-foot">
-        <text class="com-chunk-upload__item-status">{{ statusText(item) }}</text>
+        <text class="com-chunk-upload__item-status">
+          {{ statusText(item) }}
+        </text>
         <view class="com-chunk-upload__item-actions">
           <wd-button
             v-if="item.status === 'uploading' || item.status === 'hashing'"
@@ -119,7 +125,9 @@
           </wd-button>
         </view>
       </view>
-      <text v-if="item.error" class="com-chunk-upload__item-error">{{ resolveErrorMessage(item.error) }}</text>
+      <text v-if="item.error" class="com-chunk-upload__item-error">
+        {{ resolveErrorMessage(item.error) }}
+      </text>
     </view>
 
     <view v-if="cachedTasks.length" class="com-chunk-upload__cache">
@@ -322,7 +330,7 @@ const internalList = computed({
         fileName: item.fileName || item.name,
         fileId: item.fileId || item.filePath || item.id,
         filePath: item.filePath || item.fileId,
-        url: item.url || formatUrl(item.fileId || item.filePath, '', /\.(mp4)$/i.test(item.fileName || item.name || '')),
+        url: item.url || formatUrl(item.fileId || item.filePath),
         status: item.status || 'success',
         percent: item.percent ?? 100,
       }
@@ -487,7 +495,7 @@ async function handleCustomUpload(file, formData, options) {
         file.fileName = item.fileName
         file.filePath = item.filePath
         file.name = item.fileName
-        file.url = formatUrl(item.fileId, '', /\.(mp4)$/i.test(item.fileName || ''))
+        file.url = formatUrl(item.fileId)
         options?.onSuccess?.({ id: item.fileId, fileName: item.fileName }, file, formData)
         stopWatch()
         uploadWatchers.delete(queueItem.uid)

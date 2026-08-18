@@ -11,6 +11,8 @@ declare module '@meng-xi/uni-router' {
     pagesTestPagesChartDemoIndex: { path: '/pages-test/pages/chart-demo/index'; meta: { title: string } }
     /** 大文件上传 */
     pagesTestPagesChunkUploadDemoIndex: { path: '/pages-test/pages/chunk-upload-demo/index'; meta: { title: string } }
+    /** ComSelect 本地分页 */
+    pagesTestPagesComSelectDemoIndex: { path: '/pages-test/pages/com-select-demo/index'; meta: { title: string } }
     /** Dropdown 示例 */
     pagesTestPagesDaDropdownDemoIndex: { path: '/pages-test/pages/da-dropdown-demo/index'; meta: { title: string } }
     /** 表单示例 */

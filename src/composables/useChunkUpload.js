@@ -1,21 +1,3 @@
-import {
-  CHUNK_STATUS,
-  ChunkUploader,
-  computeProgressFromCache,
-  createFileUid,
-  getChunkApiBase,
-  hydrateFileItem,
-  listUploadCaches,
-  loadQueueSession,
-  loadUploadCache,
-  persistFile,
-  removePersistedFile,
-  removeQueueSession,
-  removeUploadCache,
-  saveQueueSession,
-  verifyFileAccessible,
-} from '@/utils/chunkUpload'
-
 const DEFAULT_ENDPOINTS = {
   init: '/init',
   chunk: '/upload',
@@ -73,13 +55,12 @@ function createUploadSession(initialOptions = {}) {
   let apiBase = options.apiBase
 
   const userStore = useUserStore()
-  const userInfo = userStore.userInfo
 
   if (!apiBase)
-    apiBase = getChunkApiBase(userStore.userType)
+    apiBase = getChunkApiBase()
 
   const headers = computed(() => ({
-    Authorization: userInfo?.token,
+    Authorization: userStore.userInfo?.token,
     platformType,
     ...(options.headers || {}),
   }))
@@ -153,7 +134,7 @@ function createUploadSession(initialOptions = {}) {
     if (next.persistQueue !== undefined)
       persistQueue = next.persistQueue
     if (next.apiBase !== undefined)
-      apiBase = next.apiBase || getChunkApiBase(userStore.userType)
+      apiBase = next.apiBase || getChunkApiBase()
   }
 
   function schedulePersist() {
@@ -497,7 +478,7 @@ function createUploadSession(initialOptions = {}) {
       filePath: item.filePath || item.fileId,
       fileUrl: item.fileUrl || item.filePath,
       name: item.fileName || item.name,
-      url: formatUrl(item.fileId || item.filePath, '', /\.(mp4)$/i.test(item.name || '')),
+      url: formatUrl(item.fileId || item.filePath),
     }))
     if (limit === 1)
       return files[0] || null

@@ -5,8 +5,6 @@
  * 推荐链路：config → configToSchema → wd-form :schema
  */
 import type { FormSchema } from '@wot-ui/ui'
-import type { MaybeRef } from 'vue'
-import { unref } from 'vue'
 
 // -----------------------------------------------------------------------------
 // rulesToSchema：V1 规则 → wot-ui FormSchema
@@ -35,7 +33,7 @@ export interface V1FormRule {
 
 export type V1FormRules = Record<string, V1FormRule[]>
 
-export type FormSchemaIssue = { path: string, message: string }
+export interface FormSchemaIssue { path: string; message: string }
 
 export type FormFormValidatorResult =
   | boolean
@@ -121,7 +119,7 @@ export function rulesToSchema(rules: MaybeRef<V1FormRules>): FormSchema {
 
   return {
     validate(model) {
-      const issues: { path: Array<string | number>, message: string }[] = []
+      const issues: { path: Array<string | number>; message: string }[] = []
       for (const [path, fieldRules] of Object.entries(getRules())) {
         const value = getValueByPath(model, path)
         const message = validateFieldValue(value, fieldRules, path, model)
@@ -161,7 +159,7 @@ export interface FormConfigItem {
   /** 跨字段 / 动态校验，可传多个，按顺序执行 */
   customValidators?: Array<(ctx: FormValidateContext) => boolean | string>
   validationType?: string
-  columns?: Array<{ text: string, value: any }>
+  columns?: Array<{ text: string; value: any }>
   multiple?: boolean
   limit?: number
   type?: string
@@ -187,7 +185,7 @@ export interface ProcessFormConfigOptions {
   disabled?: boolean
 }
 
-const arrayRequired = (v: any) => {
+function arrayRequired(v: any) {
   return Array.isArray(v)
     && v.length > 0
     && v.every(item =>
@@ -199,15 +197,15 @@ const arrayRequired = (v: any) => {
 
 export function generateDefaultPlaceholder(item: FormConfigItem) {
   const prefixMap: Record<string, string> = {
-    input: '请输入',
-    textarea: '请输入',
-    upload: '请上传',
+    'input': '请输入',
+    'textarea': '请输入',
+    'upload': '请上传',
     'chunk-upload': '请上传',
-    select: '请选择',
-    radio: '请选择',
-    checkbox: '请选择',
-    date: '请选择',
-    tree: '请选择',
+    'select': '请选择',
+    'radio': '请选择',
+    'checkbox': '请选择',
+    'date': '请选择',
+    'tree': '请选择',
     'picker-date': '请选择',
   }
 
@@ -455,13 +453,11 @@ export function processFormItem(
     })
   }
 
-  if (newItem.extendRules?.length) {
+  if (newItem.extendRules?.length)
     newItem.rules = [...(newItem.rules || []), ...newItem.extendRules]
-  }
 
-  if (newItem.customValidators?.length) {
+  if (newItem.customValidators?.length)
     newItem.rules = [...(newItem.rules || []), ...modelRules(...newItem.customValidators)]
-  }
 
   if (newItem.validationType) {
     const validationRules = commonRules[newItem.validationType]
@@ -773,7 +769,7 @@ function parseSchemaParts(parts: ConfigSchemaPart[]) {
 }
 
 function runFormValidators(model: Record<string, any>, validators: FormFormValidator[]) {
-  const issues: { path: Array<string | number>, message: string }[] = []
+  const issues: { path: Array<string | number>; message: string }[] = []
   for (const validator of validators) {
     for (const issue of normalizeFormValidatorResult(validator(model))) {
       if (!issue.path)
@@ -894,7 +890,7 @@ export function loopField(config: LoopFieldConfig): LoopFieldConfig {
  * @example extraRules（slot 字段 / 条件校验）
  * configToSchema(formConfig, {
  *   extraRules: (model) => ({
- *     stationName: [{ modelValidator: ({ model: m }) => !!m.stationInfoId || '请选择站点' }],
+ *     itemName: [{ modelValidator: ({ model: m }) => !!m.itemId || '请选择条目' }],
  *     ...(model.serviceMode === 'offline' ? { address: [{ required: true, message: '线下服务请输入地址' }] } : {}),
  *   }),
  * })

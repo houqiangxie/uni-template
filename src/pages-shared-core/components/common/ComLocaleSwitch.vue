@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { LocaleType } from '@/locale/types'
-import { enableI18n } from '@/utils/config'
 
 const props = withDefaults(defineProps<{
   /** 展示模式：cell 列表项 / button 按钮 */
@@ -23,7 +22,6 @@ function handleSelect(locale: LocaleType) {
 }
 
 function openPicker() {
-
   const itemList = localeStore.localeOptions.map(item => item.label)
   uni.showActionSheet({
     itemList,
@@ -40,21 +38,30 @@ function openPicker() {
   <!-- 列表项模式 -->
   <view v-if="enableI18n && mode === 'cell'" class="locale-cell" @click="openPicker">
     <view class="locale-cell__left">
-      <text class="locale-cell__icon">🌐</text>
-      <text class="locale-cell__label">{{ t('common.language') }}</text>
+      <text class="locale-cell__icon">
+        🌐
+      </text>
+      <text class="locale-cell__label">
+        {{ t('common.language') }}
+      </text>
     </view>
     <view class="locale-cell__right">
-      <text class="locale-cell__value">{{ currentLabel }}</text>
+      <text class="locale-cell__value">
+        {{ currentLabel }}
+      </text>
       <wd-icon name="arrow-right" size="16px" color="#999" />
     </view>
   </view>
 
   <!-- 按钮模式 -->
   <view v-else-if="enableI18n" class="locale-button" @click="openPicker">
-    <text class="locale-button__icon">🌐</text>
-    <text class="locale-button__text">{{ currentLabel }}</text>
+    <text class="locale-button__icon">
+      🌐
+    </text>
+    <text class="locale-button__text">
+      {{ currentLabel }}
+    </text>
   </view>
-
 </template>
 
 <style lang="scss" scoped>

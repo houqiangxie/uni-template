@@ -50,9 +50,9 @@ const isLeaf = computed(() => isTreeNodeLeaf(
 ))
 
 async function toggleExpand() {
-  if (!props.node.isShowChild && lazy.value && !props.node.loaded && !children.value?.length) {
+  if (!props.node.isShowChild && lazy.value && !props.node.loaded && !children.value?.length)
     await loadNode(props.node)
-  }
+
   props.node.isShowChild = !props.node.isShowChild
 }
 
@@ -95,7 +95,7 @@ function handleSelect(node: TreeNodeModel) {
 </script>
 
 <template>
-  <view v-if="isExpandable" class="com-tree-node text-sm">
+  <view v-if="isExpandable" class="text-sm com-tree-node">
     <view
       class="com-tree-node__row"
       :style="{ paddingLeft: `${34 * ((node.level ?? 1) - 1)}rpx` }"

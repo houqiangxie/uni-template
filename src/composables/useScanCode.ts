@@ -6,14 +6,6 @@
  */
 
 import type { DetectedQr } from '@/utils/qrDecode'
-import { nextTick } from 'vue'
-import {
-  // #ifdef H5
-  detectAllQrFromFile,
-  // #endif
-  detectAllQrFromPath,
-  pickImageFileH5,
-} from '@/utils/qrDecode'
 
 export type ScanType = 'barCode' | 'qrCode' | 'datamatrix' | 'pdf417'
 
@@ -207,7 +199,6 @@ function decodeAlbumFile(file: File, options: ScanCodeOptions) {
     })
     .finally(() => uni.hideLoading())
 }
-// #endif
 
 /** H5：同步弹出选图，再交给 ComScanCode 解码（与扫码页内点相册同一路径） */
 function pickAndResolveDesktop(options: ScanCodeOptions): Promise<ScanCodeResult> {
@@ -226,7 +217,9 @@ function pickAndResolveDesktop(options: ScanCodeOptions): Promise<ScanCodeResult
     })
   })
 }
+// #endif
 
+// #ifndef H5
 /** 原生端：选图后交给 ComScanCode 解码 */
 function chooseImageAndResolve(options: ScanCodeOptions): Promise<ScanCodeResult> {
   ensureScanIdle()
@@ -250,6 +243,7 @@ function chooseImageAndResolve(options: ScanCodeOptions): Promise<ScanCodeResult
     })
   })
 }
+// #endif
 
 /**
  * 从相册识别二维码（三端一致：jsQR + 多码点选）

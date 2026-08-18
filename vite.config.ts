@@ -1,16 +1,12 @@
-/// <reference types="vitest" />
-
-import { createReadStream, existsSync } from 'node:fs'
+import { createReadStream, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { Plugin } from 'vite'
 import { defineConfig, loadEnv } from 'vite'
 import uni from '@dcloudio/vite-plugin-uni'
-// import Unocss from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import UniPages from '@uni-helper/vite-plugin-uni-pages'
 import UniLayouts from '@uni-helper/vite-plugin-uni-layouts'
-// import vueJsx from '@vitejs/plugin-vue-jsx';
 import { generateRouter } from '@meng-xi/vite-plugin'
 import UniKuRoot from '@uni-ku/root'
 import uniSubpackagePlaceholder from 'vite-plugin-uni-subpackage-placeholder'
@@ -38,26 +34,79 @@ function localeRemoteDevPlugin(): Plugin {
   }
 }
 
+/**
+ * 构建时把高德 Key / 可选微信 appid 写入 manifest，结束后还原，避免密钥进仓库。
+ * manifest 含注释，用行级替换而非 JSON.parse。
+ */
+function injectManifestEnvPlugin(env: Record<string, string>): Plugin {
+  const manifestPath = resolve(__dirname, 'src/manifest.json')
+  let original = ''
+
+  function replaceKeyField(source: string, field: string, value: string): string {
+    const escaped = JSON.stringify(value)
+    // 全局替换：H5 + mp-weixin 等处的同名字段一并注入
+    return source.replace(
+      new RegExp(`("${field}"\\s*:\\s*)"[^"]*"`, 'g'),
+      `$1${escaped}`,
+    )
+  }
+
+  /** 仅替换 mp-weixin.appid，避免误伤其它平台 */
+  function replaceMpWeixinAppid(source: string, appid: string): string {
+    return source.replace(
+      /("mp-weixin"\s*:\s*\{[\s\S]*?"appid"\s*:\s*)"[^"]*"/,
+      `$1${JSON.stringify(appid)}`,
+    )
+  }
+
+  return {
+    name: 'inject-manifest-env',
+    buildStart() {
+      const key = env.VITE_AMAP_KEY || ''
+      const security = env.VITE_AMAP_SECURITY_JS_CODE || ''
+      const mpAppid = env.VITE_MP_WEIXIN_APPID || ''
+      if (!key && !security && !mpAppid)
+        return
+      original = readFileSync(manifestPath, 'utf-8')
+      let next = original
+      if (key)
+        next = replaceKeyField(next, 'key', key)
+      if (security)
+        next = replaceKeyField(next, 'securityJsCode', security)
+      if (mpAppid)
+        next = replaceMpWeixinAppid(next, mpAppid)
+      writeFileSync(manifestPath, next, 'utf-8')
+    },
+    buildEnd() {
+      if (original)
+        writeFileSync(manifestPath, original, 'utf-8')
+    },
+  }
+}
+
+function resolveEnvBase(env: Record<string, string>): string {
+  return (env.VITE_BASE_URL || '').replace(/\/$/, '')
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(async ({ command, mode }) => {
   const Unocss = (await import('unocss/vite')).default
 
-// 加载环境变量
   const env = loadEnv(mode, process.cwd(), '')
+  const envBase = resolveEnvBase(env)
+  const apiPrefix = (env.VITE_API_PREFIX || '/api').replace(/\/$/, '') || '/api'
 
-  /** Sass 静态资源前缀：H5 相对路径；小程序 / App 用 VITE_BASE_URL */
+  const staticPrefix = (env.VITE_STATIC_PREFIX || '/wxStaticFile/static').replace(/\/$/, '') || '/wxStaticFile/static'
+
+  /** Sass 静态资源前缀：H5 相对路径；小程序 / App 用 VITE_BASE_URL + VITE_STATIC_PREFIX */
   function resolveSassBaseUrl(): string {
     const platform = process.env.UNI_PLATFORM || ''
-    if (platform === 'h5')
-      return '/wxStaticFile/static/'
-    const base = (env.VITE_BASE_URL || '').replace(/\/$/, '')
-    if (!base)
-      return '/wxStaticFile/static/'
-    return `${base}/wxStaticFile/static/`
+    if (platform === 'h5' || !envBase)
+      return `${staticPrefix}/`
+    return `${envBase}${staticPrefix}/`
   }
 
   const sassBaseUrl = resolveSassBaseUrl()
-  const staticProxyTarget = (env.VITE_BASE_URL || '').replace(/\/$/, '')
 
   return {
     resolve: {
@@ -74,6 +123,7 @@ export default defineConfig(async ({ command, mode }) => {
     },
     plugins: [
       command === 'serve' ? localeRemoteDevPlugin() : null,
+      injectManifestEnvPlugin(env),
       /**
        * vite-plugin-uni-pages
        * @see https://github.com/uni-helper/vite-plugin-uni-pages
@@ -84,7 +134,7 @@ export default defineConfig(async ({ command, mode }) => {
           'src/pages-shared-heavy',
           'src/pages-test',
         ],
-        exclude: ['**/components/**/*.*', '**/uni_modules/**/*.*']
+        exclude: ['**/components/**/*.*', '**/uni_modules/**/*.*'],
       }),
 
       /**
@@ -123,8 +173,8 @@ export default defineConfig(async ({ command, mode }) => {
           'vue-i18n',
           {
             from: '@meng-xi/uni-router',
-            imports: ['createRouter', 'useRouter', 'useRoute']
-          }
+            imports: ['createRouter', 'useRouter', 'useRoute'],
+          },
         ],
         dts: 'src/auto-imports.d.ts',
         dirs: [
@@ -150,11 +200,10 @@ export default defineConfig(async ({ command, mode }) => {
           './src/pages-shared-heavy/components',
           './src/components',
         ],
-        exclude: [/[\\/]lime-echart[\\/]/,],
+        exclude: [/[\\/]lime-echart[\\/]/],
       }),
       UniKuRoot(),
       uni(),
-      // vueJsx(), //jsx
       uniSubpackagePlaceholder(['pages-shared-core', 'pages-shared-heavy', 'pages-test']),
     ].filter(Boolean),
     define: {
@@ -163,10 +212,6 @@ export default defineConfig(async ({ command, mode }) => {
       __VUE_I18N_PROD_DEVTOOLS__: false,
     },
 
-    /**
-     * Vitest
-     * @see https://github.com/vitest-dev/vitest
-     */
     css: {
       preprocessorOptions: {
         scss: {
@@ -181,44 +226,38 @@ export default defineConfig(async ({ command, mode }) => {
       host: '0.0.0.0',
       open: true,
       hmr: {
-        // protocol: 'ws',
-        // host: '0.0.0.0',
-        // port: 80,
         overlay: false,
       },
       proxy: {
         '/amap': {
-          target: "https://restapi.amap.com",
+          target: 'https://restapi.amap.com',
           changeOrigin: true,
           rewrite: p => p.replace(/^\/amap/, ''),
         },
-        '/fwz': {
-          // target: "http://172.17.30.234:5888/station",
-          target: "http://172.17.29.32:5889",
-          changeOrigin: true,
-        },
-        ...(staticProxyTarget
+        ...(envBase
           ? {
+              [apiPrefix]: {
+                target: envBase,
+                changeOrigin: true,
+              },
               '/wxStaticFile': {
-                target: staticProxyTarget,
+                target: envBase,
                 changeOrigin: true,
               },
             }
           : {}),
-      }
+      },
     },
     build: {
       cssCodeSplit: false,
-      minify: 'esbuild', 
+      minify: 'esbuild',
     },
     optimizeDeps: {
       exclude: ['@wot-ui/ui'],
     },
     esbuild: {
-      // 只在生产环境移除注释
-      legalComments: process.env.NODE_ENV === 'production' ? 'none' : 'inline'
+      legalComments: process.env.NODE_ENV === 'production' ? 'none' : 'inline',
     },
-    // base: process.env.NODE_ENV === 'production' ? '/station_h5' : '/'
-    base: process.env.NODE_ENV === 'production' ? '/' : '/'
+    base: '/',
   }
- })
+})

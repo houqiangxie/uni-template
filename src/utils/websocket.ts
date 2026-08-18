@@ -1,5 +1,3 @@
-import { ref, computed, onUnmounted } from 'vue'
-
 interface WebSocketOptions {
   url: string
   protocols?: string | string[]
@@ -12,29 +10,15 @@ interface WebSocketOptions {
   onClose?: (event: CloseEvent) => void
 }
 
-interface WebSocketInstance {
-  url: string
-  ws: WebSocket | UniNamespace.WebSocket | null
-  options: WebSocketOptions
-  reconnectCount: number
-  heartbeatTimer: any
-  reconnectTimer: any
-  isConnected: boolean
-  isConnecting: boolean
-  send: (data: any) => Promise<boolean>
-  connect: () => Promise<void>
-  disconnect: () => void
-  reconnect: () => void
-  on: (type: string, callback: (event: any) => void) => void
-  off: (type: string, callback?: (event: any) => void) => void
-}
+type UniSocket = WebSocket | UniNamespace.SocketTask
 
 export class WebSocketClient {
-  private ws: WebSocket | UniNamespace.WebSocket | null = null
+  private ws: UniSocket | null = null
   private options: WebSocketOptions
   private reconnectCount = 0
   private heartbeatTimer: any = null
   private reconnectTimer: any = null
+  private manualClose = false
   public isConnected = false
   public isConnecting = false
   private eventListeners: { [key: string]: Array<(event: any) => void> } = {}
@@ -44,30 +28,24 @@ export class WebSocketClient {
       heartbeatInterval: 30000,
       reconnectInterval: 5000,
       maxReconnectAttempts: 10,
-      ...options
+      ...options,
     }
   }
 
   public async connect(): Promise<void> {
-    if (this.isConnecting || this.isConnected) {
+    if (this.isConnecting || this.isConnected)
       return
-    }
 
+    this.manualClose = false
     this.isConnecting = true
 
     try {
       await this.createConnection()
       this.isConnected = true
       this.reconnectCount = 0
-
-      if (this.options.onOpen) {
-        this.options.onOpen(new Event('open'))
-      }
-      this.emit('open', new Event('open'))
-
       this.startHeartbeat()
-
-    } catch (error) {
+    }
+    catch (error) {
       this.isConnecting = false
       this.isConnected = false
       this.reconnect()
@@ -76,56 +54,81 @@ export class WebSocketClient {
 
   private async createConnection(): Promise<void> {
     return new Promise((resolve, reject) => {
+      let settled = false
+      const onOpen = (event: any) => {
+        if (settled)
+          return
+        settled = true
+        if (this.options.onOpen)
+          this.options.onOpen(event)
+        this.emit('open', event)
+        this.isConnecting = false
+        resolve()
+      }
+      const onMessage = (event: any) => {
+        if (this.options.onMessage)
+          this.options.onMessage(event)
+        this.emit('message', event)
+      }
+      const onError = (event: any) => {
+        if (this.options.onError)
+          this.options.onError(event)
+        this.emit('error', event)
+        this.isConnecting = false
+        if (!settled) {
+          settled = true
+          reject(event)
+        }
+      }
+      const onClose = (event: any) => {
+        if (this.options.onClose)
+          this.options.onClose(event)
+        this.emit('close', event)
+        const wasConnected = this.isConnected
+        this.isConnected = false
+        this.isConnecting = false
+        this.clearHeartbeat()
+        // 尚未 open 时由 connect() 的 catch 负责重连，避免与 onClose 双触发
+        if (!settled) {
+          settled = true
+          reject(event)
+          return
+        }
+        if (wasConnected && !this.manualClose)
+          this.reconnect()
+      }
+
       try {
-        let socket: WebSocket | UniNamespace.WebSocket
-
-        if (process.env.UNI_PLATFORM === 'h5' || !process.env.UNI_PLATFORM) {
-          socket = new WebSocket(this.options.url, this.options.protocols)
-        } else {
-          socket = uni.connectSocket({
-            url: this.options.url,
-            protocols: this.options.protocols,
-            method: 'GET',
-          })
-        }
-
+        // #ifdef H5
+        const socket = new WebSocket(this.options.url, this.options.protocols)
         this.ws = socket
+        socket.onopen = onOpen
+        socket.onmessage = onMessage
+        socket.onerror = onError
+        socket.onclose = onClose
+        // #endif
 
-        socket.onopen = (event) => {
-          if (this.options.onOpen) {
-            this.options.onOpen(event)
-          }
-          this.emit('open', event)
-          this.isConnecting = false
-          resolve()
+        // #ifndef H5
+        const protocols = typeof this.options.protocols === 'string'
+          ? [this.options.protocols]
+          : this.options.protocols
+        const socketTask = uni.connectSocket({
+          url: this.options.url,
+          protocols,
+          complete: () => {},
+        })
+        if (!socketTask) {
+          reject(new Error('WebSocket 连接创建失败'))
+          return
         }
-
-        socket.onmessage = (event) => {
-          if (this.options.onMessage) {
-            this.options.onMessage(event)
-          }
-          this.emit('message', event)
-        }
-
-        socket.onerror = (event) => {
-          if (this.options.onError) {
-            this.options.onError(event)
-          }
-          this.emit('error', event)
-          this.isConnecting = false
-        }
-
-        socket.onclose = (event) => {
-          if (this.options.onClose) {
-            this.options.onClose(event)
-          }
-          this.emit('close', event)
-          this.isConnected = false
-          this.isConnecting = false
-          this.clearHeartbeat()
-        }
-
-      } catch (error) {
+        this.ws = socketTask
+        socketTask.onOpen(onOpen)
+        socketTask.onMessage(onMessage)
+        socketTask.onError(onError)
+        socketTask.onClose(onClose)
+        // #endif
+      }
+      catch (error) {
         reject(error)
       }
     })
@@ -141,33 +144,37 @@ export class WebSocketClient {
       try {
         const message = typeof data === 'string' ? data : JSON.stringify(data)
 
-        if (process.env.UNI_PLATFORM === 'h5' || !process.env.UNI_PLATFORM) {
-          this.ws.send(message)
-          resolve(true)
-        } else {
-          uni.sendSocketMessage({
-            data: message,
-            success: () => resolve(true),
-            fail: (error) => reject(error)
-          })
-        }
-      } catch (error) {
+        // #ifdef H5
+        ;(this.ws as WebSocket).send(message)
+        resolve(true)
+        // #endif
+        // #ifndef H5
+        ;(this.ws as UniNamespace.SocketTask).send({
+          data: message,
+          success: () => resolve(true),
+          fail: error => reject(error),
+        })
+        // #endif
+      }
+      catch (error) {
         reject(error)
-        return false
       }
     })
   }
 
   public disconnect(): void {
+    this.manualClose = true
     this.clearHeartbeat()
     this.clearReconnectTimer()
 
     if (this.ws) {
-      if (process.env.UNI_PLATFORM === 'h5' || !process.env.UNI_PLATFORM) {
-        this.ws.close()
-      } else {
-        uni.closeSocket({})
-      }
+      // #ifdef H5
+      ;(this.ws as WebSocket).close()
+      // #endif
+      // #ifndef H5
+      ;(this.ws as UniNamespace.SocketTask).close({})
+      // #endif
+
       this.ws = null
     }
 
@@ -178,7 +185,7 @@ export class WebSocketClient {
   public reconnect(): void {
     if (this.reconnectCount >= this.options.maxReconnectAttempts) {
       console.error('Max reconnect attempts reached')
-      this.emit('reconnect_failed', new Event('reconnect_failed'))
+      this.emit('reconnect_failed', { type: 'reconnect_failed' })
       return
     }
 
@@ -191,7 +198,8 @@ export class WebSocketClient {
   }
 
   private startHeartbeat(): void {
-    if (!this.options.heartbeatInterval) return
+    if (!this.options.heartbeatInterval)
+      return
 
     this.clearHeartbeat()
     this.heartbeatTimer = setInterval(() => {
@@ -219,31 +227,34 @@ export class WebSocketClient {
   }
 
   public on(type: string, callback: (event: any) => void): void {
-    if (!this.eventListeners[type]) {
+    if (!this.eventListeners[type])
       this.eventListeners[type] = []
-    }
+
     this.eventListeners[type].push(callback)
   }
 
   public off(type: string, callback?: (event: any) => void): void {
-    if (!this.eventListeners[type]) return
+    if (!this.eventListeners[type])
+      return
 
     if (callback) {
       const index = this.eventListeners[type].indexOf(callback)
-      if (index !== -1) {
+      if (index !== -1)
         this.eventListeners[type].splice(index, 1)
-      }
-    } else {
+    }
+    else {
       this.eventListeners[type] = []
     }
   }
 
   private emit(type: string, event: any): void {
-    if (!this.eventListeners[type]) return
-    this.eventListeners[type].forEach(callback => {
+    if (!this.eventListeners[type])
+      return
+    this.eventListeners[type].forEach((callback) => {
       try {
         callback(event)
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Error in WebSocket event listener for ${type}:`, error)
       }
     })
@@ -264,16 +275,23 @@ export function useWebSocket(options: WebSocketOptions) {
   const connected = ref(client.connected)
   const connecting = ref(client.connecting)
 
-  const connect = async () => {
-    await client.connect()
+  const syncState = () => {
     connected.value = client.connected
     connecting.value = client.connecting
   }
 
+  client.on('open', syncState)
+  client.on('close', syncState)
+  client.on('error', syncState)
+
+  const connect = async () => {
+    await client.connect()
+    syncState()
+  }
+
   const disconnect = () => {
     client.disconnect()
-    connected.value = false
-    connecting.value = false
+    syncState()
   }
 
   const send = async (data: any) => {
@@ -304,6 +322,6 @@ export function useWebSocket(options: WebSocketOptions) {
     send,
     reconnect,
     on,
-    off
+    off,
   }
 }

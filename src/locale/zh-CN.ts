@@ -48,6 +48,9 @@ export default {
     chunkUploadDemo: '大文件上传',
     uploadCenterDemo: '上传中心',
     comSelectDemo: 'ComSelect 本地分页',
+    scanDemo: '扫码示例',
+    chartDemo: '图表示例',
+    daDropdownDemo: 'Dropdown 示例',
   },
   login: {
     username: '用户名',
@@ -60,6 +63,13 @@ export default {
     login: '登录',
     loginSuccess: '登录成功',
   },
+  request: {
+    sessionExpired: '登录状态已过期，请重新登录',
+    networkAbnormal: '网络异常，请刷新重试!',
+    invalidParams: '请求地址或参数包含 undefined，已拦截',
+    networkFailed: '网络请求失败，请稍后重试',
+    timeout: '请求超时，请稍后重试',
+  },
   route: {
     appName: 'Uni 模板',
     home: '首页',
@@ -68,6 +78,9 @@ export default {
     chunkUploadDemo: '大文件上传',
     uploadCenterDemo: '上传中心',
     comSelectDemo: 'ComSelect 本地分页',
+    scanDemo: '扫码示例',
+    chartDemo: '图表示例',
+    daDropdownDemo: 'Dropdown 示例',
   },
   formDemo: {
     intro: '本页演示 com-form + configToSchema 的常用写法，包含基础字段、校验规则、条件校验与循环列表。',

@@ -17,7 +17,6 @@
     "types": [
       "vite/client",
       "vite-plugin-pages/client",
-      "nutui-uniapp/global.d.ts",
       "@wot-ui/ui/global"
     ],
     "paths": {

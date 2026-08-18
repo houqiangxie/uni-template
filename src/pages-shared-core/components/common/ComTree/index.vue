@@ -1,7 +1,12 @@
 <script lang="ts">
-import type { InjectionKey, Ref } from 'vue'
-import { inject, provide } from 'vue'
-import { deepClone } from '@/utils/common'
+</script>
+
+<script setup lang="ts">
+import {
+  buildRemoteRequestSignature,
+  createRemoteRequestCoordinator,
+  shallowEqualObjects,
+} from '../ComSelect/index.vue'
 
 export interface TreeNodeModel extends Record<string, any> {
   level?: number
@@ -294,21 +299,12 @@ export function mergeTreeNodesByKey(
   const missing = extra.filter(row => !keySet.has(String(row[valueKey])))
   return missing.length ? [...missing, ...base] : base
 }
-</script>
-
-<script setup lang="ts">
-import { toRef } from 'vue'
-import ComTreePanel from './components/ComTreePanel.vue'
-import {
-  buildRemoteRequestSignature,
-  createRemoteRequestCoordinator,
-  shallowEqualObjects,
-} from '../ComSelect/index.vue'
-import { debounce } from '@/utils/common'
 
 defineOptions({
   name: 'ComTree',
-  styleIsolation: 'shared',
+  options: {
+    styleIsolation: 'shared',
+  },
 })
 
 const props = withDefaults(defineProps<{
@@ -850,12 +846,11 @@ function flattenTree(list: TreeNodeModel[], level = 1, parent: TreeNodeModel | n
     treeFlat.value.push(item)
 
     const children = item[props.childrenKey] as TreeNodeModel[] | undefined
-    if (children?.length) {
+    if (children?.length)
       flattenTree(children, level + 1, item)
-    }
-    else if (isTreeNodeLeaf(item, props.childrenKey, props.isLeafKey, props.lazy)) {
+
+    else if (isTreeNodeLeaf(item, props.childrenKey, props.isLeafKey, props.lazy))
       treeLeafNodes.value.push(item)
-    }
   })
 }
 
@@ -1007,7 +1002,7 @@ defineExpose({ open })
 <template>
   <view class="com-tree" :class="{ 'h-full flex flex-col': !popup }">
     <view v-if="popup" class="com-tree__trigger" @click.stop="open">
-      <view v-if="showField" class="com-tree__field relative min-w-0">
+      <view v-if="showField" class="relative com-tree__field min-w-0">
         <wd-input
           v-model="formatText"
           readonly
@@ -1018,7 +1013,7 @@ defineExpose({ open })
         />
         <view
           v-if="multiple && showTags && formatText"
-          class="flex items-center gap-1 overflow-x-scroll absolute right-0 w-full"
+          class="flex items-center gap-1 absolute right-0 w-full overflow-x-scroll"
         >
           <wd-tag
             v-for="item in formatList"
@@ -1050,7 +1045,9 @@ defineExpose({ open })
       @close="close"
     >
       <view class="h-10 relative">
-        <view class="flex items-center justify-center h-full text-base">{{ resolvedTitle }}</view>
+        <view class="flex items-center justify-center h-full text-base">
+          {{ resolvedTitle }}
+        </view>
         <wd-icon name="close" size="16" color="#666" custom-class="absolute top-3 right-5" @click="cancelPopup" />
       </view>
       <ComTreePanel

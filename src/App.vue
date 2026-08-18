@@ -1,17 +1,8 @@
-<!--
- * @Descripttion:
- * @version:
- * @Author: houqiangxie
- * @Date: 2023-08-07 20:48:34
- * @LastEditors: houqiangxie
- * @LastEditTime: 2025-03-04 14:51:10
--->
 <template>
 </template>
 
 <script setup lang="ts">
-import { onLaunch, onShow } from '@dcloudio/uni-app'
-import { useToast, useNotify, useDialog } from '@wot-ui/ui'
+import { useDialog, useNotify, useToast } from '@wot-ui/ui'
 import { runColdStartGuard, setLaunchOptions } from './router'
 
 uni.$toast = useToast()

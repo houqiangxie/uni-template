@@ -3,8 +3,8 @@
     <view :class="`da-dropdown-header flex justify-between gap-2 ${hasSearch && menuList.length <= 2 ? '' : 'flex-col'}`">
       <view v-if="hasSearch && searchItem" class="da-dropdown-search">
         <Search
-          :placeholder="searchItem!.placeholder || '请输入关键词查询'"
           v-model="searchItem!.value"
+          :placeholder="searchItem!.placeholder || '请输入关键词查询'"
           v-bind="searchComponentProps"
           @search="handleSearch"
           @change="handleSearch"
@@ -14,87 +14,99 @@
       <scroll-view class="da-dropdown-menu" scroll-x enable-flex :show-scrollbar="false">
         <view class="da-dropdown-menu-inner">
           <template v-for="(item, index) in menuList" :key="item.prop || index">
-            <view class="da-dropdown-menu-item" :class="{ 'is-hidden': item.isHidden }" v-if="!item.hidden"
-              @click="handleMenuClick(index, item)">
-              <text class="da-dropdown-menu-item--text" :class="item.isActived ? 'is-actived' : ''">{{
-                item.displayLabel || item.title
-                }}</text>
-              <view class="da-dropdown-menu-item--icon" v-if="item.showArrow">
-                <text v-if="item.isLoading" class="is--loading"></text>
-                <text v-else-if="item.isClick" class="is--arrup"></text>
-                <text v-else class="is--arrdown"></text>
+            <view
+              v-if="!item.hidden" class="da-dropdown-menu-item" :class="{ 'is-hidden': item.isHidden }"
+              @click="handleMenuClick(index, item)"
+            >
+              <text class="da-dropdown-menu-item--text" :class="item.isActived ? 'is-actived' : ''">
+                {{
+                  item.displayLabel || item.title
+                }}
+              </text>
+              <view v-if="item.showArrow" class="da-dropdown-menu-item--icon">
+                <text v-if="item.isLoading" class="is--loading" />
+                <text v-else-if="item.isClick" class="is--arrup" />
+                <text v-else class="is--arrdown" />
               </view>
-              <view class="da-dropdown-menu-item--sort" v-else-if="item.showSort" :class="'is--' + item.value"></view>
+              <view v-else-if="item.showSort" class="da-dropdown-menu-item--sort" :class="`is--${item.value}`" />
             </view>
           </template>
         </view>
       </scroll-view>
     </view>
     <!-- 弹出 -->
-    <view class="da-dropdown-content" :style="{ top: popTop + 'px' }" :class="{ 'is-show': isShow, 'is-visible': isVisible }">
+    <view class="da-dropdown-content" :style="{ top: `${popTop}px` }" :class="{ 'is-show': isShow, 'is-visible': isVisible }">
       <view class="da-dropdown-content-popup" :class="isShow ? 'is-show' : ''">
         <view v-if="currentMenuItem" class="da-dropdown-popup-box" :class="{ 'is-field-popup': isFieldPopupMenu }">
           <!-- 下拉列表 -->
-          <DropdownCell v-if="currentMenuItem.type === 'cell'" :dropdownItem="currentMenuItem"
-            :dropdownIndex="currentIndex" @success="handleCellSelect"></DropdownCell>
+          <DropdownCell
+            v-if="currentMenuItem.type === 'cell'" :dropdown-item="currentMenuItem"
+            :dropdown-index="currentIndex" @success="handleCellSelect"
+          />
           <!-- 多条件筛选 -->
-          <DropdownFilter v-else-if="currentMenuItem.type === 'filter'" :dropdownItem="currentMenuItem"
-            :dropdownIndex="currentIndex" @success="handleFilterConfirm"></DropdownFilter>
+          <DropdownFilter
+            v-else-if="currentMenuItem.type === 'filter'" :dropdown-item="currentMenuItem"
+            :dropdown-index="currentIndex" @success="handleFilterConfirm"
+          />
           <!-- 级联选择 -->
-          <DropdownPicker v-else-if="currentMenuItem.type === 'picker'" :dropdownItem="currentMenuItem"
-            :dropdownIndex="currentIndex" @success="handlePickerConfirm" />
+          <DropdownPicker
+            v-else-if="currentMenuItem.type === 'picker'" :dropdown-item="currentMenuItem"
+            :dropdown-index="currentIndex" @success="handlePickerConfirm"
+          />
           <!-- 日期范围 -->
-          <DropdownDaterange v-else-if="currentMenuItem.type === 'daterange'" :dropdownItem="currentMenuItem"
-            :dropdownIndex="currentIndex" @success="handleDaterangeConfirm" />
+          <DropdownDaterange
+            v-else-if="currentMenuItem.type === 'daterange'" :dropdown-item="currentMenuItem"
+            :dropdown-index="currentIndex" @success="handleDaterangeConfirm"
+          />
           <!-- 独立字段：com-select / com-tree / date-picker 等 -->
-          <DropdownField v-else-if="isFieldMenuType(currentMenuItem.type)" :dropdownItem="currentMenuItem"
-            :dropdownIndex="currentIndex" @success="handleFieldConfirm" @cancel="handleFieldCancel" />
+          <DropdownField
+            v-else-if="isFieldMenuType(currentMenuItem.type)" :dropdown-item="currentMenuItem"
+            :dropdown-index="currentIndex" @success="handleFieldConfirm" @cancel="handleFieldCancel"
+          />
           <!-- 弹窗插槽（小程序不支持动态插槽，固定 slot1~slot5） -->
           <template v-else-if="currentMenuItem.type === 'slot1'">
-            <slot name="slot1" :item="currentMenuItem" :index="currentIndex"></slot>
+            <slot name="slot1" :item="currentMenuItem" :index="currentIndex" />
           </template>
           <template v-else-if="currentMenuItem.type === 'slot2'">
-            <slot name="slot2" :item="currentMenuItem" :index="currentIndex"></slot>
+            <slot name="slot2" :item="currentMenuItem" :index="currentIndex" />
           </template>
           <template v-else-if="currentMenuItem.type === 'slot3'">
-            <slot name="slot3" :item="currentMenuItem" :index="currentIndex"></slot>
+            <slot name="slot3" :item="currentMenuItem" :index="currentIndex" />
           </template>
           <template v-else-if="currentMenuItem.type === 'slot4'">
-            <slot name="slot4" :item="currentMenuItem" :index="currentIndex"></slot>
+            <slot name="slot4" :item="currentMenuItem" :index="currentIndex" />
           </template>
           <template v-else-if="currentMenuItem.type === 'slot5'">
-            <slot name="slot5" :item="currentMenuItem" :index="currentIndex"></slot>
+            <slot name="slot5" :item="currentMenuItem" :index="currentIndex" />
           </template>
         </view>
       </view>
-      <view class="da-dropdown-mask" v-if="isShow" @click="handlePopupMask" @touchmove.stop.prevent="handleMove" />
+      <view v-if="isShow" class="da-dropdown-mask" @click="handlePopupMask" @touchmove.stop.prevent="handleMove" />
     </view>
-    <view class="da-dropdown--blank" v-if="fixedTop"></view>
+    <view v-if="fixedTop" class="da-dropdown--blank" />
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount, getCurrentInstance, nextTick } from 'vue'
-import { getRect } from '@/utils/common'
 import {
-  deepClone,
-  menuInitOpts,
-  getValueByKey,
   checkDataField,
-  ensureAllOption,
   computeMenuActived,
-  updateMenuDisplayLabel,
-  isEmptyObject,
-  isAllValue,
-  hasDaterangeValue,
-  getMenuStructureSnapshot,
+  deepClone,
+  ensureAllOption,
   getMenuConfigSnapshot,
-  getOptionsConfigSnapshot,
+  getMenuStructureSnapshot,
   getModelValuesSnapshot,
-  isSameValue,
-  isFieldMenuType,
+  getOptionsConfigSnapshot,
+  getValueByKey,
+  hasDaterangeValue,
   hasFieldValue,
+  isAllValue,
+  isEmptyObject,
+  isFieldMenuType,
   isFieldPopupType,
+  isSameValue,
+  menuInitOpts,
+  updateMenuDisplayLabel,
 } from './utils'
 import type { DaDropdownMenuListItem } from './typing'
 import DropdownPicker from './components/picker.vue'
@@ -102,21 +114,13 @@ import DropdownCell from './components/cell.vue'
 import DropdownFilter from './components/filter.vue'
 import DropdownDaterange from './components/daterange.vue'
 import DropdownField from './components/field.vue'
-import Search from '@/pages-shared-core/components/common/Search.vue'
 
 defineOptions({
-  virtualHost: true,
-  addGlobalClass: true,
+  options: {
+    virtualHost: true,
+    addGlobalClass: true,
+  },
 })
-
-type RuntimeMenuItem = DaDropdownMenuListItem & {
-  value?: unknown
-  isActived?: boolean
-  isClick?: boolean
-  isLoading?: boolean
-  displayLabel?: string
-  isHidden?: boolean
-}
 
 const props = withDefaults(defineProps<{
   dropdownMenu?: DaDropdownMenuListItem[]
@@ -147,6 +151,15 @@ const emit = defineEmits<{
   'update:modelValue': [value: Record<string, unknown>]
 }>()
 
+type RuntimeMenuItem = DaDropdownMenuListItem & {
+  value?: unknown
+  isActived?: boolean
+  isClick?: boolean
+  isLoading?: boolean
+  displayLabel?: string
+  isHidden?: boolean
+}
+
 const instance = getCurrentInstance()
 const currentIndex = ref(-1)
 const isVisible = ref(false)
@@ -159,7 +172,8 @@ const popTop = ref(90)
 let closeTimer: ReturnType<typeof setTimeout> | null = null
 
 const currentMenuItem = computed(() => {
-  if (currentIndex.value < 0) return null
+  if (currentIndex.value < 0)
+    return null
   return menuList.value[currentIndex.value] || null
 })
 
@@ -180,24 +194,26 @@ const dropdownStyle = computed(() => `
 const MENU_PATCH_KEYS = ['title', 'hidden', 'placeholder', 'resetText', 'confirmText', 'showQuick', 'showAll', 'showIcon', 'showLabel', 'field'] as const
 
 async function updatePopTop() {
-  if (props.fixedTop) return
+  if (props.fixedTop)
+    return
   try {
     const rect = await getRect('.da-dropdown-menu', false, instance?.proxy)
     popTop.value = ((rect?.top ?? 0) + (rect?.height ?? 0)) || 90
-  } catch {
+  }
+  catch {
     // 保留上次计算值
   }
 }
 
 function resolveMenuItemValue(prop: string, menuIndex: number) {
   const model = props.modelValue
-  if (model && Object.prototype.hasOwnProperty.call(model, prop)) {
+  if (model && Object.prototype.hasOwnProperty.call(model, prop))
     return deepClone(model[prop])
-  }
+
   const fromMenu = props.dropdownMenu?.[menuIndex]
-  if (fromMenu?.defaultValue !== undefined) {
+  if (fromMenu?.defaultValue !== undefined)
     return deepClone(fromMenu.defaultValue)
-  }
+
   return undefined
 }
 
@@ -210,9 +226,8 @@ function applyItemValueState(item: RuntimeMenuItem, value: unknown) {
 function getMenuValue() {
   const obj: Record<string, unknown> = {}
   menuList.value.forEach((k) => {
-    if (k.prop) {
+    if (k.prop)
       obj[k.prop] = k.value
-    }
   })
   return obj
 }
@@ -300,7 +315,8 @@ function initData() {
       const menuIndex = i
       item.syncDataFn(item, menuIndex).then((res) => {
         const target = menuList.value[menuIndex]
-        if (!target) return
+        if (!target)
+          return
         target.options = checkDataField(
           item.syncDataKey ? getValueByKey(res, item.syncDataKey) : res,
           item.field,
@@ -309,9 +325,8 @@ function initData() {
         target.isLoading = false
         updateMenuDisplayLabel(target)
       }).catch(() => {
-        if (menuList.value[menuIndex]) {
+        if (menuList.value[menuIndex])
           menuList.value[menuIndex].isLoading = false
-        }
       })
     }
 
@@ -327,9 +342,8 @@ function initData() {
       searchItem.value = item
       hasSearch.value = true
       const searchVal = resolveMenuItemValue(item.prop, i)
-      if (searchVal !== undefined) {
+      if (searchVal !== undefined)
         searchItem.value.value = searchVal
-      }
     }
 
     newMenu[i] = item
@@ -339,22 +353,24 @@ function initData() {
 }
 
 function syncValuesFromModel() {
-  if (!menuList.value.length) return
+  if (!menuList.value.length)
+    return
 
   menuList.value.forEach((target, index) => {
-    if (!target?.prop) return
-    if (!props.modelValue || !Object.prototype.hasOwnProperty.call(props.modelValue, target.prop)) {
+    if (!target?.prop)
       return
-    }
+    if (!props.modelValue || !Object.prototype.hasOwnProperty.call(props.modelValue, target.prop))
+      return
+
     const srcValue = props.modelValue[target.prop]
-    if (isSameValue(target.value, srcValue)) return
+    if (isSameValue(target.value, srcValue))
+      return
     applyItemValueState(target, deepClone(srcValue))
   })
 
   if (searchItem.value?.prop && props.modelValue
-    && Object.prototype.hasOwnProperty.call(props.modelValue, searchItem.value.prop)) {
+    && Object.prototype.hasOwnProperty.call(props.modelValue, searchItem.value.prop))
     searchItem.value.value = props.modelValue[searchItem.value.prop]
-  }
 }
 
 async function openMenuItemPopup(index: number) {
@@ -367,7 +383,7 @@ async function openMenuItemPopup(index: number) {
 }
 
 function clearClickState() {
-  menuList.value?.forEach(k => {
+  menuList.value?.forEach((k) => {
     k.isClick = false
   })
 }
@@ -379,9 +395,9 @@ function clearIndex() {
 function closeMenuPopup() {
   clearClickState()
   isShow.value = false
-  if (closeTimer) {
+  if (closeTimer)
     clearTimeout(closeTimer)
-  }
+
   closeTimer = setTimeout(() => {
     isVisible.value = false
     clearIndex()
@@ -399,9 +415,10 @@ function handleMove() {
 }
 
 function handleMenuClick(index: number, item: RuntimeMenuItem) {
-  if (item.isLoading) return
+  if (item.isLoading)
+    return
 
-  menuList.value.forEach(k => {
+  menuList.value.forEach((k) => {
     k.isClick = false
   })
 
@@ -426,11 +443,10 @@ function handleMenuClick(index: number, item: RuntimeMenuItem) {
 }
 
 function handleSearch() {
-  if (searchItem.value?.prop) {
+  if (searchItem.value?.prop)
     confirmAndEmit({ [searchItem.value.prop]: searchItem.value.value })
-  } else {
+  else
     console.error(`菜单项${searchItem.value?.title}未定义prop，返回内容失败`)
-  }
 }
 
 function handleCellSelect(callbackData: Record<string, unknown>, cellItem: { value: unknown }, index: number) {
@@ -440,7 +456,8 @@ function handleCellSelect(callbackData: Record<string, unknown>, cellItem: { val
   if (isAllValue(cellItem.value)) {
     item.isActived = false
     item.value = null
-  } else {
+  }
+  else {
     item.isActived = true
     item.value = cellItem.value
   }
@@ -456,17 +473,17 @@ function handleItemClick(item: RuntimeMenuItem, index: number) {
     currentIndex.value = index
     item.value = true
     item.isActived = true
-  } else {
+  }
+  else {
     item.value = false
     item.isActived = false
     clearIndex()
   }
 
-  if (item.prop) {
+  if (item.prop)
     confirmAndEmit({ [item.prop]: item.value })
-  } else {
+  else
     console.error(`菜单项${item.title}未定义prop，返回内容失败`)
-  }
 }
 
 function handleItemSort(item: RuntimeMenuItem, index: number) {
@@ -476,21 +493,22 @@ function handleItemSort(item: RuntimeMenuItem, index: number) {
     item.value = 'desc'
     currentIndex.value = index
     item.isActived = true
-  } else if (item.value === 'desc') {
+  }
+  else if (item.value === 'desc') {
     item.value = undefined
     item.isActived = false
     clearIndex()
-  } else {
+  }
+  else {
     item.value = 'asc'
     currentIndex.value = index
     item.isActived = true
   }
 
-  if (item.prop) {
+  if (item.prop)
     confirmAndEmit({ [item.prop]: item.value })
-  } else {
+  else
     console.error(`菜单项${item.title}未定义prop，返回内容失败`)
-  }
 }
 
 function handleFilterConfirm(callbackData: Record<string, unknown>, filterData: Record<string, unknown>, index: number) {
@@ -509,7 +527,8 @@ function handlePickerConfirm(callbackData: Record<string, unknown>, pickerItem: 
   if (!pickerItem || isAllValue(pickerItem)) {
     item.isActived = false
     item.value = null
-  } else {
+  }
+  else {
     item.isActived = true
     item.value = pickerItem
   }
@@ -518,14 +537,15 @@ function handlePickerConfirm(callbackData: Record<string, unknown>, pickerItem: 
   confirmAndEmit(callbackData)
 }
 
-function handleDaterangeConfirm(callbackData: Record<string, unknown>, daterangeItem: { start?: string, end?: string }, index: number) {
+function handleDaterangeConfirm(callbackData: Record<string, unknown>, daterangeItem: { start?: string; end?: string }, index: number) {
   const item = menuList.value[index]
   item.isClick = false
 
   if (hasDaterangeValue(daterangeItem)) {
     item.isActived = true
     item.value = daterangeItem
-  } else {
+  }
+  else {
     item.isActived = false
     item.value = null
   }
@@ -551,10 +571,11 @@ function handleFieldCancel() {
 watch(
   () => getMenuStructureSnapshot(props.dropdownMenu),
   (_sig, prevSig) => {
-    if (prevSig === undefined) return
-    if (isShow.value) {
+    if (prevSig === undefined)
+      return
+    if (isShow.value)
       closeMenuPopup()
-    }
+
     initData()
   },
 )
@@ -562,7 +583,8 @@ watch(
 watch(
   () => getMenuConfigSnapshot(props.dropdownMenu),
   (_sig, prevSig) => {
-    if (prevSig === undefined) return
+    if (prevSig === undefined)
+      return
     syncMenuConfig()
   },
 )
@@ -570,7 +592,8 @@ watch(
 watch(
   () => getModelValuesSnapshot(props.modelValue),
   (_sig, prevSig) => {
-    if (prevSig === undefined) return
+    if (prevSig === undefined)
+      return
     syncValuesFromModel()
   },
 )
@@ -580,9 +603,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  if (closeTimer) {
+  if (closeTimer)
     clearTimeout(closeTimer)
-  }
 })
 </script>
 

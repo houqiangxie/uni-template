@@ -1,5 +1,3 @@
-import { abortRequestByKey } from '@/composables/useRequest.js'
-
 const CANCEL_KEY = '__cancelKey'
 
 let cancelKeySeq = 0
@@ -14,109 +12,120 @@ function createListCancelKey() {
   return uid != null ? `useList_${uid}_${seq}` : `useList_${seq}`
 }
 
-export const useList = ({
-    initParams = {},
-    apiFunc,
-    preFunc,
-    sufFunc,
-    autoLoad = true,
-    disabled,
+export function useList({
+  initParams = {},
+  apiFunc,
+  preFunc,
+  sufFunc,
+  autoLoad = true,
+  disabled,
 }: {
-    initParams: any
-    apiFunc: Function
-    preFunc?: Function
-    sufFunc?: Function
-    autoLoad?: boolean
-    /** 为 true / 返回 true 时，跳过接口调用（支持 Ref<boolean> 或 () => boolean） */
-    disabled?: Ref<boolean> | (() => boolean)
-}) => {
-    const listObj = reactive({ data: [] as any, total: 0, finish: false });
-    const searchModel = reactive({ ...initParams });
-    const page = { pageNum: 1, pageSize: 10 }
-    let allowWatch = false
-    const cancelKey = createListCancelKey()
-    let fetchGeneration = 0
+  initParams: any
+  apiFunc: Function
+  preFunc?: Function
+  sufFunc?: Function
+  autoLoad?: boolean
+  /** 为 true / 返回 true 时，跳过接口调用（支持 Ref<boolean> 或 () => boolean） */
+  disabled?: Ref<boolean> | (() => boolean)
+}) {
+  const listObj = reactive({ data: [] as any, total: 0, finish: false })
+  const searchModel = reactive({ ...initParams })
+  const page = { pageNum: 1, pageSize: 10 }
+  let allowWatch = false
+  const cancelKey = createListCancelKey()
+  let fetchGeneration = 0
 
-    function isDisabled(): boolean {
-        if (disabled == null) return false
-        return typeof disabled === 'function' ? disabled() : unref(disabled)
-    }
+  function isDisabled(): boolean {
+    if (disabled == null)
+      return false
+    return typeof disabled === 'function' ? disabled() : unref(disabled)
+  }
 
-    function attachCancelKey(params: Record<string, unknown>) {
-        Object.defineProperty(params, CANCEL_KEY, {
-            value: cancelKey,
-            enumerable: false,
-            configurable: true,
-        })
-    }
-
-    function resetList() {
-        page.pageNum = 1;
-        listObj.data = [];
-        listObj.finish = false;
-        listObj.total = 0;
-        getList();
-    }
-
-    async function getList() {
-        if (isDisabled()) return
-
-        const generation = ++fetchGeneration
-        const params = { ...searchModel, ...page } as Record<string, unknown>;
-
-        if (preFunc) {
-            try {
-                Object.assign(params, preFunc(JSON.parse(JSON.stringify(params))));
-            } catch {
-                return
-            }
-        }
-
-        attachCancelKey(params)
-
-        try {
-            const { data } = await apiFunc(params);
-            if (generation !== fetchGeneration) return
-
-            sufFunc && (data.records = sufFunc(data.records, data));
-            if (data.records?.length < page.pageSize) listObj.finish = true
-            if (data.records?.length) {
-                page.pageNum === 1
-                    ? (listObj.data = [...data.records])
-                    : listObj.data.push(...data.records)
-            }
-            if (data.total != null) listObj.total = data.total
-            allowWatch = true
-        } catch (err: any) {
-            if (generation !== fetchGeneration || err?.aborted) return
-            throw err
-        }
-    }
-
-    function loadMore() {
-        if (listObj.finish) return;
-        page.pageNum++;
-        getList();
-    }
-
-    const debouncedResetList = debounce(() => {
-        if (!allowWatch) return
-        resetList()
-    }, 300, false);
-
-    watch(() => searchModel, () => {
-        debouncedResetList()
-    }, { deep: true })
-
-    onMounted(() => {
-        if (autoLoad) resetList()
-        else allowWatch = true
+  function attachCancelKey(params: Record<string, unknown>) {
+    Object.defineProperty(params, CANCEL_KEY, {
+      value: cancelKey,
+      enumerable: false,
+      configurable: true,
     })
+  }
 
-    onBeforeUnmount(() => {
-        fetchGeneration++
-        abortRequestByKey(cancelKey)
-    })
+  function resetList() {
+    page.pageNum = 1
+    listObj.data = []
+    listObj.finish = false
+    listObj.total = 0
+    getList()
+  }
 
-    return { listObj, searchModel, resetList, loadMore, getList, cancelKey }
+  async function getList() {
+    if (isDisabled())
+      return
+
+    const generation = ++fetchGeneration
+    const params = { ...searchModel, ...page } as Record<string, unknown>
+
+    if (preFunc) {
+      try {
+        Object.assign(params, preFunc(JSON.parse(JSON.stringify(params))))
+      }
+      catch {
+        return
+      }
+    }
+
+    attachCancelKey(params)
+
+    try {
+      const { data } = await apiFunc(params)
+      if (generation !== fetchGeneration)
+        return
+
+      sufFunc && (data.records = sufFunc(data.records, data))
+      if (data.records?.length < page.pageSize)
+        listObj.finish = true
+      if (data.records?.length) {
+        page.pageNum === 1
+          ? (listObj.data = [...data.records])
+          : listObj.data.push(...data.records)
+      }
+      if (data.total != null)
+        listObj.total = data.total
+      allowWatch = true
+    }
+    catch (err: any) {
+      if (generation !== fetchGeneration || err?.aborted)
+        return
+      throw err
+    }
+  }
+
+  function loadMore() {
+    if (listObj.finish)
+      return
+    page.pageNum++
+    getList()
+  }
+
+  const debouncedResetList = debounce(() => {
+    if (!allowWatch)
+      return
+    resetList()
+  }, 300, false)
+
+  watch(() => searchModel, () => {
+    debouncedResetList()
+  }, { deep: true })
+
+  onMounted(() => {
+    if (autoLoad)
+      resetList()
+    else allowWatch = true
+  })
+
+  onBeforeUnmount(() => {
+    fetchGeneration++
+    abortRequestByKey(cancelKey)
+  })
+
+  return { listObj, searchModel, resetList, loadMore, getList, cancelKey }
 }

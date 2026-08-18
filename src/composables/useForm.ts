@@ -1,26 +1,24 @@
-
-
 export type ScrollIntoViewPosition = 'start' | 'center' | 'end' | 'nearest'
 
 export interface ScrollIntoViewValueOptions {
-    position?: ScrollIntoViewPosition
-    startOffset?: number
-    endOffset?: number
+  position?: ScrollIntoViewPosition
+  startOffset?: number
+  endOffset?: number
 }
 
 export interface ScrollIntoViewOptions {
-    position?: ScrollIntoViewPosition
-    startOffset?: number
-    endOffset?: number
-    duration?: number
+  position?: ScrollIntoViewPosition
+  startOffset?: number
+  endOffset?: number
+  duration?: number
 }
 
-/**    
+/**
 ```
-                      page               
-                     ╱ 
+                      page
+                     ╱
     ╭───────────────╮    viewport
-  ╭─│─ ─ ─ ─ ─ ─ ─ ─│─╮ ╱  
+  ╭─│─ ─ ─ ─ ─ ─ ─ ─│─╮ ╱
   │ │ ╭───────────╮ │ │
   │ │ │  element  │ │ │
   │ │ ╰───────────╯ │ │
@@ -46,59 +44,58 @@ export interface ScrollIntoViewOptions {
 
 */
 export function getScrollIntoViewValue(
-    viewportHeight: number,
-    viewportScrollTop: number,
-    elementHeight: number,
-    elementOffsetTop: number,
-    options: ScrollIntoViewValueOptions = {},
+  viewportHeight: number,
+  viewportScrollTop: number,
+  elementHeight: number,
+  elementOffsetTop: number,
+  options: ScrollIntoViewValueOptions = {},
 ) {
-    const { startOffset = 0, endOffset = 0 } = options
+  const { startOffset = 0, endOffset = 0 } = options
 
-    let position = options.position || 'nearest'
+  let position = options.position || 'nearest'
 
-    const elementToViewportTopOffset =
-        elementOffsetTop - viewportScrollTop - startOffset
-    const elementToViewportBottomOffset =
-        elementOffsetTop +
-        elementHeight -
-        viewportScrollTop -
-        viewportHeight +
-        endOffset
+  const elementToViewportTopOffset
+        = elementOffsetTop - viewportScrollTop - startOffset
+  const elementToViewportBottomOffset
+        = elementOffsetTop
+        + elementHeight
+        - viewportScrollTop
+        - viewportHeight
+        + endOffset
 
-    if (position === 'nearest') {
-        if (elementToViewportTopOffset >= 0 && elementToViewportBottomOffset <= 0) {
-            return viewportScrollTop
-        } else {
-            position =
-                Math.abs(elementToViewportTopOffset) >
-                    Math.abs(elementToViewportBottomOffset)
-                    ? 'end'
-                    : 'start'
-        }
+  if (position === 'nearest') {
+    if (elementToViewportTopOffset >= 0 && elementToViewportBottomOffset <= 0) {
+      return viewportScrollTop
     }
-
-    let nextScrollTop = 0
-
-    switch (position) {
-        case 'start':
-            nextScrollTop = elementOffsetTop - startOffset
-            break
-        case 'center':
-            nextScrollTop =
-                elementOffsetTop -
-                (viewportHeight - elementHeight - endOffset - startOffset) / 2 +
-                startOffset
-            break
-        case 'end':
-            nextScrollTop =
-                elementOffsetTop + elementHeight - viewportHeight + endOffset
-            break
+    else {
+      position
+                = Math.abs(elementToViewportTopOffset)
+                    > Math.abs(elementToViewportBottomOffset)
+          ? 'end'
+          : 'start'
     }
+  }
 
-    return nextScrollTop
+  let nextScrollTop = 0
+
+  switch (position) {
+    case 'start':
+      nextScrollTop = elementOffsetTop - startOffset
+      break
+    case 'center':
+      nextScrollTop
+                = elementOffsetTop
+                - (viewportHeight - elementHeight - endOffset - startOffset) / 2
+                + startOffset
+      break
+    case 'end':
+      nextScrollTop
+                = elementOffsetTop + elementHeight - viewportHeight + endOffset
+      break
+  }
+
+  return nextScrollTop
 }
-
-
 
 // 使用示例
 // <scroll-view class="container flex-1 overflow-auto" scroll-y :scroll-top="scrollTop" scroll-with-animation />
@@ -107,19 +104,19 @@ export function getScrollIntoViewValue(
 
 // wd-form-item 校验错误优先；其余为子组件内置错误提示
 const ERROR_MESSAGE_SELECTORS = [
-    '.wd-form-item__error-message',
-    '.wd-cell__error-message',
-    '.wd-calendar__error-message',
-    '.wd-input__error-message',
-    '.wd-textarea__error-message',
-    '.wd-picker__error-message',
+  '.wd-form-item__error-message',
+  '.wd-cell__error-message',
+  '.wd-calendar__error-message',
+  '.wd-input__error-message',
+  '.wd-textarea__error-message',
+  '.wd-picker__error-message',
 ]
 const FORM_ITEM_SELECTORS = [
-    '.wd-form-item',
-    '.wd-cell',
-    '.wd-calendar__cell',
-    '.wd-input',
-    '.wd-textarea',
+  '.wd-form-item',
+  '.wd-cell',
+  '.wd-calendar__cell',
+  '.wd-input',
+  '.wd-textarea',
 ]
 const ERROR_SELECTOR_COUNT = ERROR_MESSAGE_SELECTORS.length
 const FORM_SELECTOR_COUNT = FORM_ITEM_SELECTORS.length
@@ -127,191 +124,185 @@ const FORM_SELECTOR_COUNT = FORM_ITEM_SELECTORS.length
 /**
  * 执行 DOM 查询并获取结果
  */
-const executeQuery = (scrollContainer: string): Promise<any[]> => {
-    return new Promise((resolve) => {
-        const query = uni.createSelectorQuery()
-        query.select(scrollContainer).boundingClientRect()
-        query.select(scrollContainer).scrollOffset()
+function executeQuery(scrollContainer: string): Promise<any[]> {
+  return new Promise((resolve) => {
+    const query = uni.createSelectorQuery()
+    query.select(scrollContainer).boundingClientRect()
+    query.select(scrollContainer).scrollOffset()
 
-        // #ifdef MP
-        const containerPrefix = `${scrollContainer} >>> `
-        ERROR_MESSAGE_SELECTORS.forEach(selector => {
-            query.selectAll(containerPrefix + selector).boundingClientRect()
-        })
-        FORM_ITEM_SELECTORS.forEach(selector => {
-            query.selectAll(containerPrefix + selector).boundingClientRect()
-        })
-        // #endif
-
-        // #ifndef MP
-        ERROR_MESSAGE_SELECTORS.forEach(selector => {
-            query.selectAll(selector).boundingClientRect()
-        })
-        FORM_ITEM_SELECTORS.forEach(selector => {
-            query.selectAll(selector).boundingClientRect()
-        })
-        // #endif
-
-        query.exec(resolve)
+    // #ifdef MP
+    const containerPrefix = `${scrollContainer} >>> `
+    ERROR_MESSAGE_SELECTORS.forEach((selector) => {
+      query.selectAll(containerPrefix + selector).boundingClientRect()
     })
+    FORM_ITEM_SELECTORS.forEach((selector) => {
+      query.selectAll(containerPrefix + selector).boundingClientRect()
+    })
+    // #endif
+
+    // #ifndef MP
+    ERROR_MESSAGE_SELECTORS.forEach((selector) => {
+      query.selectAll(selector).boundingClientRect()
+    })
+    FORM_ITEM_SELECTORS.forEach((selector) => {
+      query.selectAll(selector).boundingClientRect()
+    })
+    // #endif
+
+    query.exec(resolve)
+  })
 }
 
 /**
  * 解析查询结果
  */
-const parseQueryResults = (res: any[]) => {
-    const container = res[0]
-    const scrollInfo = res[1]
-    // 使用 flatMap 高效合并多个数组
-    const errorItems = res.slice(2, 2 + ERROR_SELECTOR_COUNT).flatMap(item => item || [])
-    const formItems = res.slice(2 + ERROR_SELECTOR_COUNT, 2 + ERROR_SELECTOR_COUNT + FORM_SELECTOR_COUNT).flatMap(item => item || [])
-    return { container, scrollInfo, errorItems, formItems }
+function parseQueryResults(res: any[]) {
+  const container = res[0]
+  const scrollInfo = res[1]
+  // 使用 flatMap 高效合并多个数组
+  const errorItems = res.slice(2, 2 + ERROR_SELECTOR_COUNT).flatMap(item => item || [])
+  const formItems = res.slice(2 + ERROR_SELECTOR_COUNT, 2 + ERROR_SELECTOR_COUNT + FORM_SELECTOR_COUNT).flatMap(item => item || [])
+  return { container, scrollInfo, errorItems, formItems }
 }
 
 /**
  * 计算滚动目标
  */
-const calculateScrollTarget = (
-    container: any,
-    scrollInfo: any,
-    firstErrorItem: any,
-    formItems: any[],
-    windowHeight: number,
-    extraOffset: number,
-) => {
-    // 找出包含错误项的最小父节点（优先 wd-form-item）
-    const parentCell = formItems
-        .filter(cell => firstErrorItem.top >= cell.top && firstErrorItem.top <= (cell.top + cell.height))
-        .sort((a, b) => a.height - b.height)[0]
-    const cell = parentCell || firstErrorItem
+function calculateScrollTarget(container: any,
+  scrollInfo: any,
+  firstErrorItem: any,
+  formItems: any[],
+  windowHeight: number,
+  extraOffset: number) {
+  // 找出包含错误项的最小父节点（优先 wd-form-item）
+  const parentCell = formItems
+    .filter(cell => firstErrorItem.top >= cell.top && firstErrorItem.top <= (cell.top + cell.height))
+    .sort((a, b) => a.height - b.height)[0]
+  const cell = parentCell || firstErrorItem
 
-    return getScrollIntoViewValue(
-        container.height,
-        scrollInfo.scrollTop,
-        cell.height,
-        firstErrorItem.top + scrollInfo.scrollTop,
-        {
-            startOffset: container.top + (cell.height - firstErrorItem.height - 10) + extraOffset,
-            endOffset: windowHeight - container.height - container.top,
-        },
-    )
+  return getScrollIntoViewValue(
+    container.height,
+    scrollInfo.scrollTop,
+    cell.height,
+    firstErrorItem.top + scrollInfo.scrollTop,
+    {
+      startOffset: container.top + (cell.height - firstErrorItem.height - 10) + extraOffset,
+      endOffset: windowHeight - container.height - container.top,
+    },
+  )
 }
 
 export function useForm(
-    scroll: boolean = true,
-    popHeight: number = 0,
-    formRefs: any = null,
-    extraOffset: number = 0,
-    scrollContainer: string = '.container',
+  scroll: boolean = true,
+  popHeight: number = 0,
+  formRefs: any = null,
+  extraOffset: number = 0,
+  scrollContainer: string = '.container',
 ) {
-    const scrollTop = ref(0)
-    const formRef = ref<any>(null)
-    let isScrolling = false // 防止重复滚动
+  const scrollTop = ref(0)
+  const formRef = ref<any>(null)
+  let isScrolling = false // 防止重复滚动
 
-    const getFormRef = () => formRefs || formRef
+  const getFormRef = () => formRefs || formRef
 
-    // 滚动到错误字段
-    const scrollToErrorField = (offset?: number) => {
-        const scrollOffset = offset ?? extraOffset
-        return new Promise<number>(async (resolve, reject) => {
-            try {
-                if (isScrolling) {
-                    resolve(scrollTop.value)
-                    return
-                }
+  // 滚动到错误字段
+  const scrollToErrorField = async (offset?: number): Promise<number> => {
+    const scrollOffset = offset ?? extraOffset
+    try {
+      if (isScrolling)
+        return scrollTop.value
 
-                isScrolling = true
+      isScrolling = true
 
-                // 等待 wd-form-item 错误信息渲染到 DOM
-                await nextTick()
-                await nextTick()
+      // 等待 wd-form-item 错误信息渲染到 DOM
+      await nextTick()
+      await nextTick()
 
-                const res = await executeQuery(scrollContainer)
-                const { container, scrollInfo, errorItems, formItems } = parseQueryResults(res)
+      const res = await executeQuery(scrollContainer)
+      const { container, scrollInfo, errorItems, formItems } = parseQueryResults(res)
 
-                // 过滤不可见错误节点
-                const visibleErrors = (errorItems || []).filter(
-                    (item: any) => item && item.height > 0 && item.width > 0,
-                )
+      // 过滤不可见错误节点
+      const visibleErrors = (errorItems || []).filter(
+        (item: any) => item && item.height > 0 && item.width > 0,
+      )
 
-                if (!visibleErrors.length || !container || !scrollInfo) {
-                    isScrolling = false
-                    resolve(scrollTop.value)
-                    return
-                }
+      if (!visibleErrors.length || !container || !scrollInfo) {
+        isScrolling = false
+        return scrollTop.value
+      }
 
-                const windowHeight = popHeight || uni.getSystemInfoSync().windowHeight
-                // 选择最靠上的错误项
-                const firstErrorItem = visibleErrors.reduce((prev, curr) => (prev.top < curr.top ? prev : curr))
+      const windowHeight = popHeight || uni.getSystemInfoSync().windowHeight
+      // 选择最靠上的错误项
+      const firstErrorItem = visibleErrors.reduce((prev, curr) => (prev.top < curr.top ? prev : curr))
 
-                let nextScrollTop = calculateScrollTarget(
-                    container,
-                    scrollInfo,
-                    firstErrorItem,
-                    formItems,
-                    windowHeight,
-                    scrollOffset,
-                )
+      let nextScrollTop = calculateScrollTarget(
+        container,
+        scrollInfo,
+        firstErrorItem,
+        formItems,
+        windowHeight,
+        scrollOffset,
+      )
 
-                // 如果和上次一样，+1，确保 scroll-view 能触发滚动
-                if (scrollTop.value === nextScrollTop) {
-                    nextScrollTop = nextScrollTop + 1
-                }
+      // 如果和上次一样，+1，确保 scroll-view 能触发滚动
+      if (scrollTop.value === nextScrollTop)
+        nextScrollTop = nextScrollTop + 1
 
-                scrollTop.value = nextScrollTop
-                isScrolling = false
-                resolve(nextScrollTop)
-            } catch (error) {
-                console.error('[scrollToErrorField] Error:', error)
-                isScrolling = false
-                reject(error)
-            }
-        })
+      scrollTop.value = nextScrollTop
+      isScrolling = false
+      return nextScrollTop
     }
-
-    const scrollAfterValidate = async (valid: boolean) => {
-        if (!valid && scroll) {
-            await scrollToErrorField()
-        }
+    catch (error) {
+      console.error('[scrollToErrorField] Error:', error)
+      isScrolling = false
+      throw error
     }
+  }
 
-    const validate = async () => {
-        try {
-            const fr = getFormRef()
-            if (!fr.value?.validate) {
-                console.error('[validate] formRef 未绑定 wd-form')
-                return false
-            }
-            const { valid } = await fr.value.validate()
-            await scrollAfterValidate(valid)
-            return valid
-        } catch (error) {
-            console.error('[validate] Error:', error)
-            return false
-        }
-    }
+  const scrollAfterValidate = async (valid: boolean) => {
+    if (!valid && scroll)
+      await scrollToErrorField()
+  }
 
-    const validateField = async (prop?: string | string[]) => {
-        try {
-            const fr = getFormRef()
-            if (!fr.value?.validate) {
-                console.error('[validateField] formRef 未绑定 wd-form')
-                return { valid: false, errors: [] }
-            }
-            const result = await fr.value.validate(prop)
-            await scrollAfterValidate(result.valid)
-            return result
-        } catch (error) {
-            console.error('[validateField] Error:', error)
-            return { valid: false, errors: [] }
-        }
+  const validate = async () => {
+    try {
+      const fr = getFormRef()
+      if (!fr.value?.validate) {
+        console.error('[validate] formRef 未绑定 wd-form')
+        return false
+      }
+      const { valid } = await fr.value.validate()
+      await scrollAfterValidate(valid)
+      return valid
     }
+    catch (error) {
+      console.error('[validate] Error:', error)
+      return false
+    }
+  }
 
-    return {
-        validate,
-        validateField,
-        scrollTop,
-        formRef: getFormRef(),
-        scrollToErrorField,
+  const validateField = async (prop?: string | string[]) => {
+    try {
+      const fr = getFormRef()
+      if (!fr.value?.validate) {
+        console.error('[validateField] formRef 未绑定 wd-form')
+        return { valid: false, errors: [] }
+      }
+      const result = await fr.value.validate(prop)
+      await scrollAfterValidate(result.valid)
+      return result
     }
+    catch (error) {
+      console.error('[validateField] Error:', error)
+      return { valid: false, errors: [] }
+    }
+  }
+
+  return {
+    validate,
+    validateField,
+    scrollTop,
+    formRef: getFormRef(),
+    scrollToErrorField,
+  }
 }

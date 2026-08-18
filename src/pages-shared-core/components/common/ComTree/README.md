@@ -161,7 +161,6 @@ async function fetchDeptTree(keyword: string) {
 
 
 ```vue
-
 <com-tree
 
   v-model="deptId"
@@ -173,15 +172,12 @@ async function fetchDeptTree(keyword: string) {
   leaf-only
 
   @load="handleLoad"
-
 />
-
 ```
 
 
 
 ```ts
-
 const rootNodes = [
 
   { id: '1', name: '总公司', isLeaf: false },
@@ -189,8 +185,6 @@ const rootNodes = [
   { id: '2', name: '分公司', isLeaf: true },
 
 ]
-
-
 
 function handleLoad(node: TreeNodeModel | null, resolve: (children: TreeNodeModel[]) => void) {
 
@@ -207,7 +201,6 @@ function handleLoad(node: TreeNodeModel | null, resolve: (children: TreeNodeMode
   fetchChildren(node.id).then(resolve)
 
 }
-
 ```
 
 
@@ -225,7 +218,6 @@ function handleLoad(node: TreeNodeModel | null, resolve: (children: TreeNodeMode
 
 
 ```vue
-
 <com-tree
 
   v-model="deptId"
@@ -243,9 +235,7 @@ function handleLoad(node: TreeNodeModel | null, resolve: (children: TreeNodeMode
   :search-func="fetchTree"
 
   :load-func="loadChildren"
-
 />
-
 ```
 
 
@@ -255,9 +245,7 @@ function handleLoad(node: TreeNodeModel | null, resolve: (children: TreeNodeMode
 
 
 ```vue
-
 <com-tree v-model="deptId" :options="treeData" />
-
 ```
 
 
@@ -267,7 +255,6 @@ function handleLoad(node: TreeNodeModel | null, resolve: (children: TreeNodeMode
 
 
 ```vue
-
 <com-tree
 
   v-model="deptId"
@@ -277,9 +264,7 @@ function handleLoad(node: TreeNodeModel | null, resolve: (children: TreeNodeMode
   show-search
 
   search-mode="tree"
-
 />
-
 ```
 
 

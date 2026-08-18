@@ -18,17 +18,20 @@ function handleClickLeft() {
   }
   router.relaunch({ name: 'pagesIndex' })
 }
-
 </script>
 
 <template>
-  <view class="app flex flex-col" :class="{
+  <view
+    class="app flex flex-col" :class="{
       dark: isDark,
-    }">
-    <wd-navbar v-if="!navbarStore.hideNavbar" :title="navbarStore.title" @click-left="handleClickLeft" :bordered="false" safeAreaInsetTop
-      :leftArrow="navbarStore.showLeftButton" ></wd-navbar>
-    <main class="flex-1   overflow-hidden">
+    }"
+  >
+    <wd-navbar
+      v-if="!navbarStore.hideNavbar" :title="navbarStore.title" :bordered="false" safe-area-inset-top :left-arrow="navbarStore.showLeftButton"
+      @click-left="handleClickLeft"
+    />
+    <view class="flex-1 overflow-hidden">
       <slot />
-    </main>
+    </view>
   </view>
 </template>

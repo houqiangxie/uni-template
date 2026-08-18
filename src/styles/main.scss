@@ -1,7 +1,6 @@
 @import '../uni.scss';
 page,root-portal {
   box-sizing: border-box;
-  // background-color: #f5f7fa;
   // 组件级变量不会随 ConfigProvider 传到小程序自定义组件，需在 page 声明
   --wot-navbar-bg: transparent;
   --wot-navbar-color: #fff;
@@ -11,14 +10,11 @@ page,root-portal {
   box-sizing: border-box;
 }
 .app {
-  // height: calc(100vh - 44px);
   height: 100vh;
   color: #000000;
   font-family: sans-serif;
-  // background: #ffffff;
   overflow: auto;
-  background: url($base-url + 'bg.png') no-repeat top left/100%;
-
+  // background: url($base-url + 'bg.png') no-repeat top left/100% #{$-color-theme};
 }
 .dark {
   color: #ffffff;
@@ -32,18 +28,11 @@ page,root-portal {
 }
 
 ::-webkit-scrollbar {
-  /*滚动条整体样式*/
-  width: 0; /*高宽分别对应横竖滚动条的尺寸*/
+  width: 0;
   height: 0;
 }
 
 .page-ct {
-  // #ifdef MP-WEIXIN
-  // height: 100vh;
-  // #endif
-  // #ifndef MP-WEIXIN
-  // height: calc(100vh - 44px);
-  // #endif
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -62,10 +51,6 @@ page,root-portal {
     color: #999 !important;
     font-size: 28rpx !important;
   }
-  // @apply '!mt-2 !p-0';
-  // .wd-card__title-content{
-  //   padding: 8px 15px !important;
-  // }
   .uni-input-input,.uni-input-placeholder,.wd-input__error-message,.wd-cell__error-message,.wd-calendar__value,.wd-calendar__error-message,.wd-form-item__error-message,
   .wd-input__inner,.uni-textarea-textarea,.uni-textarea-placeholder,.wd-calendar__error-message,.wd-picker__error-message,.wd-textarea__error-message{
     text-align: right !important;
@@ -89,50 +74,6 @@ page,root-portal {
   padding: 4px;
 }
 
-
-.bg-title2 {
-  display: flex;
-  align-items: center;
-  padding: 12px;
-  font-weight: bold;
-  // @apply flex items-center px-3 py-3 font-bold;
-  // border-bottom: 1px solid $-color-theme;
-  background-color: #fff;
-  color: $-color-theme;
-  position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 24rpx;
-    right: 24rpx;
-    height: 1px;
-    transform-origin: 0 100%;
-    transform: scaleY(0.5);
-    background-color: $-color-theme;
-  }
-
-  .bg-box {
-    width: 4px;
-    height: 12px;
-    margin-right: 8px;
-    background-color: $-color-theme;
-  }
-}
-
-.fix-add-btn {
-  position: absolute;
-  right: 24rpx;
-  bottom: 0;
-  width: 100rpx !important;
-  height: 100rpx !important;
-  image{
-    width: 100rpx !important;
-    height: 100rpx !important;
-  }
-}
-
 .footer-box {
   display: flex;
   justify-content: between;
@@ -149,17 +90,15 @@ page,root-portal {
     &.is-primary {
       background: linear-gradient(90deg, #1E88E5 0%, #27B5FF 100%) !important;
       &.is-plain{
-        // color: #2D8CF0 !important;
         background: none !important;
       }
     }
   }
 
-
   .blue-fill-btn {
     flex: 1;
     background: linear-gradient(90deg, #1E88E5 0%, #27B5FF 100%);
-    border-radius: 100rpx 100rpx 100rpx 100rpx;
+    border-radius: 100rpx;
     color: #fff;
     height: 80rpx;
     display: flex;
@@ -173,40 +112,6 @@ page,root-portal {
   box-shadow: 0 4px 8px 0rpx rgba(0, 0, 0, 0.02);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .input-placeholder,
 .uni-textarea-placeholder,
 .date-box .placeholder,
@@ -219,254 +124,4 @@ page,root-portal {
 .date-box .text {
   color: #333 !important;
   font-size: 14px !important;
-}
-
-.u-input,
-.input-value-border {
-  padding-left: 0 !important;
-  border: none !important;
-}
-
-.u-input--square {
-  background-color: transparent !important;
-}
-
-.nut-textarea {
-  padding: 0 !important;
-  border: none !important;
-}
-
-.boxShadow {
-  box-shadow: 0 6rpx 8rpx 0rpx rgba(0, 0, 0, 0.1);
-}
-
-.custom-form {
-  .u-form-item__body__left__content__label {
-    font-size: 14px !important;
-  }
-
-  .u-form-item__body__right {
-    overflow: hidden;
-  }
-
-  .uni-textarea-textarea {
-    text-align: right !important;
-  }
-
-  .u-radio-group {
-    justify-content: end;
-  }
-
-  .selected-list {
-    justify-content: end;
-  }
-
-  .u-form-item__body__right__content {
-    overflow: hidden;
-  }
-
-  .u-form-item__body__right__content__slot {
-    display: flex;
-    overflow: hidden;
-    flex-direction: row !important;
-    align-items: center !important;
-
-    .u-cell {
-      width: 100% !important;
-      padding: 0 !important;
-    }
-
-    .u-checkbox-group--row {
-      width: 100%;
-    }
-  }
-
-  uni-data-picker {
-    overflow: hidden;
-    flex: 1;
-  }
-
-  .uni-data-tree {
-    overflow: hidden;
-  }
-
-  .u-form-item {
-    border-bottom: 1px solid #E0E0E0;
-
-    &:last-of-type {
-      border-bottom: none;
-    }
-
-    .u-textarea {
-      border: none;
-      // background-color: #F4F4F4;
-      // max-height:70;
-      // overflow:auto;
-    }
-
-    .nut-textarea {
-      border: none;
-      padding: 0;
-      // background-color: #F4F4F4;
-      // max-height:70;
-      // overflow:auto;
-    }
-
-    .u-input {
-      border: none;
-      text-align: right !important;
-
-      // 默认给所有输入框右侧padding
-      // padding-right: 32rpx !important;
-
-      // 有suffix-icon的输入框不需要额外padding
-      &:has(.u-input__content__subfix-icon) {
-        padding-right: 0 !important;
-      }
-    }
-
-    .u-input__content__field-wrapper__field {
-      text-align: right !important;
-    }
-
-    .u-input__content__field-wrapper__field::placeholder {
-      text-align: right !important;
-    }
-
-    // 自定义组件右对齐
-    .com-tree-picker {
-
-      .tree-content {
-        justify-content: flex-end !important;
-      }
-
-      .select-box {
-        padding-right: 8rpx;
-        text-align: right !important;
-        justify-content: flex-end !important;
-
-        .truncate {
-          text-align: right !important;
-        }
-      }
-
-      .placeholder {
-        text-align: right !important;
-      }
-
-      .item-title {
-        text-align: left;
-      }
-    }
-
-    // SelectPlus2组件右对齐
-    .uni-input {
-      justify-content: flex-end !important;
-      // height: 70rpx !important; // 与u-input保持一致的高度
-
-      .flex.flex-1.items-center {
-        justify-content: flex-end !important;
-        text-align: right !important;
-      }
-
-      text {
-        text-align: right !important;
-      }
-
-      .truncate {
-        text-align: right !important;
-      }
-    }
-    .wd-upload__close {
-      top:0;
-    }
-
-    // SelectPlus2外层容器高度调整
-    .custom-form .border-box.h-6.w-full {
-      height: 48rpx !important; // 与u-input保持一致的高度
-      min-height: 48rpx !important;
-    }
-
-    // 更具体的SelectPlus2样式覆盖
-    .custom-form .uni-input.border-box.h-full {
-      height: 48rpx !important;
-      min-height: 48rpx !important;
-    }
-
-    // 通用选择器组件右对齐
-    .u-form-item__body__right__content__slot {
-      justify-content: flex-end !important;
-
-      >view,
-      >text {
-        text-align: right !important;
-      }
-    }
-
-    // 表单验证消息右对齐
-    .u-form-item__body__right__message {
-      text-align: right !important;
-      padding-right: 32rpx;
-      padding-bottom: 12rpx;
-    }
-
-    .u-icon--right {
-      font-size: 16px;
-    }
-
-
-  }
-
-  .has-border {
-    .u-form-item {
-      border-bottom: 1px solid #E0E0E0 !important;
-    }
-  }
-
-  .input-value {
-    border: none;
-
-    .arrow-area {
-      display: none;
-    }
-  }
-
-  .uni-scroll-view {
-    overflow: hidden;
-
-    // width:0;
-    .text-color {
-      white-space: nowrap;
-    }
-  }
-
-  .u-icon__icon {
-    flex-wrap: wrap;
-  }
-
-  .uicon-arrow-right {
-    font-size: 14px !important;
-    line-height: 14px !important;
-  }
-}
-
-.oper-btn {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 120rpx;
-  height: 48rpx;
-  border-radius: 24rpx;
-  border: 1rpx solid #E0E0E0;
-  font-size: 24rpx;
-
-  &.del {
-    color: #EE4646;
-    line-height: 34rpx;
-  }
-
-  &.edit {
-    color: #108EE9;
-    line-height: 34rpx;
-  }
 }

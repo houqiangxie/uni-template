@@ -172,14 +172,28 @@ export function removeQueueSession(sessionId) {
   }
 }
 
+function getUserDataDir() {
+  try {
+    if (typeof wx !== 'undefined' && wx.env?.USER_DATA_PATH)
+      return wx.env.USER_DATA_PATH
+    if (typeof my !== 'undefined' && my.env?.USER_DATA_PATH)
+      return my.env.USER_DATA_PATH
+    if (typeof swan !== 'undefined' && swan.env?.USER_DATA_PATH)
+      return swan.env.USER_DATA_PATH
+    if (typeof tt !== 'undefined' && tt.env?.USER_DATA_PATH)
+      return tt.env.USER_DATA_PATH
+    if (typeof qq !== 'undefined' && qq.env?.USER_DATA_PATH)
+      return qq.env.USER_DATA_PATH
+    if (typeof uni !== 'undefined' && uni.env?.USER_DATA_PATH)
+      return uni.env.USER_DATA_PATH
+  }
+  catch { /* ignore */ }
+  return '_doc'
+}
+
 function getPersistentFilePath(uid, fileName) {
   const safeName = (fileName || 'file').replace(/[/\\?%*:|"<>]/g, '_')
-  // #ifdef MP-WEIXIN
-  return `${wx.env.USER_DATA_PATH}/chunk_upload_${uid}_${safeName}`
-  // #endif
-  // #ifndef MP-WEIXIN
-  return `_doc/chunk_upload_${uid}_${safeName}`
-  // #endif
+  return `${getUserDataDir()}/chunk_upload_${uid}_${safeName}`
 }
 
 function openIndexedDB() {
@@ -291,17 +305,22 @@ export async function persistFile(uid, raw) {
   const destPath = getPersistentFilePath(uid, fileName)
   return new Promise((resolve, reject) => {
     const fs = getFileSystemManager()
+    const fallbackSave = () => {
+      uni.saveFile({
+        tempFilePath: srcPath,
+        success: res => resolve({ storeType: 'path', persistPath: res.savedFilePath }),
+        fail: err => reject(err),
+      })
+    }
+    if (!fs?.copyFile) {
+      fallbackSave()
+      return
+    }
     fs.copyFile({
       srcPath,
       destPath,
       success: () => resolve({ storeType: 'path', persistPath: destPath }),
-      fail: () => {
-        uni.saveFile({
-          tempFilePath: srcPath,
-          success: res => resolve({ storeType: 'path', persistPath: res.savedFilePath }),
-          fail: err => reject(err),
-        })
-      },
+      fail: fallbackSave,
     })
   })
   // #endif
@@ -352,12 +371,17 @@ export async function verifyFileAccessible(item) {
       return false
     }
   }
+  return !!(item.file || item.path)
   // #endif
 
+  // #ifndef H5
   if (item.persistPath || item.path) {
+    const fs = getFileSystemManager()
+    if (!fs?.access)
+      return !!(item.file || item.path)
     const path = item.persistPath || item.path
     return new Promise((resolve) => {
-      getFileSystemManager().access({
+      fs.access({
         path,
         success: () => resolve(true),
         fail: () => resolve(false),
@@ -366,6 +390,7 @@ export async function verifyFileAccessible(item) {
   }
 
   return !!(item.file || item.path)
+  // #endif
 }
 
 export async function removePersistedFile(item) {
@@ -387,8 +412,11 @@ export async function removePersistedFile(item) {
   // #endif
 
   if (item.persistPath) {
+    const fs = getFileSystemManager()
+    if (!fs?.unlink)
+      return
     return new Promise((resolve) => {
-      getFileSystemManager().unlink({
+      fs.unlink({
         filePath: item.persistPath,
         success: resolve,
         fail: resolve,
@@ -445,8 +473,8 @@ export function createFileUid() {
   return `f_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
 }
 
-export function getChunkApiBase(userType = 1) {
-  let url = (userType === 1 ? '' : '/jgzf') + '/api/system/sys/file/chunk'
+export function getChunkApiBase() {
+  let url = `${apiPrefix}/system/sys/file/chunk`
   // #ifndef H5
   url = baseUrl + url
   // #endif
@@ -549,6 +577,10 @@ export function readFileChunk({ file, filePath, persistPath, start, end }) {
   // #ifndef H5
   return new Promise((resolve, reject) => {
     const fs = getFileSystemManager()
+    if (!fs?.readFile) {
+      reject(new Error('当前平台不支持读取文件分片'))
+      return
+    }
     fs.readFile({
       filePath: resolvedPath || file?.url || file?.path,
       position: start,
@@ -570,6 +602,10 @@ export function readFileChunk({ file, filePath, persistPath, start, end }) {
 export function writeTempChunkFile(tempPath, data) {
   return new Promise((resolve, reject) => {
     const fs = getFileSystemManager()
+    if (!fs?.writeFile) {
+      reject(new Error('当前平台不支持写入临时分片'))
+      return
+    }
     fs.writeFile({
       filePath: tempPath,
       data,
@@ -580,13 +616,7 @@ export function writeTempChunkFile(tempPath, data) {
 }
 
 function getTempChunkPath(uploadId, chunkIndex) {
-  const name = `chunk_${uploadId}_${chunkIndex}.tmp`
-  // #ifdef MP-WEIXIN
-  return `${wx.env.USER_DATA_PATH}/${name}`
-  // #endif
-  // #ifndef MP-WEIXIN
-  return `_doc/${name}`
-  // #endif
+  return `${getUserDataDir()}/chunk_${uploadId}_${chunkIndex}.tmp`
 }
 
 function parseResponse(res) {

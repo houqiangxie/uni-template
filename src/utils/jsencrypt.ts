@@ -1,91 +1,105 @@
-/*
- * @Descripttion: 
- * @version: 
- * @Author: houqiangxie
- * @Date: 2023-08-03 10:23:29
- * @LastEditors: houqiangxie
- * @LastEditTime: 2025-02-28 10:44:19
- */
-import JSEncrypt from 'jsencrypt';
-// 密钥对生成 http://web.chacuo.net/netrsakeypair
+import JSEncrypt from 'jsencrypt'
 
-const publicKey =
-    'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAKoR8mX0rGKLqzcWmOzbfj64K8ZIgOdH\n' +
-    'nzkXSOVOZbFu/TJhZ7rFAN+eaGkl3C4buccQd/EjEsj9ir7ijT7h96MCAwEAAQ==';
-
-// const privateKey =
-//     'MIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEAqhHyZfSsYourNxaY\n' +
-//     '7Nt+PrgrxkiA50efORdI5U5lsW79MmFnusUA355oaSXcLhu5xxB38SMSyP2KvuKN\n' +
-//     'PuH3owIDAQABAkAfoiLyL+Z4lf4Myxk6xUDgLaWGximj20CUf+5BKKnlrK+Ed8gA\n' +
-//     'kM0HqoTt2UZwA5E2MzS4EI2gjfQhz5X28uqxAiEA3wNFxfrCZlSZHb0gn2zDpWow\n' +
-//     'cSxQAgiCstxGUoOqlW8CIQDDOerGKH5OmCJ4Z21v+F25WaHYPxCFMvwxpcw99Ecv\n' +
-//     'DQIgIdhDTIqD2jfYjPTY8Jj3EDGPbH2HHuffvflECt3Ek60CIQCFRlCkHpi7hthh\n' +
-//     'YhovyloRYsM+IS9h/0BzlEAuO0ktMQIgSPT3aFAgJYwKpqRYKlLDVcflZFCKY7u3\n' +
-//     'UP8iWi1Qw0Y=';
-
-
-// 企业端文件key
-export const enterprisePublicKey = `MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi+Fz5LYom0Xu7yLJ0lsyxZfSvYEvT4LZV3ltZMzgOAmHbbZmvr2AoYH6JqA5pbN1+LJzKD2ED+yrIWa8JKgq0uYtMIzEzNB+3wO22q8hFVrGkC94tHlauvvYgF+Wf0mQPlHeMQKwQOQfsQG09dpH8eZlQQLbA9R+Pl2qa0x+QYkEQprplZAtTLAksjGgJ2YKzQQXUeIRrkz2X3profouMqPxZX0VrVVYay5tqnSvDiuyKT1NXzVc4d2wUQWq/Gd0y2YCW7mF19B4dCy3/oGFe2e/9SsLd+PDwqfn4MSiuBHv8UDN5gZbCbjagh7utER8kyA1k7OcbUcmRfaI+JH7XQIDAQAB`
-// 加密
-export function encrypt(txt: string, key = publicKey, flag: any) {
-    const encryptor = new JSEncrypt();
-    encryptor.setPublicKey(key); // 设置公钥
-    return encryptor.encrypt(txt); // 对数据进行加密
+function normalizePemKey(raw: string): string {
+  return raw.replace(/\\n/g, '\n').trim()
 }
 
-// 解密
-// export function decrypt(txt: string) {
-//     const encryptor = new JSEncrypt();
-//     encryptor.setPrivateKey(privateKey); // 设置私钥
-//     return encryptor.decrypt(txt); // 对数据进行解密
-// }
+/** 通用 RSA 公钥（来自环境变量） */
+export const publicKey = normalizePemKey(import.meta.env.VITE_RSA_PUBLIC_KEY || '')
 
-// let base = baseUrl + '/station'
-let base = '/station'
-const getToken = () => {
-    const str = uni.getStorageSync('user')
-    let token
-    if (str) {
-        const user = JSON.parse(str)
-        token = user?.userInfo?.token
-    } else token = uni.getStorageSync('userInfo')?.token
+/** 文件下载等场景公钥，未配置时回退到 publicKey */
+export const enterprisePublicKey = normalizePemKey(
+  import.meta.env.VITE_RSA_ENTERPRISE_PUBLIC_KEY || import.meta.env.VITE_RSA_PUBLIC_KEY || '',
+)
+
+/** 加密 */
+export function encrypt(txt: string, key = publicKey, _flag?: boolean) {
+  if (!key) {
+    console.warn('[jsencrypt] RSA public key is not configured (VITE_RSA_PUBLIC_KEY)')
+    return false
+  }
+  const encryptor = new JSEncrypt()
+  encryptor.setPublicKey(key)
+  return encryptor.encrypt(txt)
+}
+
+function parseStorage(value: unknown): any {
+  if (!value)
+    return null
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value)
+    }
+    catch {
+      return null
+    }
+  }
+  return value
+}
+
+function getToken() {
+  try {
+    const storeToken = useUserStore().userInfo?.token
+    if (storeToken)
+      return storeToken
+  }
+  catch { /* pinia 尚未就绪时回退本地存储 */ }
+  const user = parseStorage(uni.getStorageSync('user'))
+  const token = user?.userInfo?.token || user?.token
+  if (token)
     return token
+  const info = parseStorage(uni.getStorageSync('userInfo'))
+  return info?.token || ''
 }
 
-export const formatUrl = (url: string) => {
-    if (!url) return url
-    let encryptToken = encrypt(getToken(), enterprisePublicKey, true)
-    encryptToken = encodeURIComponent(encryptToken)
-    let path = `${base}/image/download?imagePath=${url}&token=${encryptToken}`
-    return path
+/** 受保护资源下载地址：H5 用相对路径；小程序 / App 拼上 VITE_BASE_URL */
+export function formatUrl(url: string) {
+  if (!url)
+    return url
+  let encryptToken = encrypt(getToken(), enterprisePublicKey, true)
+  encryptToken = encodeURIComponent(encryptToken || '')
+  const path = `${apiPrefix}/file/image/download?imagePath=${url}&token=${encryptToken}`
+  // #ifdef H5
+  return path
+  // #endif
+  // #ifndef H5
+  return baseUrl + path
+  // #endif
 }
 
-export const createTempUrl = async (url: string, type = 'blob') => {
-    if (!url) return
-    const res = await fetch(formatUrl(url))
-    const blob = await res.blob()
-    let tempUrl
-    if (type == 'blob') tempUrl = URL.createObjectURL(blob)
-    else if (type == 'base64') {
-        tempUrl = new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result); // 转换完成后返回 Base64 字符串
-            reader.onerror = reject; // 处理错误
-            reader.readAsDataURL(blob); // 将 Blob 转换为 Base64
-        });
-    } else tempUrl = ''
-    return tempUrl
+export async function createTempUrl(url: string, type = 'blob') {
+  if (!url)
+    return
+  const signed = formatUrl(url)
+  // #ifdef H5
+  const res = await fetch(signed)
+  const blob = await res.blob()
+  if (type == 'blob')
+    return URL.createObjectURL(blob)
+  if (type == 'base64') {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result)
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+  }
+  return ''
+  // #endif
+  // #ifndef H5
+  return signed
+  // #endif
 }
 
-// 批量替换富文本中的链接
+/** 批量替换富文本中的链接 */
 export function replaceMediaLinks(htmlContent: string): string {
-    let updatedContent = htmlContent;
-    const replaceAttrList = ['img', 'video', 'audio', 'source'];
-    replaceAttrList.forEach(element => {
-        const regex = new RegExp(`<${element}[^>]+src="([^"]+)"[^>]*>`, 'g');
-        updatedContent = updatedContent.replace(regex, (match: string, p1: string) => {
-            return match.replace(p1, formatUrl(p1));
-        });
-    });
-    return updatedContent;
+  let updatedContent = htmlContent
+  const replaceAttrList = ['img', 'video', 'audio', 'source']
+  replaceAttrList.forEach((element) => {
+    const regex = new RegExp(`<${element}[^>]+src="([^"]+)"[^>]*>`, 'g')
+    updatedContent = updatedContent.replace(regex, (match: string, p1: string) => {
+      return match.replace(p1, formatUrl(p1))
+    })
+  })
+  return updatedContent
 }
