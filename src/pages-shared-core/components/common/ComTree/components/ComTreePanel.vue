@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import type { TreeNodeModel } from '../index.vue'
+import type { TreeNodeModel } from '../common'
+import TreeNode from './TreeNode.vue'
+
+defineOptions({
+  name: 'ComTreePanel',
+  options: {
+    styleIsolation: 'shared',
+    virtualHost: true,
+  },
+})
 
 const props = withDefaults(defineProps<{
   nodes: TreeNodeModel[]
@@ -78,14 +87,14 @@ function handleClear() {
         {{ t('common.add') }}
       </view>
     </view>
-    <view class="overflow-hidden flex-1 com-tree-panel__body min-h-0 px-2">
+    <view class="overflow-hidden com-tree-panel__body px-2">
       <view v-if="loading" class="com-tree-panel__state">
         {{ t('common.loading') }}
       </view>
       <view v-else-if="!nodes.length" class="com-tree-panel__state">
         {{ emptyText || t('comTree.empty') }}
       </view>
-      <scroll-view v-else class="h-full" scroll-y>
+      <scroll-view v-else class="com-tree-panel__scroll" scroll-y :style="{ height: '640rpx' }">
         <TreeNode
           v-for="item in nodes"
           :key="item[valueKey]"
@@ -105,11 +114,8 @@ function handleClear() {
 
 <style lang="scss" scoped>
 .com-tree-panel {
-  display: flex;
-  flex-direction: column;
+  width: 100%;
   overflow: hidden;
-  flex: 1;
-  min-height: 0;
 
   &__search {
     flex-shrink: 0;
@@ -120,15 +126,19 @@ function handleClear() {
     padding: 10rpx;
   }
 
-  &__body {
-    flex: 1;
+  &__scroll {
+    height: 640rpx;
+    min-height: 640rpx;
+    box-sizing: border-box;
   }
 
   &__state {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 200rpx;
+    height: 640rpx;
+    min-height: 640rpx;
+    box-sizing: border-box;
     color: #999;
     font-size: 28rpx;
   }

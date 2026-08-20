@@ -58,6 +58,8 @@
 </script>
 
 <style lang="scss" >
+	@use "sass:color";
+
 	$uni-primary: #007aff !default;
 
 	.uni-calendar-item__weeks-box {
@@ -76,7 +78,7 @@
 		font-size: 14px;
 		// font-family: Lato-Bold, Lato;
 		font-weight: bold;
-		color: darken($color: $uni-primary, $amount: 40%);
+		color: color.adjust($uni-primary, $lightness: -40%);
 	}
 
 	.uni-calendar-item__weeks-box-item {

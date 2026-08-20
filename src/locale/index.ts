@@ -13,6 +13,40 @@ import {
 /** 已加载的语言包 */
 const loadedLocales = new Set<LocaleType>()
 
+const builtinMessages: Record<LocaleType, typeof zhCN> = {
+  'zh-CN': zhCN,
+  'en-US': enUS,
+}
+
+/** 远程语言包覆盖内置文案，缺失 key 保留 fallback，避免显示原始 key */
+function deepMergeMessages(
+  base: Record<string, unknown>,
+  override: Record<string, unknown>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = { ...base }
+  for (const key of Object.keys(override)) {
+    const baseVal = base[key]
+    const overrideVal = override[key]
+    if (
+      baseVal
+      && overrideVal
+      && typeof baseVal === 'object'
+      && typeof overrideVal === 'object'
+      && !Array.isArray(baseVal)
+      && !Array.isArray(overrideVal)
+    ) {
+      result[key] = deepMergeMessages(
+        baseVal as Record<string, unknown>,
+        overrideVal as Record<string, unknown>,
+      )
+    }
+    else {
+      result[key] = overrideVal
+    }
+  }
+  return result
+}
+
 function registerLocaleMessages(locale: LocaleType, messages: object): void {
   i18n.global.setLocaleMessage(locale, messages as typeof zhCN)
   loadedLocales.add(locale)
@@ -112,13 +146,21 @@ async function initLocaleMessages(): Promise<void> {
 
   const remoteMessages = await fetchAllLocaleMessages(SUPPORTED_LOCALES)
   for (const locale of SUPPORTED_LOCALES) {
-    const messages = remoteMessages[locale]
-    if (messages)
-      registerLocaleMessages(locale, messages)
+    const remote = remoteMessages[locale]
+    const builtin = builtinMessages[locale]
+    if (remote) {
+      registerLocaleMessages(
+        locale,
+        deepMergeMessages(
+          builtin as unknown as Record<string, unknown>,
+          remote as Record<string, unknown>,
+        ),
+      )
+    }
+    else if (!loadedLocales.has(locale)) {
+      registerLocaleMessages(locale, builtin)
+    }
   }
-
-  if (!loadedLocales.has(DEFAULT_LOCALE))
-    registerLocaleMessages(DEFAULT_LOCALE, zhCN)
 }
 
 /**

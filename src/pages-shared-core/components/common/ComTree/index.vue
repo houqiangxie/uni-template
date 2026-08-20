@@ -1,304 +1,35 @@
-<script lang="ts">
-</script>
-
 <script setup lang="ts">
+import type {
+  TreeLoadHandler,
+  TreeNodeModel,
+  TreeParams,
+  TreeRemoteSearchHandler,
+  TreeSearchHandler,
+  TreeSearchMode,
+  TreeValue,
+} from './common'
+import {
+  TreeCheckStatus,
+  applyCheckStatusFromValue,
+  buildTreeNodeMap,
+  cloneTreeNodes,
+  filterTreeLeaves,
+  filterTreeVisibleRoots,
+  getTreeValueList,
+  isSameTreeValue,
+  isTreeNodeLeaf,
+  mergeTreeNodesByKey,
+  parseRemoteTreeResponse,
+  provideComTreeContext,
+  resetTreeExpandState,
+  setParentCheckStatus,
+  treeFindPathByKey,
+} from './common'
 import {
   buildRemoteRequestSignature,
   createRemoteRequestCoordinator,
   shallowEqualObjects,
-} from '../ComSelect/index.vue'
-
-export interface TreeNodeModel extends Record<string, any> {
-  level?: number
-  parent?: TreeNodeModel | null
-  isShowChild?: boolean
-  checkStatus?: number
-  disabled?: boolean
-  /** 懒加载：是否为叶子节点 */
-  isLeaf?: boolean
-  /** 懒加载：子节点是否已加载（内部状态） */
-  loaded?: boolean
-  /** 懒加载：是否正在加载子节点（内部状态） */
-  loading?: boolean
-}
-
-export type TreeLoadHandler = (
-  node: TreeNodeModel | null,
-  resolve: (children: TreeNodeModel[]) => void,
-) => void | Promise<TreeNodeModel[]>
-
-export type TreeSearchSideEffectHandler = (
-  keyword: string,
-) => void | Promise<void>
-
-export type TreeRemoteSearchHandler = (
-  keyword: string,
-) => Promise<TreeNodeModel[]> | TreeNodeModel[]
-
-/** 远程搜索：返回树数据则组件内直接渲染；无返回值则由外部更新 options */
-export type TreeSearchHandler = TreeRemoteSearchHandler | TreeSearchSideEffectHandler
-
-export type TreeParams = Record<string, unknown>
-
-export type TreeValue = string | number | Array<string | number> | null | undefined
-
-export type TreeSearchMode = 'flat' | 'tree'
-
-/** 0 未选 | 1 半选 | 2 全选 */
-export const TreeCheckStatus = {
-  Unchecked: 0,
-  Indeterminate: 1,
-  Checked: 2,
-} as const
-
-export interface ComTreeContext {
-  treeFlat: Ref<TreeNodeModel[]>
-  submit: () => void
-  popup: Ref<boolean>
-  clearCustomNodes: () => void
-  lazy: Ref<boolean>
-  isLeafKey: Ref<string>
-  childrenKey: Ref<string>
-  loadNode: (node: TreeNodeModel | null) => Promise<void>
-}
-
-export const comTreeContextKey: InjectionKey<ComTreeContext> = Symbol('comTreeContext')
-
-export function provideComTreeContext(ctx: ComTreeContext) {
-  provide(comTreeContextKey, ctx)
-}
-
-export function useComTreeContext() {
-  const ctx = inject(comTreeContextKey)
-  if (!ctx)
-    throw new Error('useComTreeContext must be used within ComTree')
-  return ctx
-}
-
-export function isSameTreeValue(
-  a: TreeValue,
-  b: TreeValue,
-  multiple: boolean,
-): boolean {
-  if (multiple) {
-    const arrA = Array.isArray(a) ? a : []
-    const arrB = Array.isArray(b) ? b : []
-    if (arrA.length !== arrB.length)
-      return false
-    const setB = new Set(arrB.map(v => String(v)))
-    return arrA.every(v => setB.has(String(v)))
-  }
-  if (a == null && b == null)
-    return true
-  return String(a) === String(b)
-}
-
-export function cloneTreeNodes(
-  nodes: TreeNodeModel[],
-  childrenKey: string,
-): TreeNodeModel[] {
-  return deepClone(nodes) as TreeNodeModel[]
-}
-
-export function buildTreeNodeMap(
-  treeFlat: TreeNodeModel[],
-  valueKey: string,
-): Map<string, TreeNodeModel> {
-  const map = new Map<string, TreeNodeModel>()
-  treeFlat.forEach((item) => {
-    map.set(String(item[valueKey]), item)
-  })
-  return map
-}
-
-export function setChildCheckStatus(
-  parent: TreeNodeModel,
-  status: number,
-  childrenKey: string,
-) {
-  const list = parent[childrenKey] as TreeNodeModel[] | undefined
-  if (!list?.length)
-    return
-  list.forEach((item) => {
-    item.checkStatus = status
-    setChildCheckStatus(item, status, childrenKey)
-  })
-}
-
-export function setParentCheckStatus(
-  child: TreeNodeModel,
-  childrenKey: string,
-) {
-  const parent = child.parent
-  if (!parent)
-    return
-
-  const children = parent[childrenKey] as TreeNodeModel[]
-  const statuses = new Set(children.map(item => item.checkStatus))
-  parent.checkStatus = statuses.size === 1
-    ? [...statuses][0]
-    : TreeCheckStatus.Indeterminate
-
-  if (parent.parent)
-    setParentCheckStatus(parent, childrenKey)
-}
-
-export function treeFindPathByKey(
-  tree: TreeNodeModel[],
-  childrenKey: string,
-  predicate: (node: TreeNodeModel) => boolean,
-  path: TreeNodeModel[] = [],
-): TreeNodeModel[] {
-  for (const node of tree) {
-    path.push(node)
-    if (predicate(node))
-      return [...path]
-    const children = node[childrenKey] as TreeNodeModel[] | undefined
-    if (children?.length) {
-      const found = treeFindPathByKey(children, childrenKey, predicate, path)
-      if (found.length)
-        return found
-    }
-    path.pop()
-  }
-  return []
-}
-
-export function filterTreeFlat(
-  list: TreeNodeModel[],
-  keyword: string,
-  labelKey: string,
-  childrenKey: string,
-): TreeNodeModel[] {
-  return list
-    .filter(item => !item[childrenKey]?.length)
-    .filter(item => String(item[labelKey] ?? '').includes(keyword))
-}
-
-/** Filter precomputed leaf nodes — avoids scanning non-leaf nodes on each search. */
-export function filterTreeLeaves(
-  leafNodes: TreeNodeModel[],
-  keyword: string,
-  labelKey: string,
-): TreeNodeModel[] {
-  if (!keyword)
-    return leafNodes
-  return leafNodes.filter(item => String(item[labelKey] ?? '').includes(keyword))
-}
-
-export function resetTreeExpandState(
-  list: TreeNodeModel[],
-  childrenKey: string,
-) {
-  list.forEach((node) => {
-    node.isShowChild = false
-    const children = node[childrenKey] as TreeNodeModel[] | undefined
-    if (children?.length)
-      resetTreeExpandState(children, childrenKey)
-  })
-}
-
-export function filterTreeVisibleRoots(
-  list: TreeNodeModel[],
-  keyword: string,
-  labelKey: string,
-  childrenKey: string,
-): TreeNodeModel[] {
-  if (!keyword)
-    return list
-
-  function matchBranch(node: TreeNodeModel): boolean {
-    const label = String(node[labelKey] ?? '')
-    const children = node[childrenKey] as TreeNodeModel[] | undefined
-    let childMatched = false
-    if (children?.length) {
-      const visibleChildren = children.filter(matchBranch)
-      node.isShowChild = visibleChildren.length > 0
-      childMatched = visibleChildren.length > 0
-    }
-    return label.includes(keyword) || childMatched
-  }
-
-  return list.filter(matchBranch)
-}
-
-export function isTreeNodeLeaf(
-  node: TreeNodeModel,
-  childrenKey: string,
-  isLeafKey: string,
-  lazy: boolean,
-): boolean {
-  if (lazy)
-    return node[isLeafKey] === true
-  return !node[childrenKey]?.length
-}
-
-export function isTreeNodeExpandable(
-  node: TreeNodeModel,
-  childrenKey: string,
-  isLeafKey: string,
-  lazy: boolean,
-): boolean {
-  if (lazy)
-    return node[isLeafKey] !== true
-  return !!node[childrenKey]?.length
-}
-
-export function applyCheckStatusFromValue(
-  treeFlat: TreeNodeModel[],
-  value: TreeValue,
-  multiple: boolean,
-  valueKey: string,
-) {
-  const valueSet = multiple && Array.isArray(value)
-    ? new Set(value.map(v => String(v)))
-    : null
-
-  treeFlat.forEach((item) => {
-    const key = String(item[valueKey])
-    if (multiple) {
-      item.checkStatus = valueSet?.has(key)
-        ? TreeCheckStatus.Checked
-        : TreeCheckStatus.Unchecked
-    }
-    else {
-      item.checkStatus = value != null && String(value) === key
-        ? TreeCheckStatus.Checked
-        : TreeCheckStatus.Unchecked
-    }
-  })
-}
-
-export function getTreeValueList(value: TreeValue): Array<string | number> {
-  if (Array.isArray(value))
-    return value
-  if (value === '' || value == null)
-    return []
-  return [value]
-}
-
-export function parseRemoteTreeResponse(result: unknown): TreeNodeModel[] {
-  const data = (result as { data?: unknown })?.data
-  if (Array.isArray((data as { records?: unknown })?.records))
-    return (data as { records: TreeNodeModel[] }).records
-  if (Array.isArray(data))
-    return data as TreeNodeModel[]
-  if (Array.isArray((data as { list?: unknown })?.list))
-    return (data as { list: TreeNodeModel[] }).list
-  return []
-}
-
-export function mergeTreeNodesByKey(
-  base: TreeNodeModel[],
-  extra: TreeNodeModel[],
-  valueKey: string,
-): TreeNodeModel[] {
-  if (!extra.length)
-    return base
-  const keySet = new Set(base.map(item => String(item[valueKey])))
-  const missing = extra.filter(row => !keySet.has(String(row[valueKey])))
-  return missing.length ? [...missing, ...base] : base
-}
+} from '../../../utils/common'
 
 defineOptions({
   name: 'ComTree',
@@ -411,6 +142,8 @@ const treeList = ref<TreeNodeModel[]>([])
 const treeFlat = ref<TreeNodeModel[]>([])
 const treeLeafNodes = ref<TreeNodeModel[]>([])
 const customNodes = ref<TreeNodeModel[]>([])
+/** childId -> parent node（运行时引用，不写入 node 避免小程序环形序列化） */
+const parentNodeMap = new Map<string, TreeNodeModel>()
 let optionsRef: TreeNodeModel[] | null = null
 let flatSearchCacheKeyword = ''
 let flatSearchCacheResult: TreeNodeModel[] = []
@@ -423,6 +156,13 @@ const isRemoteBuiltIn = computed(() => props.remote && (!!props.remoteUrl || !!p
 const remoteLoading = computed(() => isRemoteBuiltIn.value ? isLoading.value : props.loading)
 const resolvedLoad = computed(() => props.load || props.loadFunc)
 
+function getParentNode(node: TreeNodeModel): TreeNodeModel | null {
+  const id = node?.[props.valueKey]
+  if (id == null || id === '')
+    return null
+  return parentNodeMap.get(String(id)) ?? null
+}
+
 // 依赖 loadNode / submit，放在函数定义之后
 provideComTreeContext({
   treeFlat,
@@ -432,7 +172,9 @@ provideComTreeContext({
   lazy: toRef(props, 'lazy'),
   isLeafKey: toRef(props, 'isLeafKey'),
   childrenKey: toRef(props, 'childrenKey'),
+  valueKey: toRef(props, 'valueKey'),
   loadNode,
+  getParentNode,
 })
 
 function syncFilterList() {
@@ -777,6 +519,7 @@ async function loadNode(node: TreeNodeModel | null) {
 function resetTreeState() {
   treeFlat.value = []
   treeLeafNodes.value = []
+  parentNodeMap.clear()
   flatSearchCacheKeyword = ''
   flatSearchCacheResult = []
 }
@@ -797,7 +540,7 @@ function appendLoadedChildren(parent: TreeNodeModel, rawChildren: TreeNodeModel[
   if (!props.checkStrictly && props.multiple) {
     children
       .filter(item => isTreeNodeLeaf(item, props.childrenKey, props.isLeafKey, props.lazy))
-      .forEach(item => setParentCheckStatus(item, props.childrenKey))
+      .forEach(item => setParentCheckStatus(item, props.childrenKey, getParentNode))
   }
 }
 
@@ -841,7 +584,16 @@ async function rebuildTreeFromOptions() {
 function flattenTree(list: TreeNodeModel[], level = 1, parent: TreeNodeModel | null = null) {
   list.forEach((item) => {
     item.level = level
-    item.parent = parent
+    // 小程序自定义组件 props 会序列化：禁止挂 parent 对象（环形引用会导致节点数据丢失）
+    if (parent) {
+      parentNodeMap.set(String(item[props.valueKey]), parent)
+      item.parentId = parent[props.valueKey] ?? null
+    }
+    else {
+      item.parentId = null
+    }
+    if ('parent' in item)
+      delete item.parent
     item.isShowChild = false
     treeFlat.value.push(item)
 
@@ -887,7 +639,7 @@ function syncSelectionFromModel() {
   if (!props.checkStrictly && props.multiple) {
     treeFlat.value
       .filter(item => isTreeNodeLeaf(item, props.childrenKey, props.isLeafKey, props.lazy))
-      .forEach(item => setParentCheckStatus(item, props.childrenKey))
+      .forEach(item => setParentCheckStatus(item, props.childrenKey, getParentNode))
   }
 
   formatText.value = getFormatText()
@@ -1041,38 +793,40 @@ defineExpose({ open })
       v-model="show"
       root-portal
       position="bottom"
-      custom-class="rounded-t-lg overflow-hidden h-100 flex flex-col"
+      custom-class="rounded-t-lg overflow-hidden"
       @close="close"
     >
-      <view class="h-10 relative">
-        <view class="flex items-center justify-center h-full text-base">
-          {{ resolvedTitle }}
+      <view class="com-tree__popup">
+        <view class="h-10 relative">
+          <view class="flex items-center justify-center h-full text-base">
+            {{ resolvedTitle }}
+          </view>
+          <wd-icon name="close" size="16" color="#666" custom-class="absolute top-3 right-5" @click="cancelPopup" />
         </view>
-        <wd-icon name="close" size="16" color="#666" custom-class="absolute top-3 right-5" @click="cancelPopup" />
-      </view>
-      <ComTreePanel
-        v-model:keyword="keyword"
-        :nodes="filterList"
-        :show-search="showSearch"
-        :search-placeholder="resolvedSearchPlaceholder"
-        :multiple="multiple"
-        :allow-create="allowCreate"
-        :leaf-only="leafOnly"
-        :check-strictly="checkStrictly"
-        :loading="remote && remoteLoading"
-        :empty-text="resolvedEmptyText"
-        :value-key="valueKey"
-        :label-key="labelKey"
-        :children-key="childrenKey"
-        :flat="!!keyword && searchMode === 'flat'"
-        @search="handleSearch"
-        @clear="onSearch"
-        @add-custom="addCustomNode"
-      />
-      <view class="p-2">
-        <wd-button type="primary" block @click="submit">
-          {{ t('common.confirm') }}
-        </wd-button>
+        <ComTreePanel
+          v-model:keyword="keyword"
+          :nodes="filterList"
+          :show-search="showSearch"
+          :search-placeholder="resolvedSearchPlaceholder"
+          :multiple="multiple"
+          :allow-create="allowCreate"
+          :leaf-only="leafOnly"
+          :check-strictly="checkStrictly"
+          :loading="remote && remoteLoading"
+          :empty-text="resolvedEmptyText"
+          :value-key="valueKey"
+          :label-key="labelKey"
+          :children-key="childrenKey"
+          :flat="!!keyword && searchMode === 'flat'"
+          @search="handleSearch"
+          @clear="onSearch"
+          @add-custom="addCustomNode"
+        />
+        <view class="p-2">
+          <wd-button type="primary" block @click="submit">
+            {{ t('common.confirm') }}
+          </wd-button>
+        </view>
       </view>
     </wd-popup>
 
@@ -1105,6 +859,11 @@ defineExpose({ open })
 .com-tree {
   width: 100%;
 
+  &__popup {
+    width: 100%;
+    background: #fff;
+  }
+
   &__trigger {
     width: 100%;
     display: flex;
@@ -1119,8 +878,13 @@ defineExpose({ open })
   }
 
   &__inline-panel {
-    :deep(.com-tree-panel__body) {
+    :deep(.com-tree-panel__scroll),
+    :deep(.com-tree-panel__state) {
       height: 400rpx;
+      min-height: 400rpx;
+    }
+
+    :deep(.com-tree-panel__body) {
       padding: 20rpx 0;
     }
   }

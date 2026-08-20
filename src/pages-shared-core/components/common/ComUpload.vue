@@ -21,10 +21,28 @@
         @confirm="handleConfirmUpload" @cancel="handleCancel"
       />
     </wd-root-portal>
+    <!-- 小程序 PNG→JPG 旧版 canvas 兜底（PC/Mac 常无 OffscreenCanvas） -->
+    <!-- #ifndef H5 -->
+    <canvas
+      :canvas-id="legacyCanvasId"
+      :id="legacyCanvasId"
+      class="compress-legacy-canvas"
+      :style="{ width: legacyCanvas.w + 'px', height: legacyCanvas.h + 'px' }"
+      :width="legacyCanvas.w"
+      :height="legacyCanvas.h"
+    />
+    <!-- #endif -->
   </view>
 </template>
 
 <script setup>
+import {
+  COMPRESS_LEGACY_CANVAS_ID,
+  compressSingle,
+  registerCompressLegacyCanvas,
+  unregisterCompressLegacyCanvas,
+} from '@/pages-shared-core/utils/compress.js'
+
 defineOptions({
   inheritAttrs: false,
 })
@@ -77,6 +95,29 @@ upUrl = baseUrl + upUrl
 // #endif
 
 const userStore = useUserStore()
+
+const legacyCanvas = reactive({ w: 100, h: 100 })
+const instance = getCurrentInstance()
+const legacyCanvasId = `${COMPRESS_LEGACY_CANVAS_ID}_${instance?.uid ?? Math.random().toString(36).slice(2, 8)}`
+let legacyApi = null
+
+// #ifndef H5
+onMounted(() => {
+  legacyApi = {
+    component: instance?.proxy,
+    canvasId: legacyCanvasId,
+    setSize(w, h) {
+      legacyCanvas.w = Math.max(1, w)
+      legacyCanvas.h = Math.max(1, h)
+    },
+  }
+  registerCompressLegacyCanvas(legacyApi)
+})
+onUnmounted(() => {
+  unregisterCompressLegacyCanvas(legacyApi)
+  legacyApi = null
+})
+// #endif
 
 const acceptTypes = computed(() => {
   return props.accept === 'image' ? ['jpg', 'jpeg', 'png', 'heif', 'heic', 'jfif'] : []
@@ -150,75 +191,27 @@ function beforeUpload({ files }) {
 }
 
 async function customUpload(file, formData, options) {
-  let method = 'uploadFile'
-  let url = ''
-  let uploadConfig = {
+  let compressed = null
+  if (props.accept === 'image') {
+    compressed = await compressSingle(file, {
+      ...(props.compress ? { quality: 20, targetKB: 100, qualityMin: 0.2 } : { quality: 40, targetKB: 300 }),
+      canvasComponent: instance?.proxy,
+    })
+  }
+  // H5 压缩后有 File 对象时传 file，小程序/APP 传 filePath（uni.uploadFile 官方支持）
+  const fileObj = compressed?.file || file.file
+  const uploadConfig = {
     url: upUrl,
     header: {
       Authorization: userStore.userInfo?.token,
       platformType,
     },
-  }
-  let compressed = null
-  if (props.accept === 'image') {
-    compressed = await compressSingle(file, props.compress ? { quality: 20, targetKB: 100, qualityMin: 0.2 } : { quality: 40, targetKB: 300 })
-    url = compressed?.url || file.url
-  }
-  // #ifdef H5
-  // 3. 构造 FormData
-  // H5 下使用 FormData 上传，需要把本地 URL 或 dataURL 转为 Blob/File
-  method = 'request'
-  const form = new FormData()
-  // helper: 将 dataURL 或 URL 转为 Blob
-  const toBlob = async (url) => {
-    if (!url)
-      return null
-    // dataURL (base64)
-    if (url.startsWith && url.startsWith('data:')) {
-      const arr = url.split(',')
-      const mime = (arr[0].match(/:(.*?);/) || [])[1] || 'application/octet-stream'
-      const bstr = atob(arr[1] || '')
-      let n = bstr.length
-      const u8arr = new Uint8Array(n)
-      while (n--)
-        u8arr[n] = bstr.charCodeAt(n)
-
-      return new Blob([u8arr], { type: mime })
-    }
-    // 其它 URL：fetch 并取 blob（支持本地临时文件或远程地址）
-    const resp = await fetch(url)
-    return await resp.blob()
-  }
-
-  const filename = (compressed?.name) || file.name || file.fileName || (file.url && file.url.split('/').pop()) || 'file'
-  const fileObj = compressed?.file
-  if (fileObj) {
-    form.append('file', fileObj, filename)
-  }
-  else {
-    const blob = await toBlob(url || file.url)
-    if (blob)
-      form.append('file', blob, filename)
-  }
-  form.append('uploadSource', '1')
-  uploadConfig.data = form
-  uploadConfig.method = 'POST'
-  // 不要手动设置 Content-Type，浏览器会自动添加 boundary
-  if (uploadConfig.header && uploadConfig.header['Content-Type'])
-    delete uploadConfig.header['Content-Type']
-
-  // #endif
-  // #ifndef H5
-  uploadConfig = {
-    ...uploadConfig,
     name: 'file',
-    filePath: url || file.url,
     formData: {
       uploadSource: '1',
     },
+    ...(fileObj instanceof File ? { file: fileObj } : { filePath: compressed?.url || file.url || file.path }),
   }
-  // #endif
-  // 抽取 success / fail 处理，使得 H5 可用 XHR 复用相同逻辑
   const handleSuccess = (res) => {
     // res 结构：{ statusCode, data }
     let response
@@ -267,62 +260,11 @@ async function customUpload(file, formData, options) {
     options?.onError(err, file, formData)
   }
 
-  let uploadTask = null
-  // #ifdef H5
-  if (method === 'request') {
-    // H5: 使用原生 XMLHttpRequest 发送 FormData，确保文件字段被正确提交，并支持进度回调
-    const xhr = new XMLHttpRequest()
-    xhr.open(uploadConfig.method || 'POST', uploadConfig.url, true)
-    // 设置 headers（Authorization 等）
-    const headers = uploadConfig.header || {}
-    Object.keys(headers).forEach((k) => {
-      // 不设置 Content-Type，让浏览器自动加 boundary
-      if (k.toLowerCase() === 'content-type')
-        return
-      try { xhr.setRequestHeader(k, headers[k]) }
-      catch (e) { /* ignore */ }
-    })
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4) {
-        const res = { statusCode: xhr.status, data: xhr.responseText }
-        if (xhr.status >= 200 && xhr.status < 300)
-          handleSuccess(res)
-        else
-          handleFail(res)
-      }
-    }
-    xhr.onerror = function (e) {
-      handleFail(e)
-    }
-    // 进度
-    uploadTask = {
-      onProgressUpdate(cb) {
-        xhr.upload.onprogress = function (e) {
-          if (e.lengthComputable)
-            cb({ progress: Math.floor((e.loaded / e.total) * 100), totalBytesSent: e.loaded, totalBytesExpectedToSend: e.total })
-          else
-            cb({ progress: 0 })
-        }
-      },
-      abort() { xhr.abort() },
-    }
-    xhr.send(uploadConfig.data)
-  }
-  else {
-    uploadTask = uni[method]({
-      ...uploadConfig,
-      success(res) { handleSuccess(res) },
-      fail(err) { handleFail(err) },
-    })
-  }
-  // #endif
-  // #ifndef H5
-  uploadTask = uni.uploadFile({
+  const uploadTask = uni.uploadFile({
     ...uploadConfig,
     success(res) { handleSuccess(res) },
     fail(err) { handleFail(err) },
   })
-  // #endif
 
   // 设置当前文件加载的百分比
   uploadTask && uploadTask.onProgressUpdate && uploadTask.onProgressUpdate((res) => {
@@ -340,4 +282,13 @@ function handleCancel() {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.compress-legacy-canvas {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+</style>

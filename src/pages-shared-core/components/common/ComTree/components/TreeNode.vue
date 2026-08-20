@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TreeNodeModel } from '../index.vue'
+import type { TreeNodeModel } from '../common'
 import {
   TreeCheckStatus,
   isTreeNodeExpandable,
@@ -7,9 +7,17 @@ import {
   setChildCheckStatus,
   setParentCheckStatus,
   useComTreeContext,
-} from '../index.vue'
+} from '../common'
+// 小程序递归组件需显式自引用
+import TreeNode from './TreeNode.vue'
 
-defineOptions({ name: 'TreeNode' })
+defineOptions({
+  name: 'TreeNode',
+  options: {
+    styleIsolation: 'shared',
+    virtualHost: true,
+  },
+})
 
 const props = withDefaults(defineProps<{
   node: TreeNodeModel
@@ -30,7 +38,17 @@ const props = withDefaults(defineProps<{
   childrenKey: 'children',
 })
 
-const { treeFlat, submit, popup, clearCustomNodes, lazy, isLeafKey, childrenKey, loadNode } = useComTreeContext()
+const {
+  treeFlat,
+  submit,
+  popup,
+  clearCustomNodes,
+  lazy,
+  isLeafKey,
+  childrenKey,
+  loadNode,
+  getParentNode,
+} = useComTreeContext()
 
 const resolvedChildrenKey = computed(() => props.childrenKey || childrenKey.value)
 const resolvedIsLeafKey = computed(() => isLeafKey.value)
@@ -56,6 +74,12 @@ async function toggleExpand() {
   props.node.isShowChild = !props.node.isShowChild
 }
 
+function isCheckedStyle(node: TreeNodeModel) {
+  if (node.checkStatus === TreeCheckStatus.Checked)
+    return true
+  return !props.checkStrictly && node.checkStatus === TreeCheckStatus.Indeterminate
+}
+
 function handleSelect(node: TreeNodeModel) {
   if (node.disabled)
     return
@@ -66,17 +90,21 @@ function handleSelect(node: TreeNodeModel) {
   }
 
   if (props.multiple) {
+    if (props.checkStrictly) {
+      node.checkStatus = node.checkStatus === TreeCheckStatus.Checked
+        ? TreeCheckStatus.Unchecked
+        : TreeCheckStatus.Checked
+      return
+    }
+
     node.checkStatus = node.checkStatus === TreeCheckStatus.Unchecked
       ? TreeCheckStatus.Checked
       : node.checkStatus === TreeCheckStatus.Indeterminate
         ? TreeCheckStatus.Checked
         : TreeCheckStatus.Unchecked
 
-    if (props.checkStrictly)
-      return
-
     setChildCheckStatus(node, node.checkStatus, resolvedChildrenKey.value)
-    setParentCheckStatus(node, resolvedChildrenKey.value)
+    setParentCheckStatus(node, resolvedChildrenKey.value, getParentNode)
     return
   }
 
@@ -98,7 +126,7 @@ function handleSelect(node: TreeNodeModel) {
   <view v-if="isExpandable" class="text-sm com-tree-node">
     <view
       class="com-tree-node__row"
-      :style="{ paddingLeft: `${34 * ((node.level ?? 1) - 1)}rpx` }"
+      :style="{ paddingLeft: `${36 * ((node.level ?? 1) - 1)}rpx` }"
     >
       <view
         class="com-tree-node__expand"
@@ -108,22 +136,30 @@ function handleSelect(node: TreeNodeModel) {
         <view v-if="node.loading" class="com-tree-node__loading" />
         <view v-else class="com-tree-node__arrow" />
       </view>
+      <view class="com-tree-node__label" @click.stop="toggleExpand">
+        {{ node[labelKey] }}
+      </view>
       <view
         v-if="!leafOnly"
         class="com-tree-node__check"
         :class="[
           multiple ? '' : 'is-radio',
-          node.checkStatus ? 'is-checked' : '',
+          isCheckedStyle(node) ? 'is-checked' : '',
           node.disabled ? 'is-disabled' : '',
         ]"
         @click.stop="handleSelect(node)"
       >
-        <wd-icon v-if="node.checkStatus === TreeCheckStatus.Indeterminate" name="decrease" size="20rpx" color="#ffffff" />
-        <wd-icon v-else-if="node.checkStatus === TreeCheckStatus.Checked" name="check" size="20rpx" color="#ffffff" />
+        <view
+          v-if="!checkStrictly && node.checkStatus === TreeCheckStatus.Indeterminate"
+          class="com-tree-node__minus"
+        />
+        <wd-icon
+          v-else-if="node.checkStatus === TreeCheckStatus.Checked"
+          name="check"
+          size="22rpx"
+          color="#ffffff"
+        />
       </view>
-      <text class="com-tree-node__label" @click.stop="toggleExpand">
-        {{ node[labelKey] }}
-      </text>
     </view>
     <view v-if="node.isShowChild" class="com-tree-node__children">
       <TreeNode
@@ -136,7 +172,7 @@ function handleSelect(node: TreeNodeModel) {
         :flat="flat"
         :value-key="valueKey"
         :label-key="labelKey"
-        :children-key="childrenKey"
+        :children-key="resolvedChildrenKey"
       />
     </view>
   </view>
@@ -144,23 +180,32 @@ function handleSelect(node: TreeNodeModel) {
     <view
       class="com-tree-node__row"
       :class="flat ? '!pl-0' : ''"
-      :style="{ paddingLeft: `${34 * ((node.level ?? 1) - 1)}rpx` }"
+      :style="{ paddingLeft: `${36 * ((node.level ?? 1) - 1)}rpx` }"
     >
+      <view v-if="!flat" class="com-tree-node__expand is-placeholder" />
+      <view class="com-tree-node__label" @click.stop="handleSelect(node)">
+        {{ node[labelKey] }}
+      </view>
       <view
         class="com-tree-node__check"
         :class="[
           multiple ? '' : 'is-radio',
-          node.checkStatus ? 'is-checked' : '',
+          isCheckedStyle(node) ? 'is-checked' : '',
           node.disabled ? 'is-disabled' : '',
         ]"
         @click.stop="handleSelect(node)"
       >
-        <wd-icon v-if="node.checkStatus === TreeCheckStatus.Indeterminate" name="decrease" size="20rpx" color="#ffffff" />
-        <wd-icon v-else-if="node.checkStatus === TreeCheckStatus.Checked" name="check" size="20rpx" color="#ffffff" />
+        <view
+          v-if="!checkStrictly && node.checkStatus === TreeCheckStatus.Indeterminate"
+          class="com-tree-node__minus"
+        />
+        <wd-icon
+          v-else-if="node.checkStatus === TreeCheckStatus.Checked"
+          name="check"
+          size="22rpx"
+          color="#ffffff"
+        />
       </view>
-      <text class="com-tree-node__label" @click.stop="handleSelect(node)">
-        {{ node[labelKey] }}
-      </text>
     </view>
   </view>
 </template>
@@ -170,17 +215,27 @@ function handleSelect(node: TreeNodeModel) {
   &__row {
     display: flex;
     align-items: center;
-    padding: 10rpx 0;
+    min-height: 72rpx;
+    padding: 12rpx 8rpx 12rpx 0;
+    box-sizing: border-box;
   }
 
   &__expand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40rpx;
+    height: 40rpx;
+    margin-right: 4rpx;
+    flex-shrink: 0;
+
     .com-tree-node__arrow {
-      margin: 0 6rpx;
-      border-top: 10rpx solid #C2CCDA;
-      border-right: 8rpx solid transparent;
-      border-bottom: 0 solid transparent;
-      border-left: 8rpx solid transparent;
-      transition: transform 0.15s ease-in-out;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 10rpx 8rpx 0;
+      border-color: #c2ccda transparent transparent transparent;
+      transition: transform 0.15s ease;
     }
 
     &.is-collapsed .com-tree-node__arrow {
@@ -191,42 +246,54 @@ function handleSelect(node: TreeNodeModel) {
   &__loading {
     width: 20rpx;
     height: 20rpx;
-    margin: 0 6rpx;
-    border: 2rpx solid #C2CCDA;
-    border-top-color: #108EE9;
+    border: 2rpx solid #c0c4cc;
+    border-top-color: #108ee9;
     border-radius: 50%;
     animation: com-tree-spin 0.8s linear infinite;
   }
 
   &__label {
     flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-align: left;
+    color: #333;
+    line-height: 1.4;
+    padding-right: 16rpx;
   }
 
   &__check {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24rpx;
-    height: 24rpx;
-    border: 1rpx solid #e0e0e0;
-    border-radius: 4rpx;
-    margin-right: 8rpx;
+    width: 36rpx;
+    height: 36rpx;
+    border: 2rpx solid #c8c9cc;
+    border-radius: 6rpx;
+    margin-left: auto;
+    flex-shrink: 0;
+    box-sizing: border-box;
 
     &.is-radio {
       border-radius: 50%;
     }
 
     &.is-checked {
-      background-color: #108EE9;
-      border-color: #108EE9;
+      background-color: #108ee9;
+      border-color: #108ee9;
     }
 
     &.is-disabled {
       background-color: #ebedf0 !important;
       border-color: #e0e0e0;
     }
+  }
+
+  &__minus {
+    width: 16rpx;
+    height: 3rpx;
+    background-color: #fff;
+    border-radius: 2rpx;
   }
 }
 

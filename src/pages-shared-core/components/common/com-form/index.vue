@@ -19,7 +19,6 @@
       </view>
       <view
         v-else
-        :class="resolveItemContext(row.item, row.fieldIndex).vertical ? ' mb-3 vertical-box' : ''"
       >
         <wd-form-item v-bind="getFormItemAttrs(row.item, row.fieldIndex)">
           <wd-input
@@ -33,6 +32,7 @@
             :maxlength="row.item.maxlength"
             :type="row.item.inputType || 'text'"
             v-bind="pickChildProps(row.item, row.fieldIndex)"
+            :align-right="resolveItemContext(row.item, row.fieldIndex).valueAlign === 'right'"
             @input="row.item.change"
             @focus="row.item.onFocus"
           />
@@ -91,7 +91,7 @@
               v-model="getModel(row)[row.item.key]"
               type="date"
               :clear-icon="false"
-              :border="resolveItemContext(row.item, row.fieldIndex).vertical"
+              :border="false"
               v-bind="pickChildProps(row.item, row.fieldIndex)"
               @change="row.item.change"
             />
@@ -100,8 +100,8 @@
             v-else-if="row.item.compType === 'radio'"
             v-model="getModel(row)[row.item.key]"
             direction="horizontal"
-            custom-class="flex flex-wrap items-center justify-end gap-2 w-full"
             v-bind="pickChildProps(row.item, row.fieldIndex)"
+            custom-class="com-form__control-group"
             @change="row.item.change"
           >
             <wd-radio
@@ -118,8 +118,8 @@
           <wd-checkbox-group
             v-else-if="row.item.compType === 'checkbox'"
             v-model="getModel(row)[row.item.key]"
-            custom-class="flex flex-wrap items-center justify-end gap-2 w-full"
             v-bind="pickChildProps(row.item, row.fieldIndex)"
+            custom-class="com-form__control-group"
             @change="row.item.change"
           >
             <wd-checkbox
@@ -152,6 +152,11 @@
 </template>
 
 <script setup>
+import { FORM_KEY } from '@wot-ui/ui/components/wd-form/types'
+
+defineOptions({ inheritAttrs: false })
+
+/** 仅声明 com-form 自身属性；layout / valueAlign 等透传属性走 attrs */
 const props = defineProps({
   config: {
     type: Array,
@@ -187,10 +192,12 @@ const props = defineProps({
   },
 })
 
+const attrs = useAttrs()
+const formProvide = inject(FORM_KEY, null)
+
 const LINK_COMP_TYPES = ['select', 'tree', 'picker-date', 'date']
 
-const INHERIT_KEYS = ['disabled', 'vertical', 'border']
-
+/** 不透传给子控件的表单项元数据 */
 const FORM_ITEM_META_KEYS = new Set([
   'prop',
   'label',
@@ -210,14 +217,32 @@ const FORM_ITEM_META_KEYS = new Set([
   'change',
   'onFocus',
   'isLink',
-  ...INHERIT_KEYS,
+  'disabled',
+  'vertical',
+  'border',
+  'center',
+  'size',
+  'layout',
+  'valueAlign',
+  'asteriskPosition',
+  'hideAsterisk',
+  'ellipsis',
+  'validateTrigger',
+  'clickable',
+  'prefixIcon',
+  'iconSize',
+  'iconPrefix',
+  'alignRight',
 ])
+
+const ATTR_SKIP_KEYS = new Set(['class', 'style', 'id'])
 
 const groupClass = computed(() => {
   const classes = ['com-form']
+  const isVertical = props.vertical || resolveAttr('layout') === 'vertical'
   if (props.embedded)
     return [...classes, 'pb-2 rounded-lg overflow-hidden'].join(' ')
-  return [...classes, props.vertical ? 'vertical' : '', 'm-3 rounded-lg overflow-hidden'].filter(Boolean).join(' ')
+  return [...classes, isVertical ? 'vertical' : '', 'm-3 rounded-lg overflow-hidden'].filter(Boolean).join(' ')
 })
 
 const renderRows = computed(() => {
@@ -227,16 +252,66 @@ const renderRows = computed(() => {
   })
 })
 
+function toKebabCase(key) {
+  return key.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)
+}
+
+function toCamelCase(key) {
+  return key.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+}
+
+/** 未声明的布尔属性在 attrs 里是空字符串，按 true 处理 */
+function normalizeAttrValue(value) {
+  return value === '' ? true : value
+}
+
+function resolveAttr(key) {
+  const camel = toCamelCase(key)
+  const kebab = toKebabCase(camel)
+  const raw = attrs[camel] ?? attrs[kebab]
+  return raw === undefined ? undefined : normalizeAttrValue(raw)
+}
+
+function getItemProp(item, key) {
+  if (item?.[key] !== undefined)
+    return item[key]
+  const kebab = toKebabCase(key)
+  if (kebab !== key && item?.[kebab] !== undefined)
+    return item[kebab]
+  return undefined
+}
+
+/** item > com-form(attrs/props) > wd-form */
 function resolveInheritProp(item, key) {
-  if (item[key] !== undefined)
-    return !!item[key]
-  return props[key]
+  const fromItem = getItemProp(item, key)
+  if (fromItem !== undefined)
+    return fromItem
+  if (Object.prototype.hasOwnProperty.call(props, key) && props[key] !== undefined)
+    return props[key]
+  const fromAttr = resolveAttr(key)
+  if (fromAttr !== undefined)
+    return fromAttr
+  return formProvide?.props?.[key]
+}
+
+function resolveBooleanInherit(item, key, fallback = false) {
+  const value = resolveInheritProp(item, key)
+  return value === undefined ? fallback : !!value
+}
+
+function resolveLayout(item) {
+  const layout = resolveInheritProp(item, 'layout')
+  if (layout !== undefined)
+    return layout
+  return resolveBooleanInherit(item, 'vertical') ? 'vertical' : undefined
 }
 
 function resolveItemContext(formItem, index) {
-  const disabled = resolveInheritProp(formItem, 'disabled')
-  const vertical = resolveInheritProp(formItem, 'vertical')
-  const border = resolveInheritProp(formItem, 'border')
+  const disabled = resolveBooleanInherit(formItem, 'disabled')
+  const layout = resolveLayout(formItem)
+  const vertical = layout === 'vertical' || resolveBooleanInherit(formItem, 'vertical')
+  const border = resolveBooleanInherit(formItem, 'border', props.border)
+  const valueAlign = resolveInheritProp(formItem, 'valueAlign') || 'left'
 
   let isLink = false
   if (formItem.isLink !== undefined)
@@ -244,11 +319,11 @@ function resolveItemContext(formItem, index) {
   else if (LINK_COMP_TYPES.includes(formItem.compType))
     isLink = !vertical && !disabled
 
-  const itemBorder = formItem.border !== undefined
-    ? !!formItem.border
-    : border && !vertical && index > 0
+  const itemBorder = getItemProp(formItem, 'border') !== undefined
+    ? !!getItemProp(formItem, 'border')
+    : border && index > 0
 
-  return { disabled, vertical, border, isLink, itemBorder }
+  return { disabled, vertical, layout, border, valueAlign, isLink, itemBorder }
 }
 
 function pickChildProps(formItem, index) {
@@ -256,7 +331,7 @@ function pickChildProps(formItem, index) {
   const childProps = { disabled: resolved.disabled }
 
   for (const [key, value] of Object.entries(formItem)) {
-    if (value === undefined || FORM_ITEM_META_KEYS.has(key))
+    if (value === undefined || FORM_ITEM_META_KEYS.has(key) || key.includes('-'))
       continue
     childProps[key] = value
   }
@@ -264,17 +339,63 @@ function pickChildProps(formItem, index) {
   return childProps
 }
 
+function assignIfDefined(target, key, value) {
+  if (value !== undefined)
+    target[key] = value
+}
+
+/** 把 com-form 上未声明的属性透传给 wd-form-item */
+function pickPassthroughAttrs() {
+  const result = {}
+  for (const [key, value] of Object.entries(attrs)) {
+    if (ATTR_SKIP_KEYS.has(key) || value === undefined)
+      continue
+    result[toCamelCase(key)] = normalizeAttrValue(value)
+  }
+  return result
+}
+
 function getFormItemAttrs(formItem, index) {
   const resolved = resolveItemContext(formItem, index)
-  const attrs = {
-    title: formItem.hiddenLabel ? '' : formItem.label,
+  const itemAttrs = {
+    ...pickPassthroughAttrs(),
+    title: formItem.hiddenLabel ? '' : (formItem.title ?? formItem.label),
     prop: formItem.prop,
     border: resolved.itemBorder,
-    titleWidth: formItem.titleWidth ?? props.titleWidth,
+    titleWidth: getItemProp(formItem, 'titleWidth') ?? props.titleWidth,
   }
+
   if (resolved.isLink)
-    attrs.isLink = true
-  return attrs
+    itemAttrs.isLink = true
+
+  assignIfDefined(itemAttrs, 'required', getItemProp(formItem, 'required'))
+  assignIfDefined(itemAttrs, 'clickable', getItemProp(formItem, 'clickable'))
+  assignIfDefined(itemAttrs, 'placeholder', getItemProp(formItem, 'placeholder'))
+  assignIfDefined(itemAttrs, 'value', getItemProp(formItem, 'value'))
+  assignIfDefined(itemAttrs, 'prefixIcon', getItemProp(formItem, 'prefixIcon'))
+  assignIfDefined(itemAttrs, 'iconSize', getItemProp(formItem, 'iconSize'))
+  assignIfDefined(itemAttrs, 'iconPrefix', getItemProp(formItem, 'iconPrefix'))
+
+  // item > attrs > wd-form；未设置则不覆盖，交给 form-item 自身继承
+  for (const key of Object.keys(itemAttrs)) {
+    if (ATTR_SKIP_KEYS.has(key) || ['title', 'prop', 'border', 'titleWidth', 'isLink', 'required', 'clickable', 'placeholder', 'value', 'prefixIcon', 'iconSize', 'iconPrefix'].includes(key))
+      continue
+    const fromItem = getItemProp(formItem, key)
+    if (fromItem !== undefined)
+      itemAttrs[key] = fromItem
+  }
+
+  // inject 到的属性显式补齐（attrs 未写时也能驱动子控件）
+  for (const key of ['center', 'size', 'layout', 'valueAlign', 'asteriskPosition', 'hideAsterisk', 'ellipsis', 'validateTrigger']) {
+    if (itemAttrs[key] !== undefined)
+      continue
+    assignIfDefined(itemAttrs, key, resolveInheritProp(formItem, key))
+  }
+
+  if (itemAttrs.layout === undefined && resolved.layout)
+    itemAttrs.layout = resolved.layout
+
+  return itemAttrs
 }
 
 function getModel(row) {
@@ -284,21 +405,81 @@ function getModel(row) {
 
 <style lang="scss" scoped>
 .com-form {
-    :deep(.wd-cell__left) {
-        width: auto !important;
-        flex: none !important;
-        max-width: none !important;
-        min-width: auto !important;
+  :deep(.wd-cell__left) {
+    width: auto !important;
+    flex: none !important;
+    max-width: none !important;
+    min-width: auto !important;
+  }
+
+  :deep(.wd-cell__title) {
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  :deep(.wd-cell__right) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  :deep(.com-form__control-group) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  :deep(.wd-cell__value--left) {
+    .com-form__control-group {
+      justify-content: flex-start;
     }
 
-    :deep(.wd-cell__title) {
-        white-space: normal;
-        word-break: break-word;
+    .wd-input__inner,
+    .wd-textarea__inner,
+    .uni-input-input,
+    .uni-textarea-textarea,
+    .uni-input-placeholder,
+    .uni-textarea-placeholder {
+      text-align: left !important;
+    }
+  }
+
+  :deep(.wd-cell__value--right) {
+    .com-form__control-group {
+      justify-content: flex-end;
     }
 
-    :deep(.wd-cell__right) {
-        flex: 1;
-        min-width: 0;
+    .wd-input__inner,
+    .wd-textarea__inner,
+    .uni-input-input,
+    .uni-textarea-textarea,
+    .uni-input-placeholder,
+    .uni-textarea-placeholder,
+    .wd-picker__value,
+    .com-select,
+    .com-tree {
+      text-align: right !important;
     }
+
+    .wd-upload {
+      justify-content: flex-end;
+    }
+  }
+
+  :deep(.wd-cell__value--center) {
+    .com-form__control-group {
+      justify-content: center;
+    }
+
+    .wd-input__inner,
+    .wd-textarea__inner,
+    .uni-input-input,
+    .uni-textarea-textarea,
+    .uni-input-placeholder,
+    .uni-textarea-placeholder {
+      text-align: center !important;
+    }
+  }
 }
 </style>

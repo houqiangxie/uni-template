@@ -64,7 +64,7 @@ const formModel = reactive({
 
 const basicConfig = computed(() => [
   { prop: 'name', label: '姓名', compType: 'input', required: true },
-  { prop: 'phone', label: '手机号', compType: 'input', required: true, validationType: 'phone' },
+  { prop: 'phone', label: '手机号', compType: 'input', required: true, validationType: 'phone', valueAlign: 'left' },
   { prop: 'email', label: '邮箱', compType: 'input', validationType: 'email' },
   { prop: 'gender', label: '性别', compType: 'radio', columns: genderOptions },
   { prop: 'hobbies', label: '爱好', compType: 'checkbox', columns: hobbyOptions },
@@ -94,7 +94,7 @@ const securityConfig = computed(() => [
         value === model.password || '两次密码不一致',
     ],
   },
-  { prop: 'startDate', label: '开始日期', compType: 'input', required: true },
+  { prop: 'startDate', label: '开始日期', compType: 'date', required: true },
   {
     prop: 'endDate',
     label: '结束日期',
@@ -116,8 +116,11 @@ const securityConfig = computed(() => [
     label: '所属部门',
     compType: 'tree',
     options: deptTreeOptions,
-    leafOnly: true,
+    //leafOnly: true,
     showFullPath: true,
+    showSearch:true,
+    multiple:true,
+    checkStrictly:true
   },
   { prop: 'address', label: '地址', compType: 'input' },
 ])
@@ -206,14 +209,14 @@ function handleReset() {
 </script>
 
 <template>
-  <view class="h-full flex flex-col form-demo card-form">
+  <view class="h-full flex flex-col form-demo">
     <view class="form-demo__intro">
       本页演示 com-form + configToSchema 的常用写法，包含基础字段、校验规则、条件校验与循环列表。
     </view>
     <view class="flex-1 overflow-hidden">
       <scroll-view class="container h-full" scroll-y :scroll-top="scrollTop" scroll-with-animation>
 
-        <wd-form ref="formRef" :model="formModel" :schema="schema" layout="horizontal" title-width="auto">
+        <wd-form ref="formRef" :model="formModel" :schema="schema" layout="vertical" value-align="left" >
           <view class="form-demo__section">
             <view class="form-demo__section-title">基础信息</view>
             <com-form :config="basicConfig" :form="formModel" embedded />

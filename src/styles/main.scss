@@ -39,37 +39,37 @@ page,root-portal {
   box-sizing: border-box;
 }
 
-.card-form,.custom-form{
-  .wd-cell__left{
-    width:auto !important;
-    flex: none !important;
-  }
-  .wd-picker__value{
-    margin-right: 0 !important;
-  }
-  .wd-icon-arrow-right{
-    color: #999 !important;
-    font-size: 28rpx !important;
-  }
-  .uni-input-input,.uni-input-placeholder,.wd-input__error-message,.wd-cell__error-message,.wd-calendar__value,.wd-calendar__error-message,.wd-form-item__error-message,
-  .wd-input__inner,.uni-textarea-textarea,.uni-textarea-placeholder,.wd-calendar__error-message,.wd-picker__error-message,.wd-textarea__error-message{
-    text-align: right !important;
-    margin-right: 0 !important;
-  }
-  .wd-upload{
-    justify-content: flex-end;
-  }
-}
-.pop-search{
-  .wd-search__input{
-    text-align: left !important;
-  }
-.uni-input-input,
-.uni-input-placeholder,
-.wd-search__input {
-  text-align: left !important;
-}
-}
+// .card-form,.custom-form{
+//   .wd-cell__left{
+//     width:auto !important;
+//     flex: none !important;
+//   }
+//   .wd-picker__value{
+//     margin-right: 0 !important;
+//   }
+//   .wd-icon-arrow-right{
+//     color: #999 !important;
+//     font-size: 28rpx !important;
+//   }
+//   .uni-input-input,.uni-input-placeholder,.wd-input__error-message,.wd-cell__error-message,.wd-calendar__value,.wd-calendar__error-message,.wd-form-item__error-message,
+//   .wd-input__inner,.uni-textarea-textarea,.uni-textarea-placeholder,.wd-calendar__error-message,.wd-picker__error-message,.wd-textarea__error-message{
+//     text-align: right !important;
+//     margin-right: 0 !important;
+//   }
+//   .wd-upload{
+//     justify-content: flex-end;
+//   }
+// }
+// .pop-search{
+//   .wd-search__input{
+//     text-align: left !important;
+//   }
+// .uni-input-input,
+// .uni-input-placeholder,
+// .wd-search__input {
+//   text-align: left !important;
+// }
+// }
 .footer-button{
   padding: 4px;
 }
