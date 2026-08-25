@@ -38,8 +38,9 @@ defineOptions({
   },
 })
 
+const modelValue = defineModel<TreeValue>({ default: null })
+
 const props = withDefaults(defineProps<{
-  modelValue?: TreeValue
   options?: TreeNodeModel[]
   multiple?: boolean
   leafOnly?: boolean
@@ -79,7 +80,6 @@ const props = withDefaults(defineProps<{
   searchPlaceholder?: string
   emptyText?: string
 }>(), {
-  modelValue: null,
   options: () => [],
   multiple: false,
   leafOnly: false,
@@ -118,7 +118,6 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: TreeValue]
   change: [node: TreeNodeModel | TreeNodeModel[], label: string]
   cancel: []
   search: [keyword: string]
@@ -286,7 +285,7 @@ async function getRemoteData(force = false) {
     [props.searchKey]: keyword.value,
     ...(props.params || {}),
   }
-  const ids = getTreeValueList(normalizeValue(props.modelValue))
+  const ids = getTreeValueList(normalizeValue(modelValue.value))
   const needIdsFetch = !show.value && ids.length > 0 && props.emptySearch
   const needMainFetch = props.emptySearch || !!keyword.value
   const signature = buildRemoteRequestSignature({
@@ -434,14 +433,14 @@ function submit() {
     show.value = false
   }
 
-  if (isSameTreeValue(value, props.modelValue, props.multiple))
+  if (isSameTreeValue(value, modelValue.value, props.multiple))
     return
 
   const label = props.multiple
     ? selectNodes.map(item => item[props.labelKey]).join(',')
     : String(selectNodes[selectNodes.length - 1]?.[props.labelKey] ?? '')
 
-  emit('update:modelValue', value || (props.multiple ? [] : ''))
+  modelValue.value = value || (props.multiple ? [] : '')
   emit(
     'change',
     props.multiple ? selectNodes : selectNodes[selectNodes.length - 1] || {},
@@ -534,7 +533,7 @@ function appendLoadedChildren(parent: TreeNodeModel, rawChildren: TreeNodeModel[
 
   flattenTree(children, (parent.level ?? 1) + 1, parent)
 
-  const value = normalizeValue(props.modelValue)
+  const value = normalizeValue(modelValue.value)
   applyCheckStatusFromValue(children, value, props.multiple, props.valueKey)
 
   if (!props.checkStrictly && props.multiple) {
@@ -632,7 +631,7 @@ function syncCustomNodesFromValue(value: TreeValue) {
 }
 
 function syncSelectionFromModel() {
-  const value = normalizeValue(props.modelValue)
+  const value = normalizeValue(modelValue.value)
   applyCheckStatusFromValue(treeFlat.value, value, props.multiple, props.valueKey)
   syncCustomNodesFromValue(value)
 
@@ -651,15 +650,15 @@ const nodeList = computed(() => {
   const selected: TreeNodeModel[] = []
   const map = nodeMap.value
 
-  if (Array.isArray(props.modelValue)) {
-    props.modelValue.forEach((id) => {
+  if (Array.isArray(modelValue.value)) {
+    modelValue.value.forEach((id) => {
       const node = map.get(String(id))
       if (node)
         selected.push(node)
     })
   }
-  else if (props.modelValue != null && props.modelValue !== '') {
-    const node = map.get(String(props.modelValue))
+  else if (modelValue.value != null && modelValue.value !== '') {
+    const node = map.get(String(modelValue.value))
     if (node)
       selected.push(node)
   }
@@ -700,7 +699,7 @@ watch(
 )
 
 watch(
-  () => props.modelValue,
+  modelValue,
   () => {
     if (props.popup && show.value) {
       formatText.value = getFormatText()

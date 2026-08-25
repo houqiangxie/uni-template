@@ -12,9 +12,6 @@ defineOptions({
 })
 
 const props = defineProps({
-  modelValue: {
-    default: [],
-  },
   type: {
     default: 'daterange',
   },
@@ -40,11 +37,8 @@ const props = defineProps({
     default: 'rgba(255,255,255,0.8)',
   },
 })
-const emit = defineEmits(['update:modelValue', 'change', 'cancel'])
-const date = ref([])
-watch(() => props.modelValue, (newVal) => {
-  date.value = newVal || []
-}, { immediate: true })
+const emit = defineEmits(['change', 'cancel'])
+const date = defineModel({ default: () => [] })
 const dateText = computed(() => {
   if (Array.isArray(date.value))
     return date.value.join(' - ')
@@ -58,7 +52,7 @@ function formatValue(value) {
   return value
 }
 function onChange(value) {
-  emit('update:modelValue', value)
+  date.value = value
   emit('change', value)
 }
 

@@ -107,10 +107,11 @@ defineOptions({
   },
 })
 
+const modelValue = defineModel<SelectModelValue>()
+const modelName = defineModel<string | number>('modelName', { default: '' })
+
 const props = withDefaults(
   defineProps<{
-    modelValue?: SelectModelValue
-    modelName?: string | number
     columns?: SelectRow[]
     name?: string
     label?: string
@@ -144,8 +145,6 @@ const props = withDefaults(
     localPageSize?: number
   }>(),
   {
-    modelValue: undefined,
-    modelName: '',
     columns: () => [],
     name: '',
     label: '',
@@ -180,9 +179,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  'update:modelValue': [value: SelectModelValue]
   change: [payload: SelectRow | SelectRow[]]
-  'update:modelName': [name: string]
   cancel: []
 }>()
 
@@ -247,13 +244,13 @@ function onConfirm() {
       : { [props.valueKey]: keyWord.value, [props.labelKey]: keyWord.value }
   }
 
-  if (isSameSelectValue(data.value, props.modelValue, props.multiple)) {
+  if (isSameSelectValue(data.value, modelValue.value, props.multiple)) {
     onCancel()
     return
   }
 
   isConfirm = true
-  emit('update:modelValue', data.value as SelectModelValue)
+  modelValue.value = data.value as SelectModelValue
   emit('change', data.checkData)
   onCancel()
   setTimeout(() => {
@@ -282,7 +279,7 @@ async function reShow(skipSearch = false) {
     data.checkData = props.multiple ? [] : {}
   }
 
-  emit('update:modelName', data.text)
+  modelName.value = data.text
 }
 
 const selectedValueSet = computed(() => buildSelectValueSet(data.value))
@@ -485,7 +482,7 @@ function closeTag(item: SelectRow) {
   data.checkData = data.checkData.filter(d => String(d[props.valueKey]) !== String(item[props.valueKey]))
   isConfirm = true
   reShow(true)
-  emit('update:modelValue', data.value)
+  modelValue.value = data.value
   emit('change', data.checkData)
   setTimeout(() => {
     isConfirm = false
@@ -522,7 +519,7 @@ watch(
 )
 
 watch(
-  () => props.modelValue,
+  modelValue,
   (newVal) => {
     data.value = normalizeSelectValue(newVal, props.multiple)
     if (isConfirm)
@@ -531,7 +528,7 @@ watch(
     if (show.value) {
       if (props.labelKey === props.valueKey) {
         data.text = String(data.value ?? '')
-        emit('update:modelName', data.text)
+        modelName.value = data.text
       }
       return
     }
@@ -541,7 +538,7 @@ watch(
 
     if (props.labelKey === props.valueKey) {
       data.text = String(data.value ?? '')
-      emit('update:modelName', data.text)
+      modelName.value = data.text
       if (props.allowCreate)
         return
     }

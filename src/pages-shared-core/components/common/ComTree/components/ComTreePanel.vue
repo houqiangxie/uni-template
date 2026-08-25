@@ -10,9 +10,8 @@ defineOptions({
   },
 })
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   nodes: TreeNodeModel[]
-  keyword?: string
   showSearch?: boolean
   searchPlaceholder?: string
   multiple?: boolean
@@ -28,7 +27,6 @@ const props = withDefaults(defineProps<{
   panelClass?: string
 }>(), {
   nodes: () => [],
-  keyword: '',
   showSearch: false,
   searchPlaceholder: '',
   multiple: false,
@@ -45,18 +43,14 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  'update:keyword': [value: string]
   search: []
   clear: []
   'addCustom': []
 }>()
 
-const { t } = useI18n()
+const keyword = defineModel<string>('keyword', { default: '' })
 
-const keywordModel = computed({
-  get: () => props.keyword,
-  set: value => emit('update:keyword', value),
-})
+const { t } = useI18n()
 
 function handleSearch() {
   emit('search')
@@ -71,7 +65,7 @@ function handleClear() {
   <view class="com-tree-panel" :class="panelClass">
     <view v-if="showSearch" class="flex items-center com-tree-panel__search">
       <wd-search
-        v-model="keywordModel"
+        v-model="keyword"
         :placeholder="searchPlaceholder"
         hide-cancel
         custom-class="pop-search flex-1"
