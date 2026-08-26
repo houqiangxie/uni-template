@@ -2,19 +2,80 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [master, main, dev, develop, release, release/**, test]
   pull_request:
+    branches: [master, main, dev, develop, release, release/**, test]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  check:
+  build:
+    name: Build (${{ github.base_ref || github.ref_name }})
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 9
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+
+      - name: Resolve build target
+        id: target
+        shell: bash
+        run: |
+          # PR 用目标分支，push 用当前分支
+          BRANCH="${{ github.base_ref || github.ref_name }}"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+
+          case "${BRANCH}" in
+            master|main|release|release/*)
+              echo "env=production" >> "$GITHUB_OUTPUT"
+              echo "h5_script=build:h5" >> "$GITHUB_OUTPUT"
+              echo "mp_script=build:mp-weixin" >> "$GITHUB_OUTPUT"
+              ;;
+            dev|develop|test)
+              echo "env=test" >> "$GITHUB_OUTPUT"
+              echo "h5_script=build:h5:test" >> "$GITHUB_OUTPUT"
+              echo "mp_script=build:mp-weixin:test" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "env=production" >> "$GITHUB_OUTPUT"
+              echo "h5_script=build:h5" >> "$GITHUB_OUTPUT"
+              echo "mp_script=build:mp-weixin" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build H5 (${{ steps.target.outputs.env }})
+        run: pnpm run ${{ steps.target.outputs.h5_script }}
+        env:
+          # 构建校验用占位，真实密钥请在仓库 Secrets 中配置后取消注释映射
+          VITE_AMAP_KEY: ${{ secrets.VITE_AMAP_KEY }}
+          VITE_AMAP_SECURITY_JS_CODE: ${{ secrets.VITE_AMAP_SECURITY_JS_CODE }}
+          VITE_MP_WEIXIN_APPID: ${{ secrets.VITE_MP_WEIXIN_APPID }}
+          VITE_AES_KEY: ${{ secrets.VITE_AES_KEY }}
+          VITE_RSA_PUBLIC_KEY: ${{ secrets.VITE_RSA_PUBLIC_KEY }}
+
+      - name: Upload H5 artifact
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: h5-${{ steps.target.outputs.env }}-${{ github.sha }}
+          path: dist/build/h5
+          if-no-files-found: warn
+          retention-days: 7

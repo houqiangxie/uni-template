@@ -4,7 +4,8 @@
 
 **推荐链路：** `config` → `configToSchema` → `wd-form :schema` + `com-form :config`
 
-校验 API 与配置说明见：`src/utils/formConfig.ts`（含 `configToSchema`、`rulesToSchema`、`modelRules` 等）
+校验 API 与配置说明见主包：`src/utils/formConfig.ts`（含 `configToSchema`、`rulesToSchema`、`modelRules` 等）。
+com-form 渲染展开逻辑在分包：`com-form/formRender.ts`（`buildFormRenderRows`）。
 
 ## 快速对照
 
@@ -346,11 +347,22 @@ async function handleSubmit() {
 - `select` - 选择器
 - `radio` - 单选框
 - `checkbox` - 复选框
-- `date` - 日期选择器
-- `upload` - 文件上传
+- `switch` - 开关
+- `number` - 数字步进器
+- `date` - 日期选择器（uni-datetime-picker）
+- `picker-date` - 日期时间（wd-datetime-picker）
+- `upload` / `chunk-upload` - 上传
 - `tree` - 树形选择器
+- `sign` - 签名
 - `slot1` ~ `slot5` - 自定义插槽
 
+```vue
+<com-form :config="[{ prop: 'extra', label: '扩展', compType: 'slot1' }]" :form="formModel">
+  <template #slot1="{ item }">
+    <!-- 自定义内容 -->
+  </template>
+</com-form>
+```
 ### 快捷校验 (validationType)
 
 - `phone` - 手机号
@@ -397,11 +409,13 @@ async function handleSubmit() {
 |------|------|--------|------|
 | config | Array | `[]` | 字段配置 |
 | form | Object | `{}` | 表单 model（响应式对象） |
-| disabled | Boolean | `false` | 全局禁用 |
-| vertical | Boolean | `false` | 垂直布局 |
+| disabled | Boolean | `false` | 本块强制禁用；为 false 时仍可继承 `wd-form` 的 disabled |
+| vertical | Boolean | `false` | 垂直布局（也可传 `layout="vertical"`） |
 | embedded | Boolean | `false` | 嵌入 wd-form 内时使用，去掉外边距 |
 | border | Boolean | `true` | 是否显示边框 |
+| titleWidth | String/Number | `auto` | 标题宽度 |
 | basePath | String | `''` | 嵌套路径前缀 |
+| value-align 等 | attrs | - | 透传到本块 form-item；`valueAlign` 默认 `left`，便于同一 Form 下多块差异化 |
 
 ## 注意事项
 

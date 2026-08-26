@@ -199,7 +199,9 @@ async function customUpload(file, formData, options) {
     })
   }
   // H5 压缩后有 File 对象时传 file，小程序/APP 传 filePath（uni.uploadFile 官方支持）
+  // 注意：小程序无 File 全局对象，不能直接 instanceof File
   const fileObj = compressed?.file || file.file
+  const useFileObj = typeof File !== 'undefined' && fileObj instanceof File
   const uploadConfig = {
     url: upUrl,
     header: {
@@ -210,7 +212,7 @@ async function customUpload(file, formData, options) {
     formData: {
       uploadSource: '1',
     },
-    ...(fileObj instanceof File ? { file: fileObj } : { filePath: compressed?.url || file.url || file.path }),
+    ...(useFileObj ? { file: fileObj } : { filePath: compressed?.url || file.url || file.path }),
   }
   const handleSuccess = (res) => {
     // res 结构：{ statusCode, data }

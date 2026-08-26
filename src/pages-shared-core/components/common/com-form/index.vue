@@ -17,22 +17,19 @@
           <text>{{ row.title }}</text>
         </slot>
       </view>
-      <view
-        v-else
-      >
-        <wd-form-item v-bind="getFormItemAttrs(row.item, row.fieldIndex)">
+      <view v-else>
+        <wd-form-item v-bind="row.formItemAttrs">
           <wd-input
             v-if="row.item.compType === 'input'"
             v-model="getModel(row)[row.item.key]"
             :bordered="row.item.bordered"
-            :disabled="resolveItemContext(row.item, row.fieldIndex).disabled"
             :placeholder="row.item.placeholder"
             :readonly="row.item.readonly"
             :suffix-icon="row.item.suffixIcon"
             :maxlength="row.item.maxlength"
             :type="row.item.inputType || 'text'"
-            v-bind="pickChildProps(row.item, row.fieldIndex)"
-            :align-right="resolveItemContext(row.item, row.fieldIndex).valueAlign === 'right'"
+            v-bind="row.childProps"
+            :align-right="row.ctx.valueAlign === 'right'"
             @input="row.item.change"
             @focus="row.item.onFocus"
           />
@@ -41,9 +38,8 @@
             v-model="getModel(row)[row.item.key]"
             auto-height
             :bordered="row.item.bordered"
-            :disabled="resolveItemContext(row.item, row.fieldIndex).disabled"
             :placeholder="row.item.placeholder"
-            v-bind="pickChildProps(row.item, row.fieldIndex)"
+            v-bind="row.childProps"
             @input="row.item.change"
           />
           <wd-datetime-picker
@@ -51,39 +47,39 @@
             v-model="getModel(row)[row.item.key]"
             custom-value-class="picker-date"
             root-portal
-            v-bind="pickChildProps(row.item, row.fieldIndex)"
+            v-bind="row.childProps"
             @confirm="row.item.change"
           />
           <ComUpload
             v-else-if="row.item.compType === 'upload'"
             v-model="getModel(row)[row.item.key]"
-            v-bind="pickChildProps(row.item, row.fieldIndex)"
+            v-bind="row.childProps"
             @change="row.item.change"
           />
           <ComChunkUpload
             v-else-if="row.item.compType === 'chunk-upload'"
             v-model="getModel(row)[row.item.key]"
-            v-bind="pickChildProps(row.item, row.fieldIndex)"
+            v-bind="row.childProps"
             @change="row.item.change"
           />
           <Sign
             v-else-if="row.item.compType === 'sign'"
             v-model="getModel(row)[row.item.key]"
-            v-bind="pickChildProps(row.item, row.fieldIndex)"
+            v-bind="row.childProps"
             @change="row.item.change"
           />
           <ComSelect
             v-else-if="row.item.compType === 'select'"
             v-model="getModel(row)[row.item.key]"
             :show-arrow="row.item.showArrow ?? false"
-            v-bind="pickChildProps(row.item, row.fieldIndex)"
+            v-bind="row.childProps"
             @change="row.item.change"
           />
           <ComTree
             v-else-if="row.item.compType === 'tree'"
             v-model="getModel(row)[row.item.key]"
             :show-arrow="row.item.showArrow ?? false"
-            v-bind="pickChildProps(row.item, row.fieldIndex)"
+            v-bind="row.childProps"
             @change="row.item.change"
           />
           <view v-else-if="row.item.compType === 'date'" class="flex items-center w-full">
@@ -92,7 +88,7 @@
               type="date"
               :clear-icon="false"
               :border="false"
-              v-bind="pickChildProps(row.item, row.fieldIndex)"
+              v-bind="row.childProps"
               @change="row.item.change"
             />
           </view>
@@ -100,7 +96,7 @@
             v-else-if="row.item.compType === 'radio'"
             v-model="getModel(row)[row.item.key]"
             direction="horizontal"
-            v-bind="pickChildProps(row.item, row.fieldIndex)"
+            v-bind="row.childProps"
             custom-class="com-form__control-group"
             @change="row.item.change"
           >
@@ -118,7 +114,7 @@
           <wd-checkbox-group
             v-else-if="row.item.compType === 'checkbox'"
             v-model="getModel(row)[row.item.key]"
-            v-bind="pickChildProps(row.item, row.fieldIndex)"
+            v-bind="row.childProps"
             custom-class="com-form__control-group"
             @change="row.item.change"
           >
@@ -136,7 +132,13 @@
           <wd-input-number
             v-else-if="row.item.compType === 'number'"
             v-model="getModel(row)[row.item.key]"
-            v-bind="pickChildProps(row.item, row.fieldIndex)"
+            v-bind="row.childProps"
+            @change="row.item.change"
+          />
+          <wd-switch
+            v-else-if="row.item.compType === 'switch'"
+            v-model="getModel(row)[row.item.key]"
+            v-bind="row.childProps"
             @change="row.item.change"
           />
           <slot v-else-if="row.item.compType === 'slot1'" name="slot1" :item="row.item" />
@@ -153,10 +155,14 @@
 
 <script setup>
 import { FORM_KEY } from '@wot-ui/ui/components/wd-form/types'
+import { buildFormRenderRows } from './formRender'
 
 defineOptions({ inheritAttrs: false })
 
-/** 仅声明 com-form 自身属性；layout / valueAlign 等透传属性走 attrs */
+/**
+ * com-form 自身属性；layout / valueAlign 等可走 attrs，用于同一 wd-form 下多块 com-form 差异化。
+ * valueAlign 默认 left：未设置时不继承 Form，避免多块被 Form 统一盖掉。
+ */
 const props = defineProps({
   config: {
     type: Array,
@@ -232,10 +238,27 @@ const FORM_ITEM_META_KEYS = new Set([
   'prefixIcon',
   'iconSize',
   'iconPrefix',
+  'cssIcon',
   'alignRight',
+  'columns',
 ])
 
-const ATTR_SKIP_KEYS = new Set(['class', 'style', 'id'])
+/** 仅在 item / com-form attrs 有值时传给 form-item（其余交给 form-item 继承 Form） */
+const FORM_ITEM_OVERRIDE_KEYS = [
+  'center',
+  'size',
+  'asteriskPosition',
+  'hideAsterisk',
+  'ellipsis',
+  'validateTrigger',
+  'clickable',
+  'placeholder',
+  'value',
+  'prefixIcon',
+  'iconSize',
+  'iconPrefix',
+  'cssIcon',
+]
 
 const groupClass = computed(() => {
   const classes = ['com-form']
@@ -246,9 +269,22 @@ const groupClass = computed(() => {
 })
 
 const renderRows = computed(() => {
-  return buildFormRenderRows(props.config, props.form, {
+  const rows = buildFormRenderRows(props.config, props.form, {
     basePath: props.basePath,
     disabled: props.disabled,
+  })
+
+  return rows.map((row) => {
+    if (row.kind !== 'field')
+      return row
+
+    const ctx = resolveItemContext(row.item, row.fieldIndex)
+    return {
+      ...row,
+      ctx,
+      formItemAttrs: getFormItemAttrs(row.item, ctx),
+      childProps: pickChildProps(row.item, ctx),
+    }
   })
 })
 
@@ -281,37 +317,52 @@ function getItemProp(item, key) {
   return undefined
 }
 
-/** item > com-form(attrs/props) > wd-form */
-function resolveInheritProp(item, key) {
+/** item > com-form(props/attrs)；不读 Form，便于多块 com-form 差异化 */
+function resolveComFormProp(item, key) {
   const fromItem = getItemProp(item, key)
   if (fromItem !== undefined)
     return fromItem
+  if (key === 'disabled') {
+    // props.disabled 默认 false，不能挡住 Form 禁用；仅 true 时视为 com-form 强制禁用
+    if (props.disabled)
+      return true
+    return undefined
+  }
   if (Object.prototype.hasOwnProperty.call(props, key) && props[key] !== undefined)
     return props[key]
-  const fromAttr = resolveAttr(key)
-  if (fromAttr !== undefined)
-    return fromAttr
-  return formProvide?.props?.[key]
+  return resolveAttr(key)
 }
 
-function resolveBooleanInherit(item, key, fallback = false) {
-  const value = resolveInheritProp(item, key)
+function resolveBooleanComForm(item, key, fallback = false) {
+  const value = resolveComFormProp(item, key)
   return value === undefined ? fallback : !!value
 }
 
 function resolveLayout(item) {
-  const layout = resolveInheritProp(item, 'layout')
+  const layout = resolveComFormProp(item, 'layout')
   if (layout !== undefined)
     return layout
-  return resolveBooleanInherit(item, 'vertical') ? 'vertical' : undefined
+  return resolveBooleanComForm(item, 'vertical') ? 'vertical' : undefined
+}
+
+/** 业务组件有效禁用：item > com-form > Form（原生 wd-* 走 useFormDisabled） */
+function resolveEffectiveDisabled(formItem) {
+  const fromItem = getItemProp(formItem, 'disabled')
+  if (fromItem !== undefined)
+    return !!fromItem
+  if (props.disabled)
+    return true
+  return Boolean(formProvide?.props?.disabled)
 }
 
 function resolveItemContext(formItem, index) {
-  const disabled = resolveBooleanInherit(formItem, 'disabled')
+  const formItemDisabled = resolveComFormProp(formItem, 'disabled')
+  const disabled = resolveEffectiveDisabled(formItem)
   const layout = resolveLayout(formItem)
-  const vertical = layout === 'vertical' || resolveBooleanInherit(formItem, 'vertical')
-  const border = resolveBooleanInherit(formItem, 'border', props.border)
-  const valueAlign = resolveInheritProp(formItem, 'valueAlign') || 'left'
+  const vertical = layout === 'vertical' || resolveBooleanComForm(formItem, 'vertical')
+  const border = resolveBooleanComForm(formItem, 'border', props.border)
+  // 默认 left：保证未配置时各 com-form 一致，且不被 Form 的 value-align 统一覆盖
+  const valueAlign = resolveComFormProp(formItem, 'valueAlign') || 'left'
 
   let isLink = false
   if (formItem.isLink !== undefined)
@@ -323,11 +374,20 @@ function resolveItemContext(formItem, index) {
     ? !!getItemProp(formItem, 'border')
     : border && index > 0
 
-  return { disabled, vertical, layout, border, valueAlign, isLink, itemBorder }
+  return {
+    disabled,
+    formItemDisabled,
+    vertical,
+    layout,
+    border,
+    valueAlign,
+    isLink,
+    itemBorder,
+  }
 }
 
-function pickChildProps(formItem, index) {
-  const resolved = resolveItemContext(formItem, index)
+function pickChildProps(formItem, resolved) {
+  // 业务组件需要完整禁用态；原生 wd-* 即使多传 disabled 也不影响 Form 继承（falsy 会继续往下看）
   const childProps = { disabled: resolved.disabled }
 
   for (const [key, value] of Object.entries(formItem)) {
@@ -344,56 +404,43 @@ function assignIfDefined(target, key, value) {
     target[key] = value
 }
 
-/** 把 com-form 上未声明的属性透传给 wd-form-item */
-function pickPassthroughAttrs() {
-  const result = {}
-  for (const [key, value] of Object.entries(attrs)) {
-    if (ATTR_SKIP_KEYS.has(key) || value === undefined)
-      continue
-    result[toCamelCase(key)] = normalizeAttrValue(value)
-  }
-  return result
-}
-
-function getFormItemAttrs(formItem, index) {
-  const resolved = resolveItemContext(formItem, index)
+/**
+ * 只传 item / com-form 覆盖项 + 本组件策略字段。
+ * center/size/... 未设置时不传，交给 wd-form-item 继承 Form。
+ * disabled 仅在 item/com-form 显式禁用时传入，避免默认 false 盖住 Form.disabled。
+ */
+function getFormItemAttrs(formItem, resolved) {
   const itemAttrs = {
-    ...pickPassthroughAttrs(),
     title: formItem.hiddenLabel ? '' : (formItem.title ?? formItem.label),
     prop: formItem.prop,
     border: resolved.itemBorder,
     titleWidth: getItemProp(formItem, 'titleWidth') ?? props.titleWidth,
+    valueAlign: resolved.valueAlign,
   }
 
+  assignIfDefined(itemAttrs, 'disabled', resolved.formItemDisabled)
+
+  if (resolved.layout)
+    itemAttrs.layout = resolved.layout
   if (resolved.isLink)
     itemAttrs.isLink = true
 
   assignIfDefined(itemAttrs, 'required', getItemProp(formItem, 'required'))
-  assignIfDefined(itemAttrs, 'clickable', getItemProp(formItem, 'clickable'))
-  assignIfDefined(itemAttrs, 'placeholder', getItemProp(formItem, 'placeholder'))
-  assignIfDefined(itemAttrs, 'value', getItemProp(formItem, 'value'))
-  assignIfDefined(itemAttrs, 'prefixIcon', getItemProp(formItem, 'prefixIcon'))
-  assignIfDefined(itemAttrs, 'iconSize', getItemProp(formItem, 'iconSize'))
-  assignIfDefined(itemAttrs, 'iconPrefix', getItemProp(formItem, 'iconPrefix'))
 
-  // item > attrs > wd-form；未设置则不覆盖，交给 form-item 自身继承
-  for (const key of Object.keys(itemAttrs)) {
-    if (ATTR_SKIP_KEYS.has(key) || ['title', 'prop', 'border', 'titleWidth', 'isLink', 'required', 'clickable', 'placeholder', 'value', 'prefixIcon', 'iconSize', 'iconPrefix'].includes(key))
-      continue
+  for (const key of FORM_ITEM_OVERRIDE_KEYS) {
     const fromItem = getItemProp(formItem, key)
-    if (fromItem !== undefined)
+    if (fromItem !== undefined) {
       itemAttrs[key] = fromItem
-  }
-
-  // inject 到的属性显式补齐（attrs 未写时也能驱动子控件）
-  for (const key of ['center', 'size', 'layout', 'valueAlign', 'asteriskPosition', 'hideAsterisk', 'ellipsis', 'validateTrigger']) {
-    if (itemAttrs[key] !== undefined)
       continue
-    assignIfDefined(itemAttrs, key, resolveInheritProp(formItem, key))
+    }
+    const fromAttr = resolveAttr(key)
+    if (fromAttr !== undefined)
+      itemAttrs[key] = fromAttr
   }
 
-  if (itemAttrs.layout === undefined && resolved.layout)
-    itemAttrs.layout = resolved.layout
+  // switch 默认垂直居中，更贴官方示例
+  if (formItem.compType === 'switch' && itemAttrs.center === undefined)
+    itemAttrs.center = true
 
   return itemAttrs
 }
@@ -430,19 +477,8 @@ function getModel(row) {
     width: 100%;
   }
 
-  :deep(.wd-cell__value--left) {
-    .com-form__control-group {
-      justify-content: flex-start;
-    }
-
-    .wd-input__inner,
-    .wd-textarea__inner,
-    .uni-input-input,
-    .uni-textarea-textarea,
-    .uni-input-placeholder,
-    .uni-textarea-placeholder {
-      text-align: left !important;
-    }
+  :deep(.wd-cell__value--left .com-form__control-group) {
+    justify-content: flex-start;
   }
 
   :deep(.wd-cell__value--right) {
@@ -450,7 +486,7 @@ function getModel(row) {
       justify-content: flex-end;
     }
 
-    .wd-input__inner,
+    // input 已用 align-right；这里补业务控件与 textarea / date
     .wd-textarea__inner,
     .uni-input-input,
     .uni-textarea-textarea,

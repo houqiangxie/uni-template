@@ -2,7 +2,9 @@ import {
   ChannelPlugin,
   InterceptorPlugin,
   ParamsPlugin,
+  createRouter,
 } from '@meng-xi/uni-router'
+import type { NavigationGuard, RouteLocation } from '@meng-xi/uni-router'
 import routes from './config'
 
 const LOGIN_ROUTE = 'pagesLoginIndex' as const
@@ -46,29 +48,26 @@ const router = createRouter({
   interceptUniApi: true,
 })
 
-router.beforeEach((to, from, next) => {
+const authGuard = ((to: RouteLocation) => {
   const loggedIn = isLoggedIn()
-  const toName = to.name as string | undefined
-  const toPath = to.path as string | undefined
+  const toName = to.name
+  const toPath = to.path
 
   if (!loggedIn && !isPublicRoute(toName, toPath)) {
-    next(
-      {
+    return {
+      location: {
         name: LOGIN_ROUTE,
         query: { returnUrl: encodeURIComponent(to.fullPath) },
       },
-      { mode: 'replace' },
-    )
-    return
+      mode: 'replace' as const,
+    }
   }
 
-  if (loggedIn && toName === LOGIN_ROUTE) {
-    next({ name: HOME_ROUTE }, { mode: 'replace' })
-    return
-  }
+  if (loggedIn && toName === LOGIN_ROUTE)
+    return { location: { name: HOME_ROUTE }, mode: 'replace' as const }
+}) as NavigationGuard
 
-  next()
-})
+router.beforeEach(authGuard)
 
 /** 记录 App 冷启动参数（deeplink / 分享等） */
 export function setLaunchOptions(options?: App.LaunchShowOption) {

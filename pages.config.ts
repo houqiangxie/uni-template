@@ -39,6 +39,7 @@ export default defineUniPages({
       'com-select': '@/pages-shared-core/components/common/ComSelect/index.vue',
       'com-tree': '@/pages-shared-core/components/common/ComTree/index.vue',
       'com-upload': '@/pages-shared-core/components/common/ComUpload.vue',
+      'sign': '@/pages-shared-core/components/common/Sign.vue',
       'com-form': '@/pages-shared-core/components/common/com-form/index.vue',
       'com-locale-switch': '@/pages-shared-core/components/common/ComLocaleSwitch.vue',
       'scroll-list': '@/pages-shared-core/components/common/ScrollList.vue',

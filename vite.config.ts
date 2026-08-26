@@ -146,6 +146,7 @@ export default defineConfig(async ({ command, mode }) => {
         outputPath: 'src/router/config.ts',
         dts: 'src/router.d.ts',
         includeSubPackages: true,
+        verbose: false,
       }),
 
       /**
@@ -248,15 +249,8 @@ export default defineConfig(async ({ command, mode }) => {
           : {}),
       },
     },
-    build: {
-      cssCodeSplit: false,
-      minify: 'esbuild',
-    },
     optimizeDeps: {
       exclude: ['@wot-ui/ui'],
-    },
-    esbuild: {
-      legalComments: process.env.NODE_ENV === 'production' ? 'none' : 'inline',
     },
     base: '/',
   }

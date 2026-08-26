@@ -76,8 +76,8 @@ importers:
         specifier: 9.1.9
         version: 9.1.9
       '@meng-xi/uni-router':
-        specifier: ^2.0.0
-        version: 2.0.0(vue@3.5.13(typescript@5.8.2))
+        specifier: ^2.5.0
+        version: 2.5.0(vue@3.5.13(typescript@5.8.2))
       '@uni-ku/root':
         specifier: ^1.1.0
         version: 1.1.1(vite@5.2.8(@types/node@18.19.130)(sass@1.98.0)(terser@5.39.0))(vue@3.5.13(typescript@5.8.2))
@@ -85,8 +85,8 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0(supports-color@8.1.1)(vite@5.2.8(@types/node@18.19.130)(sass@1.98.0)(terser@5.39.0))(vue@3.5.13(typescript@5.8.2))
       '@wot-ui/ui':
-        specifier: ^2.2.0
-        version: 2.2.0(vue@3.5.13(typescript@5.8.2))
+        specifier: ^2.3.2
+        version: 2.3.2(vue@3.5.13(typescript@5.8.2))
       crypto-js:
         specifier: ^4.2.0
         version: 4.2.0
@@ -1823,8 +1823,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@meng-xi/uni-router@2.0.0':
-    resolution: {integrity: sha512-npLuNP5dPiYMblPe/I5bo7q7k5CiwyAZ+d6m3bhoKHaeaIP3ao8zi3/oF9PEAYZOmQ+C1WA07ZbByL63zbRl6g==}
+  '@meng-xi/uni-router@2.5.0':
+    resolution: {integrity: sha512-Tm70f4jGFr9C9V7oHGo0xqHvbnVpQ0a0XLD3eixPg1pkDJISrPLM1PluwQKfO6d6guaV9IPJsF1W/3Wp9kKY8w==}
     peerDependencies:
       vue: '>=3.0.0'
     peerDependenciesMeta:
@@ -2531,8 +2531,8 @@ packages:
       '@types/node': ^18.6.3
       pug: ^3.0.2
 
-  '@wot-ui/ui@2.2.0':
-    resolution: {integrity: sha512-/eC3sejQ7N1OCnLOHtG8K8nMXb16cf/7SwkLnDlpULlhbUCuW1fw3Qm4fvAbz0cNLSGlB0qJ/8axklww2C/BmQ==}
+  '@wot-ui/ui@2.3.2':
+    resolution: {integrity: sha512-voPLlAsSh9mWASqYXXiYMSp8Rc9aZ3HBEYh7kAuxrADtbwtL+D+gbofUL5hd2SnSIbRVaweVD5Bb+MicZ6jIlw==}
     engines: {HBuilderX: ^3.8.7}
     peerDependencies:
       vue: '>=3.2.47'
@@ -7722,7 +7722,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@meng-xi/uni-router@2.0.0(vue@3.5.13(typescript@5.8.2))':
+  '@meng-xi/uni-router@2.5.0(vue@3.5.13(typescript@5.8.2))':
     optionalDependencies:
       vue: 3.5.13(typescript@5.8.2)
 
@@ -8456,7 +8456,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@wot-ui/ui@2.2.0(vue@3.5.13(typescript@5.8.2))':
+  '@wot-ui/ui@2.3.2(vue@3.5.13(typescript@5.8.2))':
     dependencies:
       vue: 3.5.13(typescript@5.8.2)
 

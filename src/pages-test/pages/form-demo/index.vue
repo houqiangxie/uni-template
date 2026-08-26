@@ -51,6 +51,7 @@ const formModel = reactive({
   email: '',
   gender: 'male',
   hobbies: [] as string[],
+  notice: true,
   remark: '',
   password: '',
   confirmPassword: '',
@@ -60,6 +61,7 @@ const formModel = reactive({
   address: '',
   deptId: '',
   members: [{ name: '', phone: '' }],
+  signature: [] as any[],
 })
 
 const basicConfig = computed(() => [
@@ -68,7 +70,9 @@ const basicConfig = computed(() => [
   { prop: 'email', label: '邮箱', compType: 'input', validationType: 'email' },
   { prop: 'gender', label: '性别', compType: 'radio', columns: genderOptions },
   { prop: 'hobbies', label: '爱好', compType: 'checkbox', columns: hobbyOptions },
+  { prop: 'notice', label: '消息通知', compType: 'switch' },
   { prop: 'remark', label: '备注', compType: 'textarea' },
+  { prop: 'signature', label: '签名', compType: 'sign', required: true },
 ])
 
 const securityConfig = computed(() => [
@@ -196,6 +200,7 @@ function handleReset() {
     email: '',
     gender: 'male',
     hobbies: [],
+    notice: true,
     remark: '',
     password: '',
     confirmPassword: '',
@@ -203,7 +208,9 @@ function handleReset() {
     endDate: '',
     serviceMode: 'online',
     address: '',
+    deptId: '',
     members: [{ name: '', phone: '' }],
+    signature: [],
   })
 }
 </script>
