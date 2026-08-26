@@ -1,3 +1,6 @@
+packages:
+  - '.'
+
 allowBuilds:
   '@parcel/watcher': true
   core-js: true
@@ -5,7 +8,7 @@ allowBuilds:
   esbuild: true
   json-editor-vue: true
   sharp: false
-  simple-git-hooks: set this to true or false
+  simple-git-hooks: false
   vue-demi: true
 
 overrides:
