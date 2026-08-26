@@ -11,6 +11,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build (${{ github.base_ref || github.ref_name }})
@@ -38,6 +41,7 @@ jobs:
         run: |
           # PR 用目标分支，push 用当前分支
           BRANCH="${{ github.base_ref || github.ref_name }}"
+          REPO_NAME="${{ github.event.repository.name }}"
           echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
 
           case "${BRANCH}" in
@@ -58,13 +62,21 @@ jobs:
               ;;
           esac
 
+          if [[ "${BRANCH}" == "master" || "${BRANCH}" == "main" ]]; then
+            echo "base_path=/${REPO_NAME}/" >> "$GITHUB_OUTPUT"
+            echo "deploy_pages=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "base_path=/" >> "$GITHUB_OUTPUT"
+            echo "deploy_pages=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build H5 (${{ steps.target.outputs.env }})
         run: pnpm run ${{ steps.target.outputs.h5_script }}
         env:
-          # 构建校验用占位，真实密钥请在仓库 Secrets 中配置后取消注释映射
+          VITE_BASE_PATH: ${{ steps.target.outputs.base_path }}
           VITE_AMAP_KEY: ${{ secrets.VITE_AMAP_KEY }}
           VITE_AMAP_SECURITY_JS_CODE: ${{ secrets.VITE_AMAP_SECURITY_JS_CODE }}
           VITE_MP_WEIXIN_APPID: ${{ secrets.VITE_MP_WEIXIN_APPID }}
@@ -79,3 +91,33 @@ jobs:
           path: dist/build/h5
           if-no-files-found: warn
           retention-days: 7
+
+      - name: Prepare GitHub Pages artifact
+        if: steps.target.outputs.deploy_pages == 'true' && github.event_name == 'push'
+        run: touch dist/build/h5/.nojekyll
+
+      - name: Upload GitHub Pages artifact
+        if: steps.target.outputs.deploy_pages == 'true' && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/build/h5
+
+  deploy:
+    name: Deploy GitHub Pages
+    needs: build
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

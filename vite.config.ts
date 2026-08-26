@@ -88,12 +88,21 @@ function resolveEnvBase(env: Record<string, string>): string {
   return (env.VITE_BASE_URL || '').replace(/\/$/, '')
 }
 
+function resolvePublicBase(env: Record<string, string>): string {
+  const basePath = (env.VITE_BASE_PATH || '/').trim()
+  if (!basePath || basePath === '/')
+    return '/'
+  const normalized = basePath.startsWith('/') ? basePath : `/${basePath}`
+  return normalized.endsWith('/') ? normalized : `${normalized}/`
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(async ({ command, mode }) => {
   const Unocss = (await import('unocss/vite')).default
 
   const env = loadEnv(mode, process.cwd(), '')
   const envBase = resolveEnvBase(env)
+  const publicBase = resolvePublicBase(env)
   const apiPrefix = (env.VITE_API_PREFIX || '/api').replace(/\/$/, '') || '/api'
 
   const staticPrefix = (env.VITE_STATIC_PREFIX || '/wxStaticFile/static').replace(/\/$/, '') || '/wxStaticFile/static'
@@ -252,6 +261,6 @@ export default defineConfig(async ({ command, mode }) => {
     optimizeDeps: {
       exclude: ['@wot-ui/ui'],
     },
-    base: '/',
+    base: publicBase,
   }
 })
